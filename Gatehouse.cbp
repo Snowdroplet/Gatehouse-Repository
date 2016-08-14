@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Gatehouse" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Roguelike" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="$(#boost.include)" />
+				</Compiler>
+				<Linker>
+					<Add option="-lallegro-5.0.10-monolith-mt" />
+					<Add library="..\..\..\Libraries\boost\stage\lib\libboost_filesystem-mgw47-mt-1_57.a" />
+					<Add library="..\..\..\Libraries\boost\stage\lib\libboost_serialization-mgw47-mt-1_57.a" />
+					<Add library="..\..\..\Libraries\boost\stage\lib\libboost_random-mgw47-mt-1_57.a" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Roguelike" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-lallegro-5.0.10-monolith-mt" />
+					<Add library="..\..\..\Libraries\boost\stage\lib\libboost_filesystem-mgw47-mt-1_57.a" />
+					<Add library="..\..\..\Libraries\boost\stage\lib\libboost_serialization-mgw47-mt-1_57.a" />
+					<Add library="..\..\..\Libraries\boost\stage\lib\libboost_random-mgw47-mt-1_57.a" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="$(#boost.include)" />
+			<Add directory="$(#boost)" />
+			<Add directory="../../../Libraries/boost/libs/serialization/test" />
+		</Compiler>
+		<Linker>
+			<Add option="-lallegro-5.0.10-monolith-mt" />
+			<Add library="..\..\..\Libraries\boost\stage\lib\libboost_filesystem-mgw47-mt-1_57.a" />
+			<Add library="..\..\..\Libraries\boost\stage\lib\libboost_serialization-mgw47-mt-1_57.a" />
+			<Add library="..\..\..\Libraries\boost\stage\lib\libboost_system-mgw47-mt-1_57.a" />
+			<Add directory="$(#boost.lib)" />
+			<Add directory="$(#boost)/lib" />
+		</Linker>
+		<Unit filename="allegrocustom.cpp" />
+		<Unit filename="allegrocustom.h" />
+		<Unit filename="area.cpp" />
+		<Unit filename="area.h" />
+		<Unit filename="being.cpp" />
+		<Unit filename="being.h" />
+		<Unit filename="cast.h" />
+		<Unit filename="control.cpp" />
+		<Unit filename="control.h" />
+		<Unit filename="eat.h" />
+		<Unit filename="extfile.cpp" />
+		<Unit filename="extfile.h" />
+		<Unit filename="gamesystem.cpp" />
+		<Unit filename="gamesystem.h" />
+		<Unit filename="gods.h" />
+		<Unit filename="graph.cpp" />
+		<Unit filename="graph.h" />
+		<Unit filename="item.cpp" />
+		<Unit filename="item.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="node.cpp" />
+		<Unit filename="node.h" />
+		<Unit filename="npc.cpp" />
+		<Unit filename="npc.h" />
+		<Unit filename="player.cpp" />
+		<Unit filename="player.h" />
+		<Unit filename="pray.h" />
+		<Unit filename="property.h" />
+		<Unit filename="quest.h" />
+		<Unit filename="read.h" />
+		<Unit filename="resource.cpp" />
+		<Unit filename="resource.h" />
+		<Unit filename="roomgenobject.h" />
+		<Unit filename="spell.h" />
+		<Unit filename="terminal.cpp" />
+		<Unit filename="terminal.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,6 @@
+#ifndef PRAY_H_INCLUDED
+#define PRAY_H_INCLUDED
+
+
+
+#endif // PRAY_H_INCLUDED
