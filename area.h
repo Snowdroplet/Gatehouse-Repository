@@ -4,6 +4,7 @@
 #include "gamesystem.h"
 #include "allegrocustom.h"
 #include "graph.h"
+#include "mainroom.h"
 
 #include <cstdlib>
 #include <cmath>
@@ -44,6 +45,7 @@ struct RoomGenBox
     RoomGenBox(b2Body *cb2b, int w, int h);
     ~RoomGenBox();
     void UpdatePosition();
+    void SnapToGrid();
 };
 
 
@@ -63,14 +65,33 @@ class Area
     }
 
 private:
+    bool GENERATORDEBUGSTASIS;
+
+    // The average (or mean) room height in the random normal distribution of room dimensions.
+    float averageRoomWidth;
+    float averageRoomHeight;
+
+    // The minimum width and height required to be listed as a "main room" for the purposes of generation
+    int mainRoomWidthThreshold;
+    int mainRoomHeightThreshold;
+
+    std::vector<RoomGenBox*>mainRooms;
+
+    // Using mersenne twister for RNG
     boost::random::mt19937 mtRng;
 
+    // Generator state flags
     bool bodiesGenerated;
     bool bodiesDistributed;
 
+    // Describe physics bodies
     b2BodyDef roomGenBody;
     b2PolygonShape roomGenPolygonShape;
     b2FixtureDef roomGenFixture;
+
+    b2BodyDef roomGenEdgeBody;          // Edges to wall in the simulation
+    b2EdgeShape roomGenEdgeShape;
+    b2FixtureDef roomGenEdgeFixture;
 
 
 public:

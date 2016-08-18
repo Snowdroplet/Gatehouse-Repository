@@ -1,6 +1,4 @@
 
-///If things go wrong with serialization, change outarchive back to << from &
-
 //Debug defines. Comment out line to deactivate corresponding debug functionality.
 
 #define D_DRAW_DEBUG_OVERLAY
@@ -9,7 +7,14 @@
 #define D_SERIALIZATION
 #define D_TEST_PATHFINDING
 
-//#define D_CREATE_TESTING_AREA
+#define D_TERMINATE_LOADING_SIGNAL
+
+//#define D_CREATE_TESTING_AREA //Uncomment to create a new testing area
+
+
+#ifdef D_TERMINATE_LOADING_SIGNAL
+bool debugTerminateLoadingPhaseSignal = false;
+#endif //D_TERMINATE_LOADING_SIGNAL
 
 #include <cstdio>
 #include <iostream>
@@ -50,7 +55,6 @@
 b2World *physics;
 Player *player;
 Area *area;
-
 
 std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to move.
@@ -158,6 +162,7 @@ int main(int argc, char *argv[])
     LoadResources();
 
     physics = new b2World(physicsGravity);
+    physics->SetAllowSleeping(true);
 
 #ifdef D_CREATE_TESTING_AREA
     area = new Area(); // Create random test area
@@ -517,9 +522,10 @@ void LoadingLogic()
             loadingCamX --;
         if(keyInput[KEY_PAD_8])
             loadingCamY --;
-
+#ifdef D_TERMINATE_LOADING_SIGNAL
         if(keyInput[KEY_Z])
             debugTerminateLoadingPhaseSignal = true;  // Obviously only for developmental purposes since Area::Generate is incomplete.
+#endif // D_TERMINATE_LOADING_SIGNAL
     }
 
     if(needGeneration)
@@ -529,22 +535,12 @@ void LoadingLogic()
             needGeneration = false;
     }
 
+#ifdef D_TERMINATE_LOADING_SIGNAL
     if(debugTerminateLoadingPhaseSignal)
     {
-        for (b2Body* b = physics->GetBodyList(); b; b = b->GetNext())
-        {
-            physics->DestroyBody(b);
-        }
-
-        for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
-        {
-            delete *it;
-            area->roomGenBoxes.erase(it);
-        }
-
-
         mainPhase = MAIN_PHASE_GAME;
     }
+#endif // D_TERMINATE_LOADING_SIGNAL
 }
 
 void TitleLogic()
@@ -598,55 +594,63 @@ void LoadingDrawing()
 
         //Draw the grid
         //Moving the camera's coordinates left moves everything else's draw coordinates right, and so on.
-        for(int i = 0; i <= areaWidth; i += TILESIZE) //Columns
+        for(int i = 0; i <= miniAreaWidth; i += MINI_TILESIZE) //Columns
         {
             int lineThickness = 1;
-            ALLEGRO_COLOR lineColor = NEUTRAL_GRAY;
+            ALLEGRO_COLOR lineColor = DIM_NEUTRAL_GRAY;
             if(i%5 == 0)
             {
-                lineThickness = 2;
-                lineColor = NEUTRAL_WHITE;
+                lineThickness = 1.5;
+                lineColor = DIM_NEUTRAL_WHITE;
             }
             al_draw_line(i          -loadingCamX,
                          0          -loadingCamY,
                          i          -loadingCamX,
-                         areaHeight -loadingCamY,
+                         miniAreaHeight -loadingCamY,
                          lineColor,lineThickness);
 
 
         }
-        for(int i = 0; i <= areaHeight; i += TILESIZE) //Rows
+        for(int i = 0; i <= miniAreaHeight; i += MINI_TILESIZE) //Rows
         {
             int lineThickness = 1;
-            ALLEGRO_COLOR lineColor = NEUTRAL_GRAY;
+            ALLEGRO_COLOR lineColor = DIM_NEUTRAL_GRAY;
             if(i%5 == 0)
             {
-                lineThickness = 2;
-                lineColor = NEUTRAL_WHITE;
+                lineThickness = 1.5;
+                lineColor = DIM_NEUTRAL_WHITE;
             }
 
             al_draw_line(0         -loadingCamX,
                          i         -loadingCamY,
-                         areaWidth -loadingCamX,
+                         miniAreaWidth -loadingCamX,
                          i         -loadingCamY,
                          lineColor,lineThickness);
         }
 
-        //Draw room generation AABBs
-
-
+        //Draw room generation boxes
         for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
         {
-            al_draw_filled_rectangle((*it)->x1 - loadingCamX,
-                                     (*it)->y1 - loadingCamY,
-                                     (*it)->x2 - loadingCamX,
-                                     (*it)->y2 - loadingCamY,
-                                     COLD_BLUE);
-            al_draw_rectangle((*it)->x1 - loadingCamX,
-                              (*it)->y1 - loadingCamY,
-                              (*it)->x2 - loadingCamX,
-                              (*it)->y2 - loadingCamY,
-                              HOLY_INDIGO,2);
+            if((*it)->correspondingB2Body == NULL)
+                al_draw_rectangle((*it)->x1 - loadingCamX,       // Null
+                                        (*it)->y1 - loadingCamY,
+                                        (*it)->x2 - loadingCamX,
+                                        (*it)->y2 - loadingCamY,
+                                        COLD_BLUE, 2);
+            else
+                al_draw_rectangle((*it)->x1 - loadingCamX,       // Not null
+                                        (*it)->y1 - loadingCamY,
+                                        (*it)->x2 - loadingCamX,
+                                        (*it)->y2 - loadingCamY,
+                                        FIRE_ORANGE, 2);
+
+
+            s_al_draw_text(terminalFont, NEUTRAL_WHITE,
+                           (*it)->x1-loadingCamX+4,
+                           (*it)->y1-loadingCamY+4,
+                            ALLEGRO_ALIGN_LEFT,
+                            std::to_string(it-area->roomGenBoxes.begin()));
+
         }
 
 
