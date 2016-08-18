@@ -69,7 +69,7 @@ private:
     bool bodiesDistributed;
 
     b2BodyDef roomGenBody;
-    b2PolygonShape roomGenBox;
+    b2PolygonShape roomGenPolygonShape;
     b2FixtureDef roomGenFixture;
 
 
