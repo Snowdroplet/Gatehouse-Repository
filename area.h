@@ -36,6 +36,7 @@ enum enumGenerationPhases
 struct RoomGenBox
 {
     b2Body* correspondingB2Body;
+    bool correspondingBodyAwake;
     float x1, y1; // Top left corner
     float x2, y2; // Bottom right corner
     float x3, y3; // Midpoint
@@ -46,6 +47,7 @@ struct RoomGenBox
     ~RoomGenBox();
     void UpdatePosition();
     void SnapToGrid();
+    bool BoundaryDeletionCheck(int strictness);
 };
 
 
@@ -88,10 +90,6 @@ private:
     b2BodyDef roomGenBody;
     b2PolygonShape roomGenPolygonShape;
     b2FixtureDef roomGenFixture;
-
-    b2BodyDef roomGenEdgeBody;          // Edges to wall in the simulation
-    b2EdgeShape roomGenEdgeShape;
-    b2FixtureDef roomGenEdgeFixture;
 
 
 public:

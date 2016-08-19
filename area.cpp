@@ -17,6 +17,7 @@
 RoomGenBox::RoomGenBox(b2Body *cb2b, int w, int h)
 {
     correspondingB2Body = cb2b;
+    correspondingBodyAwake = correspondingB2Body->IsAwake();
     width = w;
     height = h;
 
@@ -30,6 +31,7 @@ RoomGenBox::~RoomGenBox()
 void RoomGenBox::UpdatePosition()
 {
     b2Vec2 updatedPosition = correspondingB2Body->GetPosition();
+    correspondingBodyAwake = correspondingB2Body->IsAwake();
 
     x3 = updatedPosition.x;
     y3 = updatedPosition.y;
@@ -53,6 +55,15 @@ void RoomGenBox::SnapToGrid()
     x3 =  x1+width;
     y3 =  y1+height;
 
+}
+
+bool RoomGenBox::BoundaryDeletionCheck(int strictness)
+{
+    if(x1 < 0+MINI_TILESIZE*strictness || y1 < 0+MINI_TILESIZE*strictness)
+        return true;
+    if(x2 > miniAreaWidth-MINI_TILESIZE*strictness || y2 > miniAreaHeight-MINI_TILESIZE*strictness)
+        return true;
+    else return false;
 }
 
 /// Default constructor which creates random square test area
@@ -116,13 +127,6 @@ void Area::ResetGeneratorState()
     roomGenBody.linearDamping = 0.0f;
     roomGenBody.allowSleep = true;
 
-    roomGenFixture.density = 1.0f;
-    roomGenFixture.restitution = 0.0f;
-    roomGenFixture.friction = 0.0f;
-
-    roomGenEdgeBody.type = b2_staticBody;
-    roomGenEdgeFixture.restitution = 20.0f;
-
     GENERATORDEBUGSTASIS = true;
 }
 
@@ -150,10 +154,10 @@ void Area::Generate()
         boost::random::normal_distribution<float> randomRoomHeight(averageRoomHeight,averageRoomHeight*0.25);
 
         // Random point in circle selected using random radius and angle. Probability is uniform.
-        boost::random::uniform_real_distribution<double> randomGenRadius(0.0,MINI_TILESIZE*5);    // (Range min, range max)
+        boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.25);    // (Range min, range max)
         boost::random::uniform_real_distribution<double> randomGenTheta(0.0,2*PI);
 
-        static int roomsToGenerate = 100;
+        static int roomsToGenerate = 150;
 
         if(!bodiesGenerated)
         {
@@ -167,10 +171,10 @@ void Area::Generate()
                 int roomWidth = randomRoomWidth(mtRng);  // Implicit conversion to int for the purposes of the modulo operation below.
                 int roomHeight = randomRoomHeight(mtRng);
 
-                // Prevent the creation of rooms less than two tiles wide or high.
-                if(roomWidth < MINI_TILESIZE*1.51)
+                // Prevent the creation of rooms less than two tiles wide or high
+                if(roomWidth < MINI_TILESIZE*1.49)
                     roomWidth = MINI_TILESIZE*2;
-                if(roomHeight < MINI_TILESIZE*1.51)
+                if(roomHeight < MINI_TILESIZE*1.49)
                     roomHeight = MINI_TILESIZE*2;
 
 #ifdef D_GEN_PHYS_DIST_RANDOM
@@ -212,8 +216,8 @@ void Area::Generate()
 #endif // D_GEN_PHYS_DIST_RANDOM
 
                 //Generate PHYSICS BODY centered at chosen random point in circle.
-                b2Body *body = physics->CreateBody(&roomGenBody);  // Create body according to roomGenBody's description. Physics is the name of the simulation's world object.
                 roomGenBody.position.Set(circleCenterX+genX,circleCenterY+genY); // Set position of body in the world to chosen random point in circle.
+                b2Body *body = physics->CreateBody(&roomGenBody);  // Create body according to roomGenBody's description. Physics is the name of the simulation's world object.
 
 
                 // Describe the shape of the fixture that will be created on the PHYSICS BODY.
@@ -234,33 +238,6 @@ void Area::Generate()
                 roomGenBoxes.push_back(new RoomGenBox(body,roomWidth,roomHeight)); // (Corresponding PHYSICS BODY, width of ROOM OBJECT, height of ROOM OBJECT).
 
             }
-
-            // Box in the area, preventing PHYSICS BODIES or ROOM OBJECTS from going out of bounds.
-
-            roomGenEdgeBody.position.Set(miniAreaWidth/2,0);
-            b2Body *body = physics->CreateBody(&roomGenEdgeBody);
-            roomGenEdgeShape.Set(b2Vec2(0,0),b2Vec2(miniAreaWidth,0)); // UPPER WALL
-            roomGenEdgeFixture.shape = &roomGenEdgeShape;
-            body->CreateFixture(&roomGenEdgeFixture);
-
-            roomGenEdgeBody.position.Set(0,miniAreaHeight/2);
-            body = physics->CreateBody(&roomGenEdgeBody);
-            roomGenEdgeShape.Set(b2Vec2(0,0),b2Vec2(0,miniAreaHeight)); // LEFT WALL
-            roomGenEdgeFixture.shape = &roomGenEdgeShape;
-            body->CreateFixture(&roomGenEdgeFixture);
-
-            roomGenEdgeBody.position.Set(miniAreaWidth,miniAreaHeight/2);
-            body = physics->CreateBody(&roomGenEdgeBody);
-            roomGenEdgeShape.Set(b2Vec2(miniAreaWidth,0),b2Vec2(0,miniAreaHeight)); // RIGHT WALL
-            roomGenEdgeFixture.shape = &roomGenEdgeShape;
-            body->CreateFixture(&roomGenEdgeFixture);
-
-            roomGenEdgeBody.position.Set(miniAreaWidth/2,miniAreaHeight);
-            body = physics->CreateBody(&roomGenEdgeBody);
-            roomGenEdgeShape.Set(b2Vec2(0,miniAreaHeight),b2Vec2(miniAreaWidth,miniAreaHeight)); // LOWER WALL
-            roomGenEdgeFixture.shape = &roomGenEdgeShape;
-            body->CreateFixture(&roomGenEdgeFixture);
-
 
 
             bodiesGenerated = true;
@@ -283,14 +260,18 @@ void Area::Generate()
         }
         else if(bodiesDistributed)
         {
-            // Snap ROOM OBJECTS to grid by flooring them to the nearest 32.
-            // Nullify pointer to corresponding PHYSICS BODY and destroy them all.
+
             for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
             {
-                (*it)->SnapToGrid();
-                (*it)->correspondingB2Body = NULL;
+                (*it)->SnapToGrid(); // Snap ROOM OBJECTS to grid by flooring them to the nearest 32.
+                if((*it)->BoundaryDeletionCheck(1))//Remove rooms which are within 1 cell of the edge of the area, or even outside.
+                {
+                    delete *it;
+                    roomGenBoxes.erase(it);
+                }
             }
 
+            // Destroy physics bodies
             for(b2Body* b = physics->GetBodyList(); b; b = b->GetNext())
             {
                 physics->DestroyBody(b);

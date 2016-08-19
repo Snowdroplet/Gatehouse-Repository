@@ -1,8 +1,8 @@
 #include "allegrocustom.h"
 
 
-ALLEGRO_COLOR NEUTRAL_WHITE;
-ALLEGRO_COLOR NEUTRAL_GRAY;
+ALLEGRO_COLOR NEUTRAL_WHITE; ALLEGRO_COLOR DIM_NEUTRAL_WHITE;
+ALLEGRO_COLOR NEUTRAL_GRAY; ALLEGRO_COLOR DIM_NEUTRAL_GRAY;
 ALLEGRO_COLOR NEUTRAL_BLACK;
 
 ALLEGRO_COLOR FIRE_ORANGE;
@@ -17,8 +17,8 @@ ALLEGRO_COLOR BLOOD_RED;
 
 void AllegroCustomInit()
 {
-    NEUTRAL_WHITE = al_map_rgb(255,255,255);
-    NEUTRAL_GRAY = al_map_rgb(180,180,180);
+    NEUTRAL_WHITE = al_map_rgb(255,255,255); DIM_NEUTRAL_WHITE = al_map_rgb(200,200,200);
+    NEUTRAL_GRAY = al_map_rgb(180,180,180); DIM_NEUTRAL_GRAY = al_map_rgb(128,128,128);
     NEUTRAL_BLACK = al_map_rgb(0,0,0);
 
     FIRE_ORANGE = al_map_rgb(255,106,0);
@@ -30,6 +30,7 @@ void AllegroCustomInit()
 
     POISON_GREEN = al_map_rgb(0,127,14);
     BLOOD_RED = al_map_rgb(127,0,0);
+
 }
 
 void c_al_draw_centered_bitmap(ALLEGRO_BITMAP *bitmap, float dx, float dy, int flags)

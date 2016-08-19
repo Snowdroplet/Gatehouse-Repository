@@ -16,9 +16,9 @@ extern b2Vec2 physicsGravity;
 extern b2World *physics;
 
 extern bool physicsCanSleep;
-extern float32 timeStep;
-extern int32 velocityIterations;
-extern int32 positionIterations;
+//extern float32 timeStep;
+//extern int32 velocityIterations;
+//extern int32 positionIterations;
 
 
 /// GAME CONSTANTS
@@ -60,7 +60,8 @@ int scaleX = (windowWidth - scaleW) / 2;
 int scaleY = (windowHeight - scaleH) / 2;
 */
 
-const int TILESIZE = 32;
+const int TILESIZE = 32;     //The size of a cell
+const int MINI_TILESIZE = TILESIZE/4; //The size of a cell in the map viewer/ room generation
 
 const int TERMINAL_H = 120;
 const int PLAY_H = SCREEN_H-TERMINAL_H;
@@ -85,8 +86,6 @@ enum enumMainPhases
 };
 
 extern int mainPhase;
-
-extern bool debugTerminateLoadingPhaseSignal;
 
 extern bool needGeneration;
 
@@ -151,6 +150,8 @@ extern int areaCellWidth;  //How many cells long the field is, not how many pixe
 extern int areaCellHeight;
 extern int areaWidth;
 extern int areaHeight;
+extern int miniAreaWidth;
+extern int miniAreaHeight;
 
 extern int currentMap; // 0 is debug for now
 
@@ -163,9 +164,6 @@ enum enumWallTypes
     WALL_MOAT = 4,       //Can be levitated or swam over
     WALL_DOOR = 5        //Can be opened, closed, or broken
 };
-
-extern int averageRoomWidth;
-extern int averageRoomHeight;
 
 
 

@@ -631,18 +631,18 @@ void LoadingDrawing()
         //Draw room generation boxes
         for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
         {
-            if((*it)->correspondingB2Body == NULL)
-                al_draw_rectangle((*it)->x1 - loadingCamX,       // Null
-                                        (*it)->y1 - loadingCamY,
-                                        (*it)->x2 - loadingCamX,
-                                        (*it)->y2 - loadingCamY,
-                                        COLD_BLUE, 2);
-            else
-                al_draw_rectangle((*it)->x1 - loadingCamX,       // Not null
+            if((*it)->correspondingBodyAwake)
+                al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
                                         (*it)->y1 - loadingCamY,
                                         (*it)->x2 - loadingCamX,
                                         (*it)->y2 - loadingCamY,
                                         FIRE_ORANGE, 2);
+            else
+                al_draw_rectangle((*it)->x1 - loadingCamX,       // Not awake
+                                        (*it)->y1 - loadingCamY,
+                                        (*it)->x2 - loadingCamX,
+                                        (*it)->y2 - loadingCamY,
+                                        COLD_BLUE, 2);
 
 
             s_al_draw_text(terminalFont, NEUTRAL_WHITE,

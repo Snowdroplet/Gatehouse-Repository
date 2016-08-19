@@ -2,13 +2,14 @@
 
 /// MATH AND PHYSICS
 
-bool physicsCanSleep = true;
 
 b2Vec2 physicsGravity(0.0f, 0.0f);
 
-float32 timeStep = 1.0f / 60.0f;
-int32 velocityIterations = 10;
-int32 positionIterations = 8;
+bool physicsCanSleep = true;
+
+//float32 timeStep =  1.0f / 60.0f;
+//int32 velocityIterations = 10;
+//int32 positionIterations = 8;
 
 /// GAME CONSTANTS
 
@@ -22,8 +23,8 @@ ALLEGRO_EVENT ev;
 ALLEGRO_MOUSE_STATE mouseState;
 
 
-int loadingCamX = TILESIZE*areaCellWidth/2 - SCREEN_W/2;   //Top left corner of loading screen camera. Camera initially centered on the
-int loadingCamY = TILESIZE*areaCellHeight/2 - SCREEN_H/2;
+int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;   //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
+int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
 
 /// MAIN STRUCTURE
 
@@ -31,8 +32,6 @@ bool gameExit = false;
 bool redraw = false;
 
 int mainPhase = MAIN_PHASE_TITLE;
-
-bool debugTerminateLoadingPhaseSignal = false;
 
 bool needGeneration = true;
 
@@ -52,13 +51,12 @@ int subMenuOpen;
 /// IN-GAME AREA
 
 
-int areaCellWidth = 20; // May become variable in the future.
-int areaCellHeight = 20;
+int areaCellWidth = 100; // May become variable in the future.
+int areaCellHeight = 100;
 int areaWidth = TILESIZE*areaCellWidth;
 int areaHeight = TILESIZE*areaCellHeight;
-
-int averageRoomWidth = TILESIZE*5; // 5 Cells wide
-int averageRoomHeight = TILESIZE*5;
+int miniAreaWidth = MINI_TILESIZE*areaCellWidth;
+int miniAreaHeight = MINI_TILESIZE*areaCellHeight;
 
 int currentMap = 0; // 0 is debug for now
 
