@@ -64,7 +64,7 @@ void Graph::DestroyGraph()
     openNodes.clear();
     closedNodes.clear();
 
-    for(std::vector<Node*>::iterator it = nodeGraph.begin(); it != nodeGraph.end(); ++it)
+    for(std::vector<Node*>::iterator it = nodeGraph.begin(); it != nodeGraph.end();)
     {
         delete *it;
         nodeGraph.erase(it);

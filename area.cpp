@@ -1,25 +1,21 @@
-/**
-*
-* ERROR: MISMATCH BETWEEN BODY DIMENSIONS AND ROOMGENBOX DIMENSIONS
-* CENTER COORDINATE (X3, Y3) MATCHES
-* OPENING AND CLOSING COORDINATES OF BODY DO NOT MATCH ROOM GEN BOX OBJECT DO NOT MATCH (X1, Y1) / (X2, Y2)
-*
-*
-**/
-
-
 
 #include "area.h"
 
 //#define D_GEN_PHYS_DIST_RANDOM
-#define D_GEN_PHYS_DIST_SNAP
+//#define D_GEN_TRIANGULATION
 
-RoomGenBox::RoomGenBox(b2Body *cb2b, int w, int h)
+RoomGenBox::RoomGenBox(int bn, b2Body *cb2b, int w, int h)
 {
+    boxNumber = bn;
+
     correspondingB2Body = cb2b;
     correspondingBodyAwake = correspondingB2Body->IsAwake();
+    designatedMainRoom = false;
+
     width = w;
     height = h;
+    cellWidth = width/MINI_TILESIZE;
+    cellHeight = height/MINI_TILESIZE;
 
     UpdatePosition();
 }
@@ -44,16 +40,15 @@ void RoomGenBox::UpdatePosition()
 
 void RoomGenBox::SnapToGrid()
 {
-    // Snap to grid - All coordinates rounded down to next lowest multiple of MINI_TILESIZE.
-    int x = x1; // Integer type for the purpose of modulo operation
+    int x = x1; // Conversion to integer type for the purpose of modulo operation
     int y = y1;
 
     x1 -= x%MINI_TILESIZE;
     y1 -= y%MINI_TILESIZE;
     x2 -= x%MINI_TILESIZE;
     y2 -= y%MINI_TILESIZE;
-    x3 =  x1+width;
-    y3 =  y1+height;
+    x3 =  x1+width/2;
+    y3 =  y1+height/2;
 
 }
 
@@ -66,8 +61,6 @@ bool RoomGenBox::BoundaryDeletionCheck(int strictness)
     else return false;
 }
 
-/// Default constructor which creates random square test area
-/// Data normally found in the serialized "areafile" is initialized here.
 Area::Area()
 {
     name = "test area";
@@ -96,12 +89,13 @@ void Area::InitByArchive()
 
 Area::~Area()
 {
-    // Although all room gen boxes should have been deleted by now, anyway, this covers us during development/debug.
-    for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+    for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
     {
         delete *it;
         roomGenBoxes.erase(it);
     }
+
+
 }
 
 /// Reset / (re)initialize everything relevant to generating an area.
@@ -132,6 +126,9 @@ void Area::ResetGeneratorState()
 
 void Area::Generate()
 {
+    /// This generation function is based on the procedure described in this article:
+    /// http://www.gamasutra.com/blogs/AAdonaac/20150903/252889/Procedural_Dungeon_Generation_Algorithm.php
+
     if(generationPhase == GEN_INACTIVE)
     {
         generationComplete = false;
@@ -141,7 +138,7 @@ void Area::Generate()
     else if(generationPhase == GEN_PHYSICAL_DISTRIBUTION)
     {
 
-        /**                               ### PHYSICAL DISTRIBUTION PHASE: ###
+        /**                      ### ROOM OBJECTS DISTRIBUTED VIA PHYSICS SIMULATION ###
             1) Create many overlapping PHYSICS BODIES within a circle of random size according to the normal distribution.
             2) Create ROOM OBJECTS corresponding to physics bodies in shape and position.
             3) Distribute PHYSICS BODIES into field via Box2D physics simulation so that none overlap.
@@ -172,9 +169,9 @@ void Area::Generate()
                 int roomHeight = randomRoomHeight(mtRng);
 
                 // Prevent the creation of rooms less than two tiles wide or high
-                if(roomWidth < MINI_TILESIZE*1.49)
+                if(roomWidth < MINI_TILESIZE*2)
                     roomWidth = MINI_TILESIZE*2;
-                if(roomHeight < MINI_TILESIZE*1.49)
+                if(roomHeight < MINI_TILESIZE*2)
                     roomHeight = MINI_TILESIZE*2;
 
 #ifdef D_GEN_PHYS_DIST_RANDOM
@@ -235,10 +232,9 @@ void Area::Generate()
                 body->CreateFixture(&roomGenFixture);              // Attach fixture to aformentioned body, according to roomGenFixture's description.
 
                 // Create ROOM OBJECT corresponding to the PHYSICS BODY in both shape and position.
-                roomGenBoxes.push_back(new RoomGenBox(body,roomWidth,roomHeight)); // (Corresponding PHYSICS BODY, width of ROOM OBJECT, height of ROOM OBJECT).
+                roomGenBoxes.push_back(new RoomGenBox(i, body, roomWidth, roomHeight)); // (Corresponding PHYSICS BODY, width of ROOM OBJECT, height of ROOM OBJECT).
 
             }
-
 
             bodiesGenerated = true;
         }
@@ -261,17 +257,21 @@ void Area::Generate()
         else if(bodiesDistributed)
         {
 
-            for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+            for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
             {
-                (*it)->SnapToGrid(); // Snap ROOM OBJECTS to grid by flooring them to the nearest 32.
+                (*it)->correspondingB2Body = NULL; // Nullify all pointers to corresponding PHYSICS BODIES, as the relationship is no longer necessary
+                (*it)->SnapToGrid(); // Snap ROOM OBJECTS to grid by flooring them to the nearest MINI_TILESIZE.
                 if((*it)->BoundaryDeletionCheck(1))//Remove rooms which are within 1 cell of the edge of the area, or even outside.
                 {
                     delete *it;
                     roomGenBoxes.erase(it);
                 }
+                else
+                    ++it;
+
             }
 
-            // Destroy physics bodies
+            // Destroy all PHYSICS BODIES
             for(b2Body* b = physics->GetBodyList(); b; b = b->GetNext())
             {
                 physics->DestroyBody(b);
@@ -281,10 +281,10 @@ void Area::Generate()
         }
     }
 
-    if(generationPhase == GEN_NODE_DISTRIBUTION)
+    if(generationPhase == GEN_GRAPH_CREATION)
     {
-        /** #### NODE DISTRIBUTION PHASE ####
-        1) MAIN ROOMS vector populated with ROOM OBJECTS
+        /**                          ### MAIN ROOMS SELECTED ###
+        1) Vector populated with ROOM OBJECTS above a certain width/height threshold.
         */
 
             for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
@@ -292,14 +292,106 @@ void Area::Generate()
                 if((*it)->width >= mainRoomWidthThreshold && (*it)->height >= mainRoomHeightThreshold)
                 {
                     mainRooms.push_back(*it);
+                    (*it)->designatedMainRoom = true;
                 }
             }
 
-            // *possible thingy here to pause simulation if debug mode is on?*
-            generationPhaseComplete = true;
+        /**                ### DELAUNAY TRIANGULATION AND MINIMUM SPANNING TREE  ###
+
+        Note: There are two graphs. The FIRST for triangulation, the SECOND for the MST.
+
+        1)      Using Bl4ckb0ne's delaunay triangulation code (details can be found in delaunay.h/cpp),
+            generate the FIRST graph - The center coordinates of ROOM OBJECTS designated as main rooms make up
+            the nodes.
+
+        2)      Generate the SECOND graph as a vector of node ID pairs (edges) from the triangulation.
+            Each node IDs is the index of the cell corresponding to a main room's center coordinates.
+
+        3)       Using the Kruskal algorithm (details be be found in mintree.h/cpp),
+            generate and output a minimum spanning tree from the SECOND graph.
+        */
+
+        std::vector<Vec2f>mainRoomCenterCoords;
+
+        for(std::vector<RoomGenBox*>::iterator it = mainRooms.begin(); it != mainRooms.end(); ++it)
+        {
+            // The main-room-center coordinate to record
+            Vec2f centerCoord( ((*it)->x3) , ((*it)->y3) );
+
+            // Record the main-room-center coordinate in a vector -- The vector will be passed to the triangulation function.
+            mainRoomCenterCoords.push_back(centerCoord);
+        }
+
+
+        Delaunay triangulation;
+        triangles = triangulation.triangulate(mainRoomCenterCoords); // Pass vector of main-room-center coordinates to triangulation function.
+        triEdges = triangulation.getEdges();
+
+#ifdef D_GEN_TRIANGULATION
+        std::cout << std::endl;
+        std::cout << "### Triangulation results: ###" << std::endl;
+
+        std::cout << "\nPoints : " << mainRoomCenterCoords.size() << std::endl;
+        for(auto &p : mainRoomCenterCoords)
+            std::cout << p << std::endl;
+
+        std::cout << "\nTriangles : " << triangles.size() << std::endl;
+            for(auto &t : triangles)
+		std::cout << t << std::endl;
+
+        std::cout << "\nEdges : " << triEdges.size() << std::endl;
+            for(auto &e : triEdges)
+        std::cout << e << std::endl;
+#endif // D_GEN_TRIANGULATION
+
+
+        for(std::vector<Edge>::iterator it = triEdges.begin(); it != triEdges.end(); ++it)
+        {
+            int nodeA = GetCenterCellID( (*it).p1.x , (*it).p1.y , MINI_TILESIZE);
+            int nodeB = GetCenterCellID( (*it).p2.x , (*it).p2.y , MINI_TILESIZE);
+
+            Vec2f coordsA = (*it).p1;
+            Vec2f coordsB = (*it).p2;
+
+            float coordDistance = std::sqrt(((coordsB.x-coordsA.x) * (coordsB.x-coordsA.x))  // Just the regular old pythagorean formula.
+                                                                   +
+                                            ((coordsB.y-coordsA.y) * (coordsB.y-coordsA.y)));
+
+            // Store the edges found by the triangulation as the indexes of the cells corresponding to the coordinates.
+            minTreeInput.push_back(MinTreeEdge(nodeA, nodeB));
+
+            // Populate the MST graph with edges.
+            mtg.minTreeEdges.push_back(MinTreeEdge(nodeA,nodeB,coordDistance));
+
+
+            // Populate the MST graph with vertices (node IDs).
+            mtg.nodeIDs.push_back(nodeA);
+            //mtg.nodeIDs.push_back(nodeB);
+
+
+        }
+
+        // Remove any duplicate vertices from MST graph.
+        std::vector<int>::iterator uit;
+        uit = std::unique (mtg.nodeIDs.begin(), mtg.nodeIDs.end());
+        mtg.nodeIDs.resize(std::distance(mtg.nodeIDs.begin(),uit));
+
+        /*
+        std::cout << std::endl;
+        std::cout << "Graph's nodeID vector contains:";
+        for (uit=mtg.nodeIDs.begin(); uit!=mtg.nodeIDs.end(); ++uit)
+        std::cout << ' ' << *uit;
+        std::cout << '\n';
+        */
+
+        minTreeOutput = Kruskal(mtg);
+
+        /*compare min tree input and min tree output and add some edges back */
+
+        generationPhaseComplete = true;
     }
 
-    if(generationPhase == GEN_DELAUNAY_TRIANGULATION)
+    if(generationPhase == GEN_HALLWAYS)
     {
 
     }
@@ -319,6 +411,24 @@ void Area::Generate()
         needGeneration = false;
     }
 
+}
+
+int GetCenterCellID(int xCoord, int yCoord, int tilesize)
+{
+    // Warning: If the room object to which the cell belongs has an even-numbered width or height, the function
+    // will always favor the right-most and/or bottom-most of the two (or four) middle cells as a natural effect of integer truncation.
+    // If generating hallways, be sure to take this into account.
+
+    int centerCellID; // The index of the cell (in a 1D array) that happens to host the room object's center coordinates.
+
+    // Convert the center coordinates in pixels to center coordinates in cells, rounded down.
+    int cellX = (int)xCoord/tilesize;
+    int cellY = (int)yCoord/tilesize;
+
+    // Calculate index of the corresponding cell.
+    centerCellID = cellY*areaCellWidth + cellX;
+
+    return centerCellID;
 }
 
 
