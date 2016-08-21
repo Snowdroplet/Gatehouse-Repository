@@ -18,6 +18,13 @@ void Union (int root1, int root2);
 
 struct MinTreeEdge
 {
+    bool operator<(MinTreeEdge const &rhs) const noexcept
+    {
+            return lhs < rhs.lhs;
+    }
+    int lhs;
+
+
     int node1ID;
     int node2ID;
     int weight;

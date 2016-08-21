@@ -34,10 +34,6 @@ void MakeSet(int nodeID)
 
 std::vector<MinTreeEdge> Kruskal(MinTreeGraph &g)
 {
-#ifdef D_PRINTOUT_MST
-    std::cout << "Kruskalize me, captain." << std::endl;
-#endif //D_PRINTOUT_MST
-
     //Take all the edges of the graph and make it a single "disjointed set"
     std::vector<MinTreeEdge> A;
     for(auto c : g.nodeIDs)      // Note to self, read up on auto.
@@ -62,9 +58,10 @@ std::vector<MinTreeEdge> Kruskal(MinTreeGraph &g)
 
 #ifdef D_PRINTOUT_MST
     std::cout << std::endl;
+    std::cout << "After Kruskal:" << std::endl;
     for(MinTreeEdge e : A)
     {
-        std::cout << e.node1ID << " -- " << e.node2ID << " " << e.weight << std::endl;
+        std::cout << "Node " << e.node1ID << " is connected to " << e.node2ID << " - Distance: " << e.weight << std::endl;
     }
 #endif // D_PRINTOUT_MST
 

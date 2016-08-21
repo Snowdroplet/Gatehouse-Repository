@@ -98,7 +98,7 @@ const std::vector<Triangle>& Delaunay::triangulate(std::vector<Vec2f> &vertices)
 		//std::cout << "_triangles contains " << _triangles.size() << " elements" << std::endl;
 
 		std::vector<Triangle> badTriangles;
-		std::vector<Edge> polygon;
+		std::vector<TriEdge> polygon;
 
 		for(auto t = begin(_triangles); t != end(_triangles); t++)
 		{
@@ -130,7 +130,7 @@ const std::vector<Triangle>& Delaunay::triangulate(std::vector<Vec2f> &vertices)
 			return false;
 		}), end(_triangles));
 
-		std::vector<Edge> badEdges;
+		std::vector<TriEdge> badTriEdges;
 		for(auto e1 = begin(polygon); e1 != end(polygon); e1++)
 		{
 			for(auto e2 = begin(polygon); e2 != end(polygon); e2++)
@@ -140,14 +140,14 @@ const std::vector<Triangle>& Delaunay::triangulate(std::vector<Vec2f> &vertices)
 
 				if(*e1 == *e2)
 				{
-					badEdges.push_back(*e1);
-					badEdges.push_back(*e2);
+					badTriEdges.push_back(*e1);
+					badTriEdges.push_back(*e2);
 				}
 			}
 		}
 
-		polygon.erase(std::remove_if(begin(polygon), end(polygon), [badEdges](Edge &e){
-			for(auto it = begin(badEdges); it != end(badEdges); it++)
+		polygon.erase(std::remove_if(begin(polygon), end(polygon), [badTriEdges](TriEdge &e){
+			for(auto it = begin(badTriEdges); it != end(badTriEdges); it++)
 			{
 				if(*it == e)
 					return true;
@@ -166,9 +166,9 @@ const std::vector<Triangle>& Delaunay::triangulate(std::vector<Vec2f> &vertices)
 
 	for(auto t = begin(_triangles); t != end(_triangles); t++)
 	{
-		_edges.push_back(t->e1);
-		_edges.push_back(t->e2);
-		_edges.push_back(t->e3);
+		_triedges.push_back(t->e1);
+		_triedges.push_back(t->e2);
+		_triedges.push_back(t->e3);
 	}
 
 	return _triangles;

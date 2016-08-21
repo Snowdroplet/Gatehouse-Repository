@@ -2,7 +2,7 @@
 #define AREA_H_INCLUDED
 
 /**
-The Area object contains the layout of the current level - Walls and tiles, field effects, inhabitants, treasures, and so on.
+The Area object contains the layout of the current level - Walls and tiles, field effects, physical features, and so on.
 Functions are included to algorithmically generate a layout and populate it with creatures, loot, and effects.
 
 Notes:
@@ -23,6 +23,7 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 #include <string>
 #include <fstream>
 #include <vector>
+#include <set>
 
 #include <boost/random.hpp>
 
@@ -74,6 +75,7 @@ struct RoomGenBox
 
 class Area
 {
+    /// Concerning the serialization of an Area
     friend class boost::serialization::access;
     template<class AreaArchive>
     void serialize(AreaArchive & aar, const unsigned int version) // Beware - Order matters.
@@ -88,61 +90,79 @@ class Area
     }
 
 private:
+    /// Generator state flags
     bool GENERATORDEBUGSTASIS;
-
-    // The average (or mean) room height in the random normal distribution of room dimensions.
-    float averageRoomWidth;
-    float averageRoomHeight;
-
-    // The minimum width and height required for a room object to be listed as a "main room" for the purposes of algorithmic generation
-    int mainRoomWidthThreshold;
-    int mainRoomHeightThreshold;
-
-    std::vector<RoomGenBox*>mainRooms;
-
-    std::vector<MinTreeEdge>minTreeInput;
-    std::vector<MinTreeEdge>minTreeOutput;
-
-    // Using mersenne twister for RNG
-    boost::random::mt19937 mtRng;
-
-    // Generator state flags
-    bool bodiesGenerated;
-    bool bodiesDistributed;
-
-    // Describe physics bodies
-    b2BodyDef roomGenBody;
-    b2PolygonShape roomGenPolygonShape;
-    b2FixtureDef roomGenFixture;
-
-
-public: // Basically a list of things to make private and accessible through its own function down the line :p
-    std::string name;
-    std::string floor; // Multiple areas can share the same floor. Like name, the floor is cosmetic.
-    int dLevel;        // The dungeon level or difficulty level of the floor determines what monsters and treasure will be created. Roughly corresponds to floor.
-
-    std::vector<bool>occupied; // Impassable cells, walls, holes, and cells with monsters or NPCs considered occupied.
-    std::vector<int>tilemap;
-    std::vector<int>wallmap;
-
-    std::vector<RoomGenBox*>roomGenBoxes;
-
-    std::vector<Triangle>triangles;
-    std::vector<Edge>triEdges;
-
-    MinTreeGraph mtg;
 
     int generationPhase;
     bool generationPhaseComplete;
     bool generationComplete;
 
-    Area();                 // Default constructor which creates random square test area. Data normally read in the serialized "areafile" is initialized here.
+    bool bodiesGenerated;
+    bool bodiesDistributed;
+
+    /// The average (or mean) room height in the random normal distribution of room dimensions.
+    float averageRoomWidth;
+    float averageRoomHeight;
+
+    /// The minimum width and height required for a room object to be listed as a "main room" for the purposes of algorithmic generation
+    int mainRoomWidthThreshold;
+    int mainRoomHeightThreshold;
+
+    /// Concerning the distribution of rooms by physics simulation:
+    std::vector<RoomGenBox*>mainRooms;
+
+    b2BodyDef roomGenBody;
+    b2PolygonShape roomGenPolygonShape;
+    b2FixtureDef roomGenFixture;
+
+    /// Concerning the use of delaunay triangulation to generate a connecting all the main rooms:
+    std::vector<Triangle>triangles;
+
+    /// Concerning the use of a minimum spanning tree to adjust the connectivity of the dungeon:
+    std::vector<MinTreeEdge>minTreeInput;
+    float removedEdgeReturnPercentage;  // Adjusts the extra connectivity of the area. 0% should leave the tree as is. 100% should return all edges.
+
+    /// Using mersenne twister for random number generation.
+    boost::random::mt19937 mtRng;
+
+
+
+public:
+    /// Concerning the area's cosmetic designations.
+    std::string name;  // A cosmetic title displayed to the user.
+    std::string floor; // Multiple areas can share the same floor. Like name, the floor is cosmetic.
+
+    /// Multipliers and indexes concerning the difficulty of the area.
+    int dLevel;        // The dungeon level or difficulty level of the floor determines what monsters and treasure will be created. Roughly corresponds to floor.
+
+    /// Concerning the layout of the level, as well as the features present.
+    std::vector<bool>occupied; // Impassable cells, walls, holes, and cells with monsters or NPCs considered occupied.
+    std::vector<int>tilemap;
+    std::vector<int>wallmap;
+
+    /// Concerning the algorithmic generation of an area.
+
+    std::vector<RoomGenBox*>roomGenBoxes;
+
+    std::vector<TriEdge>triEdges;
+
+    std::vector<MinTreeEdge>minTreeOutput;
+    MinTreeGraph mtg;
+
+
+
+
+    Area();                  // Default constructor which creates random square test area. Data normally read in the serialized "areafile" is initialized here.
     Area(bool savedArea);
     void InitByArchive();
     ~Area();
 
-    void ResetGeneratorState();
-    void Generate();
+    bool GetGenerationComplete();   // Simply returns generation completion flag.
+    int GetGenerationPhase();       // Simply returns the current generation phase.
+    void ResetGeneratorState();     // Reset generator state flags and variables concerning generation.
+    void Generate();                // Generates an area.
+
+    void SetRemovedEdgeReturnPercentage(float rerp);
 
     void DistributeMonsters();
     void DistributeTreasure();

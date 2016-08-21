@@ -531,7 +531,7 @@ void LoadingLogic()
     if(needGeneration)
     {
         area->Generate();
-        if(area->generationComplete)
+        if(area->GetGenerationComplete())
             needGeneration = false;
     }
 
@@ -631,18 +631,33 @@ void LoadingDrawing()
         //Draw room generation boxes
         for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
         {
+
+            // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
+            // Draws outlines of room objects. Orange rooms denote that the corresponding physics body is awake. Blue rooms are asleep.
+
             if((*it)->correspondingBodyAwake)
+            {
                 al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
-                                        (*it)->y1 - loadingCamY,
-                                        (*it)->x2 - loadingCamX,
-                                        (*it)->y2 - loadingCamY,
-                                        FIRE_ORANGE, 2);
+                                  (*it)->y1 - loadingCamY,
+                                  (*it)->x2 - loadingCamX,
+                                  (*it)->y2 - loadingCamY,
+                                   FIRE_ORANGE, 1);
+            }
             else
-                al_draw_rectangle((*it)->x1 - loadingCamX,       // Not awake
-                                        (*it)->y1 - loadingCamY,
-                                        (*it)->x2 - loadingCamX,
-                                        (*it)->y2 - loadingCamY,
-                                        COLD_BLUE, 2);
+            {
+                if((*it)->designatedMainRoom)
+                    al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
+                                      (*it)->y1 - loadingCamY,
+                                      (*it)->x2 - loadingCamX,
+                                      (*it)->y2 - loadingCamY,
+                                        BRIGHT_GREEN, 2);
+                else
+                    al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
+                                      (*it)->y1 - loadingCamY,
+                                      (*it)->x2 - loadingCamX,
+                                      (*it)->y2 - loadingCamY,
+                                        COLD_BLUE, 1);
+            }
 
 
             s_al_draw_text(terminalFont, NEUTRAL_WHITE,
@@ -651,6 +666,17 @@ void LoadingDrawing()
                             ALLEGRO_ALIGN_LEFT,
                             std::to_string(it-area->roomGenBoxes.begin()));
 
+        }
+
+        // Draw the graph visualization created by delaunay triangulation
+
+        for(std::vector<TriEdge>::iterator it = area->triEdges.begin(); it != area->triEdges.end(); ++it)
+        {
+            al_draw_line((*it).p1.x        -loadingCamX,
+                         (*it).p1.y        -loadingCamY,
+                         (*it).p2.x        -loadingCamX,
+                         (*it).p2.y        -loadingCamY,
+                         BRIGHT_GREEN,1);
         }
 
 

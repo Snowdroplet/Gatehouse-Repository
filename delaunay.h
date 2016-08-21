@@ -108,22 +108,22 @@ bool operator == (Vector2<T> v1, Vector2<T> v2)
 
 typedef Vector2<float> Vec2f;
 
-class Edge
+class TriEdge
 {
 	public:
-		Edge(const Vec2f &p1, const Vec2f &p2) : p1(p1), p2(p2) {};
-		Edge(const Edge &e) : p1(e.p1), p2(e.p2) {};
+		TriEdge(const Vec2f &p1, const Vec2f &p2) : p1(p1), p2(p2) {};
+		TriEdge(const TriEdge &e) : p1(e.p1), p2(e.p2) {};
 
 		Vec2f p1;
 		Vec2f p2;
 };
 
-inline std::ostream &operator << (std::ostream &str, Edge const &e)
+inline std::ostream &operator << (std::ostream &str, TriEdge const &e)
 {
-	return str << "Edge " << e.p1 << ", " << e.p2;
+	return str << "TriEdge " << e.p1 << ", " << e.p2;
 }
 
-inline bool operator == (const Edge & e1, const Edge & e2)
+inline bool operator == (const TriEdge & e1, const TriEdge & e2)
 {
 	return 	(e1.p1 == e2.p1 && e1.p2 == e2.p2) ||
 			(e1.p1 == e2.p2 && e1.p2 == e2.p1);
@@ -141,9 +141,9 @@ class Triangle
 		Vec2f p1;
 		Vec2f p2;
 		Vec2f p3;
-		Edge e1;
-		Edge e2;
-		Edge e3;
+		TriEdge e1;
+		TriEdge e2;
+		TriEdge e3;
 };
 
 inline std::ostream &operator << (std::ostream &str, const Triangle & t)
@@ -167,11 +167,11 @@ class Delaunay
 	public:
 		const std::vector<Triangle>& triangulate(std::vector<Vec2f> &vertices);
 		const std::vector<Triangle>& getTriangles() const { return _triangles; };
-		const std::vector<Edge>& getEdges() const { return _edges; };
+		const std::vector<TriEdge>& getTriEdges() const { return _triedges; };
 
 	private:
 		std::vector<Triangle> _triangles;
-		std::vector<Edge> _edges;
+		std::vector<TriEdge> _triedges;
 };
 
 

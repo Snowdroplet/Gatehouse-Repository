@@ -3,6 +3,8 @@
 
 //#define D_GEN_PHYS_DIST_RANDOM
 //#define D_GEN_TRIANGULATION
+//#define D_VECTOR_UNIQUE_NODE_ID
+#define D_TRI_MST_COMBINATION
 
 RoomGenBox::RoomGenBox(int bn, b2Body *cb2b, int w, int h)
 {
@@ -98,6 +100,16 @@ Area::~Area()
 
 }
 
+bool Area::GetGenerationComplete()
+{
+    return generationComplete;
+}
+
+int Area::GetGenerationPhase()
+{
+    return generationPhase;
+}
+
 /// Reset / (re)initialize everything relevant to generating an area.
 void Area::ResetGeneratorState()
 {
@@ -120,6 +132,8 @@ void Area::ResetGeneratorState()
     roomGenBody.fixedRotation = true;
     roomGenBody.linearDamping = 0.0f;
     roomGenBody.allowSleep = true;
+
+    SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
 
     GENERATORDEBUGSTASIS = true;
 }
@@ -307,8 +321,12 @@ void Area::Generate()
         2)      Generate the SECOND graph as a vector of node ID pairs (edges) from the triangulation.
             Each node IDs is the index of the cell corresponding to a main room's center coordinates.
 
-        3)       Using the Kruskal algorithm (details be be found in mintree.h/cpp),
+        3)      Using the Kruskal algorithm (details be be found in mintree.h/cpp),
             generate and output a minimum spanning tree from the SECOND graph.
+
+        4)      Shuffle and add a random percentage of the edges culled by the MST back to give the area a bit more connectivity.
+
+
         */
 
         std::vector<Vec2f>mainRoomCenterCoords;
@@ -325,7 +343,7 @@ void Area::Generate()
 
         Delaunay triangulation;
         triangles = triangulation.triangulate(mainRoomCenterCoords); // Pass vector of main-room-center coordinates to triangulation function.
-        triEdges = triangulation.getEdges();
+        triEdges = triangulation.getTriEdges();
 
 #ifdef D_GEN_TRIANGULATION
         std::cout << std::endl;
@@ -345,7 +363,7 @@ void Area::Generate()
 #endif // D_GEN_TRIANGULATION
 
 
-        for(std::vector<Edge>::iterator it = triEdges.begin(); it != triEdges.end(); ++it)
+        for(std::vector<TriEdge>::iterator it = triEdges.begin(); it != triEdges.end(); ++it)
         {
             int nodeA = GetCenterCellID( (*it).p1.x , (*it).p1.y , MINI_TILESIZE);
             int nodeB = GetCenterCellID( (*it).p2.x , (*it).p2.y , MINI_TILESIZE);
@@ -371,22 +389,64 @@ void Area::Generate()
 
         }
 
-        // Remove any duplicate vertices from MST graph.
-        std::vector<int>::iterator uit;
-        uit = std::unique (mtg.nodeIDs.begin(), mtg.nodeIDs.end());
-        mtg.nodeIDs.resize(std::distance(mtg.nodeIDs.begin(),uit));
+        // Keep only unique node IDs in the MST graph.
+        std::vector<int>::iterator unid_it;
+        unid_it = std::unique (mtg.nodeIDs.begin(), mtg.nodeIDs.end());
+        mtg.nodeIDs.resize(std::distance(mtg.nodeIDs.begin(),unid_it));
 
-        /*
+#ifdef D_VECTOR_UNIQUE_NODE_ID
         std::cout << std::endl;
         std::cout << "Graph's nodeID vector contains:";
         for (uit=mtg.nodeIDs.begin(); uit!=mtg.nodeIDs.end(); ++uit)
         std::cout << ' ' << *uit;
         std::cout << '\n';
-        */
+#endif //D_VECTOR UNIQUE_NODE_ID
 
+        // Create the MST and store in a vector.
         minTreeOutput = Kruskal(mtg);
 
-        /*compare min tree input and min tree output and add some edges back */
+        //Compare minTreeOutput with minTreeInput and add back a certain percentage of the edges removed in the MST.
+        int numberOfEdgesToReturn = std::round((triEdges.size()-minTreeOutput.size()) * removedEdgeReturnPercentage);  //The number of edges that have been removed is the triangulation's edges minus the MST's edges.
+
+        //Shuffle mintreeinput (Containing the edges between nodeIDs after the triangulation)
+        std::random_shuffle(minTreeInput.begin(),minTreeInput.end());
+
+#ifdef D_TRI_MST_COMBINATION
+        std::cout << std::endl;
+        std::cout << "Number of edges in the triangulation:" << triEdges.size() << std::endl;
+        std::cout << "Number of edges in the MST:" << minTreeOutput.size() << std::endl;
+        std::cout << "Number of edges removed from the triangulation:" << triEdges.size() - minTreeOutput.size() << std::endl;
+        std::cout << "Percentage of edges to re-add: " << removedEdgeReturnPercentage * 100 << "%" <<std::endl;
+        std::cout << "Number of Edges to re-add: " << numberOfEdgesToReturn << std::endl;
+        std::cout << "Before re-adding edges, the number of edges is " << minTreeOutput.size() << ": " << std::endl;
+        std::cout << "Re-adding edges......." << std::endl;
+
+#endif // D_TRI_MST_COMBINATION
+
+        // Add elements of previously shuffled mintreeinput to mintreeoutput until its size increases by the number of edges we are returning.
+        // Prevent duplicates using unique_copy.
+
+
+        std::vector<MinTreeEdge>::iterator mto_it = minTreeOutput.begin();
+        int currentSize = minTreeOutput.size();
+        int targetSize = currentSize + numberOfEdgesToReturn;
+        int sizeDistance = targetSize - currentSize;
+        while(sizeDistance != 0)
+        {
+            mto_it = unique_copy(minTreeInput.begin(),minTreeInput.begin()+sizeDistance,minTreeOutput.begin());  /// Error
+            currentSize = minTreeOutput.size();
+            sizeDistance = targetSize - currentSize;
+        }
+
+#ifdef D_TRI_MST_COMBINATION
+        std::cout << std::endl;
+        std::cout << "After re-adding edges, the number of edges is " << minTreeOutput.size() << ": " << std::endl;
+        for(std::vector<MinTreeEdge>::iterator it = minTreeOutput.begin(); it!= minTreeOutput.end(); ++it)
+        {
+            std::cout << (*it).node1ID << " is connected to " << (*it).node2ID << " - Distance: " << (*it).weight << std::endl;
+        }
+
+#endif // D_TRI_MST_COMBINATION
 
         generationPhaseComplete = true;
     }
@@ -411,6 +471,16 @@ void Area::Generate()
         needGeneration = false;
     }
 
+}
+
+void Area::SetRemovedEdgeReturnPercentage(float rerp)
+{
+    removedEdgeReturnPercentage = rerp;
+
+    if(removedEdgeReturnPercentage < 0)
+        removedEdgeReturnPercentage = 0;
+    if(removedEdgeReturnPercentage > 1.0)
+        removedEdgeReturnPercentage = 1.0;
 }
 
 int GetCenterCellID(int xCoord, int yCoord, int tilesize)
