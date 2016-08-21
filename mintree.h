@@ -12,15 +12,21 @@
 extern std::unordered_map<int, int> PARENT;  // Records parental relationship between nodes (vertices)
 extern std::unordered_map<int, int> RANK;    // Records depth of the tree
 
-int Find(int nodeID);
-void Union (int root1, int root2);
 
 
 struct MinTreeEdge
 {
+    /*
     bool operator<(MinTreeEdge const &rhs) const noexcept
     {
             return lhs < rhs.lhs;
+    }
+    int lhs;
+    */
+
+    bool operator==(MinTreeEdge const &rhs) const noexcept
+    {
+        return lhs == rhs.lhs;
     }
     int lhs;
 
@@ -29,8 +35,8 @@ struct MinTreeEdge
     int node2ID;
     int weight;
 
-    MinTreeEdge(int n1, int n2       ):node1ID(n1), node2ID(n2)           {} // Double-dipping to use MinTreeEdge as storage.
-    MinTreeEdge(int n1, int n2, int w):node1ID(n1), node2ID(n2), weight(w){} // Assign proper endpoint nodes and weights between them for use by MinTreeGraph.
+    MinTreeEdge(int n1, int n2       ):node1ID(n1), node2ID(n2), weight(0) {} // Double-dipping to use MinTreeEdge as storage.
+    MinTreeEdge(int n1, int n2, int w):node1ID(n1), node2ID(n2), weight(w) {} // Assign proper endpoint nodes and weights between them for use by MinTreeGraph.
 };
 
 struct MinTreeGraph
@@ -39,8 +45,13 @@ struct MinTreeGraph
     std::vector<MinTreeEdge>minTreeEdges;
 };
 
+std::vector<MinTreeEdge> Kruskal(MinTreeGraph &g);
+
+int Find(int nodeID);
+void Union (int root1, int root2);
+
 void MakeSet(int nodeID);
 
-std::vector<MinTreeEdge> Kruskal(MinTreeGraph &g);
+bool SameMinTreeEdge(MinTreeEdge a, MinTreeEdge b);
 
 #endif // MINTREE_H_INCLUDED

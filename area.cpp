@@ -426,14 +426,20 @@ void Area::Generate()
         // Add elements of previously shuffled mintreeinput to mintreeoutput until its size increases by the number of edges we are returning.
         // Prevent duplicates using unique_copy.
 
-
-        std::vector<MinTreeEdge>::iterator mto_it = minTreeOutput.begin();
         int currentSize = minTreeOutput.size();
         int targetSize = currentSize + numberOfEdgesToReturn;
         int sizeDistance = targetSize - currentSize;
         while(sizeDistance != 0)
         {
-            mto_it = unique_copy(minTreeInput.begin(),minTreeInput.begin()+sizeDistance,minTreeOutput.begin());  /// Error
+            //Probably really inefficient
+
+            for(std::vector<MinTreeEdge>::iterator it = minTreeInput.begin(); it != minTreeInput.begin()+sizeDistance; ++it)
+                minTreeOutput.push_back(*it);
+
+            std::vector<MinTreeEdge>::iterator mto_it;
+            mto_it = std::unique (minTreeOutput.begin(), minTreeOutput.end());
+            //minTreeOutput.resize(std::distance(minTreeOutput.begin(),mto_it));
+
             currentSize = minTreeOutput.size();
             sizeDistance = targetSize - currentSize;
         }
