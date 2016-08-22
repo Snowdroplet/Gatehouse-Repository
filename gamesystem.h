@@ -73,6 +73,8 @@ const int STATS_BAR_OPEN_Y = 580;
 extern int loadingCamX; //Top left corner of loading screen camera.
 extern int loadingCamY;
 
+extern bool showGenVisualization // Show the room generation visualization instead of a loading screen
+
 /// MAIN STRUCTURE
 
 extern bool gameExit;

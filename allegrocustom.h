@@ -21,7 +21,9 @@ int s_al_show_native_message_box(ALLEGRO_DISPLAY *display,
                                  char const *buttons, int flags);
 
 extern ALLEGRO_COLOR NEUTRAL_WHITE;
+extern ALLEGRO_COLOR DIM_NEUTRAL_WHITE;
 extern ALLEGRO_COLOR NEUTRAL_GRAY;
+extern ALLEGRO_COLOR DIM_NEUTRAL_GRAY;
 extern ALLEGRO_COLOR NEUTRAL_BLACK;
 
 extern ALLEGRO_COLOR FIRE_ORANGE;
@@ -32,6 +34,7 @@ extern ALLEGRO_COLOR HOLY_INDIGO;
 extern ALLEGRO_COLOR DARK_VIOLET;
 
 extern ALLEGRO_COLOR POISON_GREEN;
+extern ALLEGRO_COLOR BRIGHT_GREEN;
 extern ALLEGRO_COLOR BLOOD_RED;
 
 void AllegroCustomInit();

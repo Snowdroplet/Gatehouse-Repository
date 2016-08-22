@@ -8,13 +8,18 @@
 #define D_TEST_PATHFINDING
 
 #define D_TERMINATE_LOADING_SIGNAL
+#define D_GEN_VISUALIZATION_PHASE_PAUSE
 
 //#define D_CREATE_TESTING_AREA //Uncomment to create a new testing area
 
 
 #ifdef D_TERMINATE_LOADING_SIGNAL
-bool debugTerminateLoadingPhaseSignal = false;
+bool D_TERMINATELOADINGPHASESIGNAL = false;
 #endif //D_TERMINATE_LOADING_SIGNAL
+
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+int D_PROGRESSPAUSEDVISUALIZATIONTIMER = 100;
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
 
 #include <cstdio>
 #include <iostream>
@@ -524,11 +529,30 @@ void LoadingLogic()
             loadingCamY --;
 #ifdef D_TERMINATE_LOADING_SIGNAL
         if(keyInput[KEY_Z])
-            debugTerminateLoadingPhaseSignal = true;  // Obviously only for developmental purposes since Area::Generate is incomplete.
+            D_TERMINATELOADINGPHASESIGNAL = true;  // Obviously only for developmental purposes since Area::Generate is incomplete.
 #endif // D_TERMINATE_LOADING_SIGNAL
+
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+        if(keyInput[KEY_Q] && D_PROGRESSPAUSEDVISUALIZATIONTIMER == 0)
+        {
+            area->D_UNPAUSE_VISUALIZATION();
+            D_PROGRESSPAUSEDVISUALIZATIONTIMER = 100;
+        }
+
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
+
     }
 
-    if(needGeneration)
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+    if(D_PROGRESSPAUSEDVISUALIZATIONTIMER > 0)
+        D_PROGRESSPAUSEDVISUALIZATIONTIMER --;
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
+
+    if(needGeneration
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+            && !area->D_GET_GENERATOR_VISUALIZATION_PAUSE()
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
+      )
     {
         area->Generate();
         if(area->GetGenerationComplete())
@@ -536,7 +560,7 @@ void LoadingLogic()
     }
 
 #ifdef D_TERMINATE_LOADING_SIGNAL
-    if(debugTerminateLoadingPhaseSignal)
+    if(D_TERMINATELOADINGPHASESIGNAL)
     {
         mainPhase = MAIN_PHASE_GAME;
     }
@@ -592,92 +616,132 @@ void LoadingDrawing()
         redraw = false;
         al_clear_to_color(al_map_rgb(0,0,0));
 
-        //Draw the grid
-        //Moving the camera's coordinates left moves everything else's draw coordinates right, and so on.
-        for(int i = 0; i <= miniAreaWidth; i += MINI_TILESIZE) //Columns
+        if(showGenVisualization)
         {
-            int lineThickness = 1;
-            ALLEGRO_COLOR lineColor = DIM_NEUTRAL_GRAY;
-            if(i%5 == 0)
+            //Draw the grid
+            //Moving the camera's coordinates left moves everything else's draw coordinates right, and so on.
+            for(int i = 0; i <= miniAreaWidth; i += MINI_TILESIZE) //Columns
             {
-                lineThickness = 1.5;
-                lineColor = DIM_NEUTRAL_WHITE;
+                int lineThickness = 1;
+                ALLEGRO_COLOR lineColor = DIM_NEUTRAL_GRAY;
+                if(i%5 == 0)
+                {
+                    lineThickness = 1.5;
+                    lineColor = DIM_NEUTRAL_WHITE;
+                }
+                al_draw_line(i          -loadingCamX,
+                             0          -loadingCamY,
+                             i          -loadingCamX,
+                             miniAreaHeight -loadingCamY,
+                             lineColor,lineThickness);
+
+
             }
-            al_draw_line(i          -loadingCamX,
-                         0          -loadingCamY,
-                         i          -loadingCamX,
-                         miniAreaHeight -loadingCamY,
-                         lineColor,lineThickness);
-
-
-        }
-        for(int i = 0; i <= miniAreaHeight; i += MINI_TILESIZE) //Rows
-        {
-            int lineThickness = 1;
-            ALLEGRO_COLOR lineColor = DIM_NEUTRAL_GRAY;
-            if(i%5 == 0)
+            for(int i = 0; i <= miniAreaHeight; i += MINI_TILESIZE) //Rows
             {
-                lineThickness = 1.5;
-                lineColor = DIM_NEUTRAL_WHITE;
+                int lineThickness = 1;
+                ALLEGRO_COLOR lineColor = DIM_NEUTRAL_GRAY;
+                if(i%5 == 0)
+                {
+                    lineThickness = 1.5;
+                    lineColor = DIM_NEUTRAL_WHITE;
+                }
+
+                al_draw_line(0         -loadingCamX,
+                             i         -loadingCamY,
+                             miniAreaWidth -loadingCamX,
+                             i         -loadingCamY,
+                             lineColor,lineThickness);
             }
 
-            al_draw_line(0         -loadingCamX,
-                         i         -loadingCamY,
-                         miniAreaWidth -loadingCamX,
-                         i         -loadingCamY,
-                         lineColor,lineThickness);
-        }
-
-        //Draw room generation boxes
-        for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
-        {
-
-            // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
-            // Draws outlines of room objects. Orange rooms denote that the corresponding physics body is awake. Blue rooms are asleep.
-
-            if((*it)->correspondingBodyAwake)
+            //Draw room generation boxes
+            for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
             {
-                al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
-                                  (*it)->y1 - loadingCamY,
-                                  (*it)->x2 - loadingCamX,
-                                  (*it)->y2 - loadingCamY,
-                                   FIRE_ORANGE, 1);
-            }
-            else
-            {
-                if((*it)->designatedMainRoom)
-                    al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
+
+                // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
+                // Draws outlines of room objects. Orange rooms denote that the corresponding physics body is awake. Blue rooms are asleep.
+
+                if((*it)->correspondingBodyAwake)
+                {
+                    al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
                                       (*it)->y1 - loadingCamY,
                                       (*it)->x2 - loadingCamX,
                                       (*it)->y2 - loadingCamY,
-                                        BRIGHT_GREEN, 2);
+                                      FIRE_ORANGE, 1);
+                }
                 else
-                    al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
-                                      (*it)->y1 - loadingCamY,
-                                      (*it)->x2 - loadingCamX,
-                                      (*it)->y2 - loadingCamY,
-                                        COLD_BLUE, 1);
+                {
+                    if((*it)->designatedMainRoom)
+                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
+                                          (*it)->y1 - loadingCamY,
+                                          (*it)->x2 - loadingCamX,
+                                          (*it)->y2 - loadingCamY,
+                                          BRIGHT_GREEN, 2);
+                    else
+                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
+                                          (*it)->y1 - loadingCamY,
+                                          (*it)->x2 - loadingCamX,
+                                          (*it)->y2 - loadingCamY,
+                                          COLD_BLUE, 1);
+                }
+
+
+                s_al_draw_text(terminalFont, NEUTRAL_WHITE,
+                               (*it)->x1-loadingCamX+4,
+                               (*it)->y1-loadingCamY+4,
+                               ALLEGRO_ALIGN_LEFT,
+                               std::to_string(it-area->roomGenBoxes.begin()));
+
             }
 
+            if(area->GetGenerationPhase() >= GEN_LAYOUT) // Draw from cell layout phase onwards
+            {
+                for(int y = 0; y < areaCellHeight; y++)
+                {
+                    for(int x = 0; x < areaCellWidth; x++)
+                    {
+                        if(area->genLayout[y*areaCellWidth+x] == GEN_CELL_MAIN_ROOM)
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     BRIGHT_GREEN);
+                        else if(area->genLayout[y*areaCellWidth+x] == GEN_CELL_HALLWAY)
+                        {
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     BLOOD_RED);
+                        }
+                    }
+                }
+            }
 
-            s_al_draw_text(terminalFont, NEUTRAL_WHITE,
-                           (*it)->x1-loadingCamX+4,
-                           (*it)->y1-loadingCamY+4,
-                            ALLEGRO_ALIGN_LEFT,
-                            std::to_string(it-area->roomGenBoxes.begin()));
+            if(area->GetGenerationPhase() >= GEN_GRAPH_CREATION) //Draw from graph creation phase onwards
+            {
+                // Draw the graph visualization created by delaunay triangulation
+                for(std::vector<TriEdge>::iterator it = area->triEdges.begin(); it != area->triEdges.end(); ++it)
+                {
+                    al_draw_line((*it).p1.x        -loadingCamX,
+                                 (*it).p1.y        -loadingCamY,
+                                 (*it).p2.x        -loadingCamX,
+                                 (*it).p2.y        -loadingCamY,
+                                 HOLY_INDIGO,2);
+                }
 
+                /** Draw the graph visualization after the MST, perhaps re-using triEdges*/
+
+            }
         }
-
-        // Draw the graph visualization created by delaunay triangulation
-
-        for(std::vector<TriEdge>::iterator it = area->triEdges.begin(); it != area->triEdges.end(); ++it)
+        else //if ! showGenVisualization
         {
-            al_draw_line((*it).p1.x        -loadingCamX,
-                         (*it).p1.y        -loadingCamY,
-                         (*it).p2.x        -loadingCamX,
-                         (*it).p2.y        -loadingCamY,
-                         BRIGHT_GREEN,1);
+            /** Show loading screen here */
         }
+
+
+
+
 
 
 #ifdef D_DRAW_DEBUG_OVERLAY

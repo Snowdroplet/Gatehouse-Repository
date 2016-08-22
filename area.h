@@ -39,9 +39,25 @@ enum enumGenerationPhases
 {
     GEN_INACTIVE = 0,
     GEN_PHYSICAL_DISTRIBUTION = 1,
-    GEN_GRAPH_CREATION = 2,
-    GEN_HALLWAYS = 3,
-    GEN_COMPLETE = 4
+    GEN_MAIN_ROOM_SELECTION = 2,
+    GEN_GRAPH_CREATION = 3,
+    GEN_LAYOUT = 4,
+    GEN_COMPLETE = 5
+};
+
+enum enumGenLayoutCellTypes
+{
+    GEN_CELL_EMPTY = 0,
+    GEN_CELL_MAIN_ROOM = 1,
+    GEN_CELL_HALLWAY = 2,
+    GEN_CELL_ROOMWAY = 3,
+    GEN_CELL_WALL = 4
+};
+
+enum enumHallwayPathAxis
+{
+    PATH_X_AXIS = 0,
+    PATH_Y_AXIS = 1
 };
 
 struct RoomGenBox
@@ -91,7 +107,8 @@ class Area
 
 private:
     /// Generator state flags
-    bool GENERATORDEBUGSTASIS;
+    bool D_GENERATORDEBUGSTASIS;
+    bool D_GENERATORVISUALIZATIONPAUSE;
 
     int generationPhase;
     bool generationPhaseComplete;
@@ -149,6 +166,7 @@ public:
     std::vector<MinTreeEdge>minTreeOutput;
     MinTreeGraph mtg;
 
+    std::vector<int>genLayout;
 
 
 
@@ -168,14 +186,17 @@ public:
     void DistributeTreasure();
 
 
+    //Debug and demonstration stuff
+    bool D_GET_GENERATOR_VISUALIZATION_PAUSE();
+    void D_UNPAUSE_VISUALIZATION();
 };
 extern Area *area;
 
- //Get the index of the cell corresponding to the given coordinates.
-int GetCenterCellID(int xCoord, int yCoord, int tilesize);
+// Get the index of the cell corresponding to the given coordinates. Because of the randomness called upon in selecting a center cell ID in case of rooms with even-numbered dimensions (in cell length),
+// This function is intended only to be used for generate(), not as a consistent "return the cell at coordinates" function.
+int GetCenterCellID(int xCoord, int yCoord);
 
 bool SaveAreaState(Area *target);
 bool LoadAreaState(std::string areaName, Area *target, bool baseState);
-
 
 #endif // AREA_H_INCLUDED

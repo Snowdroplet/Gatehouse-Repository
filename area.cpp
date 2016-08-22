@@ -4,7 +4,10 @@
 //#define D_GEN_PHYS_DIST_RANDOM
 //#define D_GEN_TRIANGULATION
 //#define D_VECTOR_UNIQUE_NODE_ID
-#define D_TRI_MST_COMBINATION
+//#define D_TRI_MST_COMBINATION
+#define D_CELL_LAYOUT
+
+#define D_GEN_VISUALIZATION_PHASE_PAUSE
 
 RoomGenBox::RoomGenBox(int bn, b2Body *cb2b, int w, int h)
 {
@@ -135,7 +138,13 @@ void Area::ResetGeneratorState()
 
     SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
 
-    GENERATORDEBUGSTASIS = true;
+    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
+    {
+        genLayout.push_back(GEN_CELL_EMPTY);
+    }
+
+    D_GENERATORDEBUGSTASIS = true;
+    D_GENERATORVISUALIZATIONPAUSE = false;
 }
 
 void Area::Generate()
@@ -295,20 +304,24 @@ void Area::Generate()
         }
     }
 
-    if(generationPhase == GEN_GRAPH_CREATION)
+    else if(generationPhase == GEN_MAIN_ROOM_SELECTION)
     {
-        /**                          ### MAIN ROOMS SELECTED ###
-        1) Vector populated with ROOM OBJECTS above a certain width/height threshold.
-        */
-
-            for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        // Room boxes above a set width/height threshold are designated main rooms.
+        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        {
+            if((*it)->width >= mainRoomWidthThreshold && (*it)->height >= mainRoomHeightThreshold)
             {
-                if((*it)->width >= mainRoomWidthThreshold && (*it)->height >= mainRoomHeightThreshold)
-                {
-                    mainRooms.push_back(*it);
-                    (*it)->designatedMainRoom = true;
-                }
+                mainRooms.push_back(*it);
+                (*it)->designatedMainRoom = true;
             }
+        }
+
+        generationPhaseComplete = true;
+    }
+
+
+    else if(generationPhase == GEN_GRAPH_CREATION)
+    {
 
         /**                ### DELAUNAY TRIANGULATION AND MINIMUM SPANNING TREE  ###
 
@@ -354,25 +367,25 @@ void Area::Generate()
             std::cout << p << std::endl;
 
         std::cout << "\nTriangles : " << triangles.size() << std::endl;
-            for(auto &t : triangles)
-		std::cout << t << std::endl;
+        for(auto &t : triangles)
+            std::cout << t << std::endl;
 
         std::cout << "\nEdges : " << triEdges.size() << std::endl;
-            for(auto &e : triEdges)
-        std::cout << e << std::endl;
+        for(auto &e : triEdges)
+            std::cout << e << std::endl;
 #endif // D_GEN_TRIANGULATION
 
 
         for(std::vector<TriEdge>::iterator it = triEdges.begin(); it != triEdges.end(); ++it)
         {
-            int nodeA = GetCenterCellID( (*it).p1.x , (*it).p1.y , MINI_TILESIZE);
-            int nodeB = GetCenterCellID( (*it).p2.x , (*it).p2.y , MINI_TILESIZE);
+            int nodeA = GetCenterCellID( (*it).p1.x , (*it).p1.y);
+            int nodeB = GetCenterCellID( (*it).p2.x , (*it).p2.y);
 
             Vec2f coordsA = (*it).p1;
             Vec2f coordsB = (*it).p2;
 
             float coordDistance = std::sqrt(((coordsB.x-coordsA.x) * (coordsB.x-coordsA.x))  // Just the regular old pythagorean formula.
-                                                                   +
+                                            +
                                             ((coordsB.y-coordsA.y) * (coordsB.y-coordsA.y)));
 
             // Store the edges found by the triangulation as the indexes of the cells corresponding to the coordinates.
@@ -398,7 +411,7 @@ void Area::Generate()
         std::cout << std::endl;
         std::cout << "Graph's nodeID vector contains:";
         for (uit=mtg.nodeIDs.begin(); uit!=mtg.nodeIDs.end(); ++uit)
-        std::cout << ' ' << *uit;
+            std::cout << ' ' << *uit;
         std::cout << '\n';
 #endif //D_VECTOR UNIQUE_NODE_ID
 
@@ -438,7 +451,6 @@ void Area::Generate()
 
             std::vector<MinTreeEdge>::iterator mto_it;
             mto_it = std::unique (minTreeOutput.begin(), minTreeOutput.end());
-            //minTreeOutput.resize(std::distance(minTreeOutput.begin(),mto_it));
 
             currentSize = minTreeOutput.size();
             sizeDistance = targetSize - currentSize;
@@ -446,6 +458,7 @@ void Area::Generate()
 
 #ifdef D_TRI_MST_COMBINATION
         std::cout << std::endl;
+        std::cout << "Size of output vector: " << minTreeOutput.size() << std::endl;
         std::cout << "After re-adding edges, the number of edges is " << minTreeOutput.size() << ": " << std::endl;
         for(std::vector<MinTreeEdge>::iterator it = minTreeOutput.begin(); it!= minTreeOutput.end(); ++it)
         {
@@ -457,7 +470,122 @@ void Area::Generate()
         generationPhaseComplete = true;
     }
 
-    if(generationPhase == GEN_HALLWAYS)
+    else if(generationPhase == GEN_LAYOUT)
+    {
+        /**              ### CELL LAYOUT ###
+        1)  All cells are initiallized EMPTY. (Already done in generator reset)
+
+        2)  Any cells within the boundaries of a designated main room
+            are set as a MAIN ROOM cell.
+
+        3)  Create a path between two center cells linked by an edge
+            and set all cells on the path as HALLWAY
+            except MAIN ROOM cells.
+
+        4)  Any cells in a non-main room
+            that possesses a hallway
+            are set as HALLROOM,
+            including HALLWAY cells.
+        */
+
+
+        // Cells within the boundaries of a main room are set as a main room cell.
+        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        {
+            if((*it)->designatedMainRoom)
+            {
+                int xBegin = ((*it)->x1) / MINI_TILESIZE;
+                int xEnd   = ((*it)->x2) / MINI_TILESIZE;
+
+                int yBegin = ((*it)->y1) / MINI_TILESIZE;
+                int yEnd   = ((*it)->y2) / MINI_TILESIZE;
+
+                for(int y = yBegin; y < yEnd; y++)
+                {
+                    for(int x = xBegin; x < xEnd; x++)
+                    {
+
+                        genLayout[y *areaCellWidth + x] = GEN_CELL_MAIN_ROOM;
+                    }
+                }
+            }
+        }
+
+
+        // Create a path between two center cells linked by an edge and set all cells on the path as HALLWAY except MAIN ROOM cells.
+        for(std::vector<MinTreeEdge>::iterator it = minTreeOutput.begin(); it != minTreeOutput.end(); ++it)
+        {
+            int startCellID = (*it).node1ID;
+            int pathCellX  = startCellID%areaCellWidth;
+            int pathCellY  = startCellID/areaCellWidth;
+
+            int endCellID = (*it).node2ID;
+            int endCellX  = endCellID%areaCellWidth;
+            int endCellY  = endCellID/areaCellWidth;
+
+            bool hallwayPathAxis = rand()%PATH_Y_AXIS; // Random whether we start by closing the X difference or the Y difference first.
+
+            /// Add later:
+            ///        -vary distance closed per step
+            ///        -a chance to switch the pathing axis midway
+            ///        -a chance to mis-steer
+            ///        the end X/Ycell.
+
+            while(pathCellX != endCellX || pathCellY != endCellY) //While the path has not yet reached the end X/Y cell
+            {
+                if(hallwayPathAxis == PATH_X_AXIS) // Close the X distance
+                {
+                    if(pathCellX < endCellX) // Target X cell is to the right
+                    {
+                        // Cells right of the current cell are converted to hallway, up to target X
+                        for(int i = 0; i < std::abs(endCellX-pathCellX);)
+                        {
+                            if(genLayout[pathCellX+i] != GEN_CELL_MAIN_ROOM)
+                                genLayout[pathCellX+i] = GEN_CELL_HALLWAY;
+                        }
+                    }
+                    else if(pathCellX > endCellX) // Target X cell is to the left
+                    {
+                        // Cells left of the current cell are converted to hallway, up to target X
+                        for(int i = 0; i < std::abs(endCellX-pathCellX);)
+                        {
+                            if(genLayout[pathCellX+i] != GEN_CELL_MAIN_ROOM)
+                                genLayout[pathCellX+i] = GEN_CELL_HALLWAY;
+                        }
+                    }
+                    pathCellX = endCellX; // Update current X cell to target X cell
+                    hallwayPathAxis = PATH_Y_AXIS; // Switch the path making to the Y axis
+                }
+                else if(hallwayPathAxis == PATH_Y_AXIS) // Close the Y distance
+                {
+                    if(pathCellY < endCellY) // Target Y cell is below
+                    {
+                        // Cells below the current cell are converted to hallway, up to target Y
+                        for(int i = 0; i < std::abs(endCellY-pathCellY);)
+                        {
+                            if(genLayout[(pathCellY-i)*pathCellY] != GEN_CELL_MAIN_ROOM)
+                                genLayout[(pathCellY-i)*pathCellY] = GEN_CELL_HALLWAY;
+                        }
+                    }
+                    else if(pathCellX > endCellY) // Target Y cell is above
+                    {
+                        // Cells above the current cell are converted to hallway, down to target Y
+                        for(int i = 0; i < std::abs(endCellY-pathCellY);)
+                        {
+                            if(genLayout[(pathCellY+i)*pathCellY] != GEN_CELL_MAIN_ROOM)
+                                genLayout[(pathCellY+i)*pathCellY] = GEN_CELL_HALLWAY;
+                        }
+                    }
+                    pathCellY = endCellY; // Update current Y cell to target Y cell
+                    hallwayPathAxis = PATH_X_AXIS; // Switch the path making to the X axis
+                }
+            }
+        }
+
+        generationPhaseComplete = true;
+    }
+
+    else if(generationPhase == GEN_COMPLETE)
     {
 
     }
@@ -470,8 +598,12 @@ void Area::Generate()
     {
         generationPhase ++;
         generationPhaseComplete = false;
+
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+        D_GENERATORVISUALIZATIONPAUSE = true;
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
     }
-    if(generationPhase == GEN_COMPLETE)
+    if(generationPhase == GEN_COMPLETE && !D_GENERATORDEBUGSTASIS)
     {
         ResetGeneratorState();
         needGeneration = false;
@@ -489,20 +621,31 @@ void Area::SetRemovedEdgeReturnPercentage(float rerp)
         removedEdgeReturnPercentage = 1.0;
 }
 
-int GetCenterCellID(int xCoord, int yCoord, int tilesize)
+int GetCenterCellID(int xCoord, int yCoord)
 {
-    // Warning: If the room object to which the cell belongs has an even-numbered width or height, the function
-    // will always favor the right-most and/or bottom-most of the two (or four) middle cells as a natural effect of integer truncation.
-    // If generating hallways, be sure to take this into account.
-
     int centerCellID; // The index of the cell (in a 1D array) that happens to host the room object's center coordinates.
 
     // Convert the center coordinates in pixels to center coordinates in cells, rounded down.
-    int cellX = (int)xCoord/tilesize;
-    int cellY = (int)yCoord/tilesize;
+    int cellX = (int)xCoord/MINI_TILESIZE;
+    int cellY = (int)yCoord/MINI_TILESIZE;
 
     // Calculate index of the corresponding cell.
+
     centerCellID = cellY*areaCellWidth + cellX;
+
+    // Due to the nature of integer division, the right-most and bottom-most cell will be favored in the case of rooms with even-numbered cell dimensions.
+    // To ensure fairness, give a 50% such rooms a chance to choose the left/upper cell.
+
+    if(xCoord%MINI_TILESIZE == 0) // The room box in question has an even-numbered cell width because the center X-coordinate falls on a multiple of MINI_TILESIZE.
+    {
+        if(rand()%1)
+            centerCellID --;
+    }
+    if(yCoord%MINI_TILESIZE == 0) // The room box in question has an even-numbered cell width because the center Y-coordinate falls on a multiple of MINI_TILESIZE.
+    {
+        if(rand()%1)
+            centerCellID -= areaCellWidth;
+    }
 
     return centerCellID;
 }
@@ -556,5 +699,18 @@ bool LoadAreaState(std::string areaName, Area *target, bool baseState)
 
     return true;
 }
+
+/// Debug and demo stuff
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+bool Area::D_GET_GENERATOR_VISUALIZATION_PAUSE()
+{
+    return D_GENERATORVISUALIZATIONPAUSE;
+}
+
+void Area::D_UNPAUSE_VISUALIZATION()
+{
+    D_GENERATORVISUALIZATIONPAUSE = false;
+}
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
 
 
