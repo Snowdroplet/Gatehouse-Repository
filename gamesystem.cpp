@@ -1,6 +1,5 @@
 #include "gamesystem.h"
 
-#define D_DEFAULT_SHOW_GEN_VISUALIZATION
 
 /// MATH AND PHYSICS
 
@@ -28,14 +27,23 @@ ALLEGRO_MOUSE_STATE mouseState;
 int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;   //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
 int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
 
-#ifdef D_DEFAULT_SHOW_GEN_VISUALIZATION
-bool showGenVisualization = true;
-#endif // D_DEFAULT_SHOW_GEN_VISUALIZATION
-#ifndef D_DEFAULT_SHOW_GEN_VISUALIZATION
-bool showGenVisualization = false;
-#endif // D_DEFAULT_SHOW_GEN_VISUALIZATION
+#ifdef D_SHOW_LOADING_VISUALIZATION
+bool D_SHOWLOADINGVISUALIZATION = true;
+#endif // D_SHOW_LOADING_VISUALIZATION
+#ifndef D_SHOW_LOADING_VISUALIZATION
+bool D_SHOWLOADINGVISUALIZATION = false;
+#endif // D_SHOW_LOADING_VISUALIZATION
+
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+int D_PROGRESSPAUSEDVISUALIZATIONTIMER = 0;
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
+
 
 /// MAIN STRUCTURE
+
+#ifdef D_TERMINATE_LOADING_SIGNAL
+bool D_TERMINATELOADINGPHASESIGNAL = false;
+#endif //D_TERMINATE_LOADING_SIGNAL
 
 bool gameExit = false;
 bool redraw = false;

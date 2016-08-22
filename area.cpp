@@ -1,14 +1,6 @@
 
 #include "area.h"
 
-//#define D_GEN_PHYS_DIST_RANDOM
-//#define D_GEN_TRIANGULATION
-//#define D_VECTOR_UNIQUE_NODE_ID
-//#define D_TRI_MST_COMBINATION
-#define D_CELL_LAYOUT
-
-#define D_GEN_VISUALIZATION_PHASE_PAUSE
-
 RoomGenBox::RoomGenBox(int bn, b2Body *cb2b, int w, int h)
 {
     boxNumber = bn;
@@ -16,6 +8,7 @@ RoomGenBox::RoomGenBox(int bn, b2Body *cb2b, int w, int h)
     correspondingB2Body = cb2b;
     correspondingBodyAwake = correspondingB2Body->IsAwake();
     designatedMainRoom = false;
+    designatedHallRoom = false;
 
     width = w;
     height = h;
@@ -467,10 +460,32 @@ void Area::Generate()
 
 #endif // D_TRI_MST_COMBINATION
 
+
+        /// ** The following code is purposeless if the visualization is not going to be shown.
+
+        // Convert center cell node IDs back to coordinates for drawing
+        if(D_SHOWLOADINGVISUALIZATION)
+        {
+            for(std::vector<MinTreeEdge>::iterator it = minTreeOutput.begin(); it != minTreeOutput.end(); ++it)
+            {
+                Vec2f node1Coords((*it).node1ID%areaCellWidth*MINI_TILESIZE ,(*it).node1ID/areaCellWidth*MINI_TILESIZE);
+                Vec2f node2Coords((*it).node2ID%areaCellWidth*MINI_TILESIZE ,(*it).node2ID/areaCellWidth*MINI_TILESIZE );
+
+                demoEdges.push_back(TriEdge(node1Coords,node2Coords));
+            }
+
+            for(unsigned int i = 0; i < demoEdges.size(); i++)
+            {
+                std::cout << std::endl;
+                std::cout << "Contained in demoedges:" << std::endl;
+                std::cout << demoEdges[i].p1.x << ", " << demoEdges[i].p1.y << " -- " << demoEdges[i].p2.x << ", " << demoEdges[i].p2.y << std::endl;
+            }
+        }
+
         generationPhaseComplete = true;
     }
 
-    else if(generationPhase == GEN_LAYOUT)
+    else if(generationPhase == GEN_LAYOUT_SKELETON)
     {
         /**              ### CELL LAYOUT ###
         1)  All cells are initiallized EMPTY. (Already done in generator reset)
@@ -481,11 +496,6 @@ void Area::Generate()
         3)  Create a path between two center cells linked by an edge
             and set all cells on the path as HALLWAY
             except MAIN ROOM cells.
-
-        4)  Any cells in a non-main room
-            that possesses a hallway
-            are set as HALLROOM,
-            including HALLWAY cells.
         */
 
 
@@ -531,26 +541,26 @@ void Area::Generate()
             ///        -a chance to mis-steer
             ///        the end X/Ycell.
 
-            while(pathCellX != endCellX || pathCellY != endCellY) //While the path has not yet reached the end X/Y cell
+            while(!(pathCellX == endCellX && pathCellY == endCellY)) //While the path has not yet reached the end X/Y cell
             {
                 if(hallwayPathAxis == PATH_X_AXIS) // Close the X distance
                 {
                     if(pathCellX < endCellX) // Target X cell is to the right
                     {
                         // Cells right of the current cell are converted to hallway, up to target X
-                        for(int i = 0; i < std::abs(endCellX-pathCellX);)
+                        for(int i = 0; i < std::abs(endCellX-pathCellX); i++)
                         {
-                            if(genLayout[pathCellX+i] != GEN_CELL_MAIN_ROOM)
-                                genLayout[pathCellX+i] = GEN_CELL_HALLWAY;
+                            if(genLayout[pathCellY*areaCellWidth + pathCellX+i] != GEN_CELL_MAIN_ROOM)
+                                genLayout[pathCellY* areaCellWidth + pathCellX+i] = GEN_CELL_HALLWAY;
                         }
                     }
-                    else if(pathCellX > endCellX) // Target X cell is to the left
+                    else if(pathCellX >= endCellX) // Target X cell is to the left or on the same row
                     {
                         // Cells left of the current cell are converted to hallway, up to target X
-                        for(int i = 0; i < std::abs(endCellX-pathCellX);)
+                        for(int i = 0; i < std::abs(endCellX-pathCellX); i++)
                         {
-                            if(genLayout[pathCellX+i] != GEN_CELL_MAIN_ROOM)
-                                genLayout[pathCellX+i] = GEN_CELL_HALLWAY;
+                            if(genLayout[pathCellY*areaCellWidth + pathCellX-i] != GEN_CELL_MAIN_ROOM)
+                                genLayout[pathCellY*areaCellWidth + pathCellX-i] = GEN_CELL_HALLWAY;
                         }
                     }
                     pathCellX = endCellX; // Update current X cell to target X cell
@@ -561,23 +571,82 @@ void Area::Generate()
                     if(pathCellY < endCellY) // Target Y cell is below
                     {
                         // Cells below the current cell are converted to hallway, up to target Y
-                        for(int i = 0; i < std::abs(endCellY-pathCellY);)
+                        for(int i = 0; i < std::abs(endCellY-pathCellY); i++)
                         {
-                            if(genLayout[(pathCellY-i)*pathCellY] != GEN_CELL_MAIN_ROOM)
-                                genLayout[(pathCellY-i)*pathCellY] = GEN_CELL_HALLWAY;
+                            if(genLayout[(pathCellY+i)*areaCellWidth + pathCellX] != GEN_CELL_MAIN_ROOM)
+                                genLayout[(pathCellY+i)*areaCellWidth + pathCellX] = GEN_CELL_HALLWAY;
                         }
                     }
-                    else if(pathCellX > endCellY) // Target Y cell is above
+                    else if(pathCellX >= endCellY) // Target Y cell is above or on the same row
                     {
                         // Cells above the current cell are converted to hallway, down to target Y
-                        for(int i = 0; i < std::abs(endCellY-pathCellY);)
+                        for(int i = 0; i < std::abs(endCellY-pathCellY); i++)
                         {
-                            if(genLayout[(pathCellY+i)*pathCellY] != GEN_CELL_MAIN_ROOM)
-                                genLayout[(pathCellY+i)*pathCellY] = GEN_CELL_HALLWAY;
+                            if(genLayout[(pathCellY-i)*areaCellWidth + pathCellX] != GEN_CELL_MAIN_ROOM)
+                                genLayout[(pathCellY-i)*areaCellWidth + pathCellX] = GEN_CELL_HALLWAY;
                         }
                     }
                     pathCellY = endCellY; // Update current Y cell to target Y cell
                     hallwayPathAxis = PATH_X_AXIS; // Switch the path making to the X axis
+                }
+            }
+        }
+
+        generationPhaseComplete = true;
+    }
+
+    else if(generationPhase == GEN_LAYOUT_FILL)
+    {
+        /**  ### FILLING THE DUNGEON WITH HALLROOMS ###
+             In any non non-main room
+             where any of its cells are HALLWAY cells,
+             all cells in the room are set as HALLROOM cells
+             including HALLWAY cells.
+        */
+
+        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        {
+            if(!(*it)->designatedMainRoom)
+            {
+                int xBegin = ((*it)->x1) / MINI_TILESIZE;
+                int xEnd   = ((*it)->x2) / MINI_TILESIZE;
+
+                int yBegin = ((*it)->y1) / MINI_TILESIZE;
+                int yEnd   = ((*it)->y2) / MINI_TILESIZE;
+
+                [&]  // Double loop break
+                {
+                    for(int y = yBegin; y < yEnd; y++)
+                    {
+                        for(int x = xBegin; x < xEnd; x++)
+                        {
+                            if(genLayout[y *areaCellWidth + x] == GEN_CELL_HALLWAY)
+                            {
+                                (*it)->designatedHallRoom = true;
+                                return;
+                            }
+                        }
+                    }
+                }();
+            }
+        }
+
+        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        {
+            int xBegin = ((*it)->x1) / MINI_TILESIZE;
+            int xEnd   = ((*it)->x2) / MINI_TILESIZE;
+
+            int yBegin = ((*it)->y1) / MINI_TILESIZE;
+            int yEnd   = ((*it)->y2) / MINI_TILESIZE;
+
+            if((*it)->designatedHallRoom)
+            {
+                for(int y = yBegin; y < yEnd; y++)
+                {
+                    for(int x = xBegin; x < xEnd; x++)
+                    {
+                        genLayout[y *areaCellWidth + x] = GEN_CELL_HALL_ROOM;
+                    }
                 }
             }
         }

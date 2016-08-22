@@ -1,26 +1,3 @@
-
-//Debug defines. Comment out line to deactivate corresponding debug functionality.
-
-#define D_DRAW_DEBUG_OVERLAY
-
-#define D_TURN_LOGIC
-#define D_SERIALIZATION
-#define D_TEST_PATHFINDING
-
-#define D_TERMINATE_LOADING_SIGNAL
-#define D_GEN_VISUALIZATION_PHASE_PAUSE
-
-//#define D_CREATE_TESTING_AREA //Uncomment to create a new testing area
-
-
-#ifdef D_TERMINATE_LOADING_SIGNAL
-bool D_TERMINATELOADINGPHASESIGNAL = false;
-#endif //D_TERMINATE_LOADING_SIGNAL
-
-#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
-int D_PROGRESSPAUSEDVISUALIZATIONTIMER = 100;
-#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
-
 #include <cstdio>
 #include <iostream>
 #include <cstring>
@@ -616,10 +593,11 @@ void LoadingDrawing()
         redraw = false;
         al_clear_to_color(al_map_rgb(0,0,0));
 
-        if(showGenVisualization)
+#ifdef D_SHOW_LOADING_VISUALIZATION
+        if(D_SHOWLOADINGVISUALIZATION)
         {
-            //Draw the grid
-            //Moving the camera's coordinates left moves everything else's draw coordinates right, and so on.
+#endif // D_SHOW_LOADING_VISUALIZATION
+            ///Draw the grid
             for(int i = 0; i <= miniAreaWidth; i += MINI_TILESIZE) //Columns
             {
                 int lineThickness = 1;
@@ -654,74 +632,102 @@ void LoadingDrawing()
                              lineColor,lineThickness);
             }
 
-            //Draw room generation boxes
-            for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
-            {
-
-                // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
-                // Draws outlines of room objects. Orange rooms denote that the corresponding physics body is awake. Blue rooms are asleep.
-
-                if((*it)->correspondingBodyAwake)
-                {
-                    al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
-                                      (*it)->y1 - loadingCamY,
-                                      (*it)->x2 - loadingCamX,
-                                      (*it)->y2 - loadingCamY,
-                                      FIRE_ORANGE, 1);
-                }
-                else
-                {
-                    if((*it)->designatedMainRoom)
-                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
-                                          (*it)->y1 - loadingCamY,
-                                          (*it)->x2 - loadingCamX,
-                                          (*it)->y2 - loadingCamY,
-                                          BRIGHT_GREEN, 2);
-                    else
-                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
-                                          (*it)->y1 - loadingCamY,
-                                          (*it)->x2 - loadingCamX,
-                                          (*it)->y2 - loadingCamY,
-                                          COLD_BLUE, 1);
-                }
-
-
-                s_al_draw_text(terminalFont, NEUTRAL_WHITE,
-                               (*it)->x1-loadingCamX+4,
-                               (*it)->y1-loadingCamY+4,
-                               ALLEGRO_ALIGN_LEFT,
-                               std::to_string(it-area->roomGenBoxes.begin()));
-
-            }
-
-            if(area->GetGenerationPhase() >= GEN_LAYOUT) // Draw from cell layout phase onwards
+            /// Draw room layout as coloured rectangles
+            if(area->GetGenerationPhase() >= GEN_LAYOUT_SKELETON) // Draw from cell layout phase onwards
             {
                 for(int y = 0; y < areaCellHeight; y++)
                 {
                     for(int x = 0; x < areaCellWidth; x++)
                     {
-                        if(area->genLayout[y*areaCellWidth+x] == GEN_CELL_MAIN_ROOM)
-                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
-                                                     y*MINI_TILESIZE                 - loadingCamY,
-                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
-                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
-                                                     BRIGHT_GREEN);
-                        else if(area->genLayout[y*areaCellWidth+x] == GEN_CELL_HALLWAY)
+                        switch(area->genLayout[y*areaCellWidth+x])
                         {
+                        case GEN_CELL_MAIN_ROOM:
                             al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
                                                      y*MINI_TILESIZE                 - loadingCamY,
                                                      x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
                                                      y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
-                                                     BLOOD_RED);
+                                                     FIRE_ORANGE);
+                            break;
+
+                        case GEN_CELL_HALLWAY:
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     LIGHTNING_YELLOW);
+                            break;
+
+                        case GEN_CELL_HALL_ROOM:
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     FIRE_ORANGE);
+                            break;
                         }
                     }
                 }
             }
 
+            ///Draw room generation boxes
+            if(area->GetGenerationPhase() >= GEN_PHYSICAL_DISTRIBUTION) // Draw from physics simulation onwards
+            {
+                for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
+                {
+
+                    // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
+                    // Draws outlines of room objects. Orange rooms denote that the corresponding physics body is awake. Blue rooms are asleep.
+
+                    if((*it)->correspondingBodyAwake)
+                    {
+                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
+                                          (*it)->y1 - loadingCamY,
+                                          (*it)->x2 - loadingCamX,
+                                          (*it)->y2 - loadingCamY,
+                                          FIRE_ORANGE, 1);
+                    }
+                    else
+                    {
+                        if((*it)->designatedMainRoom)
+                            al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
+                                              (*it)->y1 - loadingCamY,
+                                              (*it)->x2 - loadingCamX,
+                                              (*it)->y2 - loadingCamY,
+                                              BRIGHT_GREEN, 2);
+                        else
+                            al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
+                                              (*it)->y1 - loadingCamY,
+                                              (*it)->x2 - loadingCamX,
+                                              (*it)->y2 - loadingCamY,
+                                              COLD_BLUE, 1);
+                    }
+
+
+                    s_al_draw_text(terminalFont, NEUTRAL_WHITE,
+                                   (*it)->x1-loadingCamX+4,
+                                   (*it)->y1-loadingCamY+4,
+                                   ALLEGRO_ALIGN_LEFT,
+                                   std::to_string(it-area->roomGenBoxes.begin()));
+
+                }
+            }
+
+
+            /// Draw the room connection graph/tree
             if(area->GetGenerationPhase() >= GEN_GRAPH_CREATION) //Draw from graph creation phase onwards
             {
-                // Draw the graph visualization created by delaunay triangulation
+                // Draw the graph created by delaunay triangulation
                 for(std::vector<TriEdge>::iterator it = area->triEdges.begin(); it != area->triEdges.end(); ++it)
+                {
+                    al_draw_line((*it).p1.x        -loadingCamX,
+                                 (*it).p1.y        -loadingCamY,
+                                 (*it).p2.x        -loadingCamX,
+                                 (*it).p2.y        -loadingCamY,
+                                 DARK_VIOLET,2);
+                }
+
+                // Draw the graph created the the minimum spanning tree/ re-addition of edges.
+                for(std::vector<TriEdge>::iterator it = area->demoEdges.begin(); it != area->demoEdges.end(); ++it)
                 {
                     al_draw_line((*it).p1.x        -loadingCamX,
                                  (*it).p1.y        -loadingCamY,
@@ -730,15 +736,14 @@ void LoadingDrawing()
                                  HOLY_INDIGO,2);
                 }
 
-                /** Draw the graph visualization after the MST, perhaps re-using triEdges*/
-
             }
+#ifdef D_SHOW_LOADING_VISUALIZATION
         }
-        else //if ! showGenVisualization
+        else //if ! D_SHOWLOADINGVISUALIZATION
         {
             /** Show loading screen here */
         }
-
+#endif // D_SHOW_LOADING_VISUALIZATION
 
 
 

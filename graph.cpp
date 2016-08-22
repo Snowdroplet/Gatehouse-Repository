@@ -1,9 +1,5 @@
 #include "graph.h"
 
-#define D_TEST_NODE_LISTS
-#define D_TEST_PARENT_OPTIMIZATION
-#define D_TEST_OUTPUT_PATH_REQUEST
-
 
 Graph::Graph(int graphW, int graphH)
 {
