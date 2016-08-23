@@ -40,24 +40,35 @@ enum enumGenerationPhases
     GEN_INACTIVE = 0,
     GEN_PHYSICAL_DISTRIBUTION = 1,
     GEN_MAIN_ROOM_SELECTION = 2,
-    GEN_GRAPH_CREATION = 3,
-    GEN_LAYOUT = 4,
-    GEN_COMPLETE = 5
+    GEN_TRIANGULATION = 3,
+    GEN_MST = 4,
+    GEN_LAYOUT_SKELETON = 5,
+    GEN_LAYOUT_FILL = 6,
+    GEN_COMPLETE = 7
 };
 
 enum enumGenLayoutCellTypes
 {
     GEN_CELL_EMPTY = 0,
     GEN_CELL_MAIN_ROOM = 1,
-    GEN_CELL_HALLWAY = 2,
-    GEN_CELL_ROOMWAY = 3,
-    GEN_CELL_WALL = 4
+    GEN_CELL_HALL_ROOM = 2,
+    GEN_CELL_HALLWAY_SKELETON = 3,
+    GEN_CELL_HALLWAY = 4,
+    GEN_CELL_HALLWAY_EXTENSION = 5,
+    GEN_CELL_WALL = 6
 };
 
-enum enumHallwayPathAxis
+enum enumHallwayPathAxes
 {
     PATH_X_AXIS = 0,
     PATH_Y_AXIS = 1
+};
+
+enum enumPreferredHallwayLayoutTypes
+{
+    NO_LAYOUT_PREFERENCE = 0,
+    PREFER_CONVEX = 1,
+    PREFER_CONCAVE = 2
 };
 
 struct RoomGenBox
@@ -78,8 +89,10 @@ struct RoomGenBox
     int width, height; // Dimensions in pixels.
     int cellWidth, cellHeight; // Dimensions in cells (or pixels/MINI_TILESIZE).
 
-    bool designatedMainRoom; // If true, this room's dimensions have met the required thresholds to be a main room and has been designated as such.
 
+    /// The ultimate fate of this roombox
+    bool designatedMainRoom; // If true, this room's dimensions have met the required thresholds to be a main room and has been designated as such.
+    bool designatedHallRoom;
 
     RoomGenBox(int bn, b2Body *cb2b, int w, int h);
     ~RoomGenBox();
@@ -106,9 +119,11 @@ class Area
     }
 
 private:
-    /// Generator state flags
+    /// Generator state
     bool D_GENERATORDEBUGSTASIS;
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
     bool D_GENERATORVISUALIZATIONPAUSE;
+#endif //D_GEN_VISUALIZATION_PHASE_PAUSE
 
     int generationPhase;
     bool generationPhaseComplete;
@@ -117,13 +132,24 @@ private:
     bool bodiesGenerated;
     bool bodiesDistributed;
 
-    /// The average (or mean) room height in the random normal distribution of room dimensions.
-    float averageRoomWidth;
-    float averageRoomHeight;
+    float removedEdgeReturnPercentage;  // MST: Adjusts the extra connectivity of the area. 0% should leave the tree as is. 100% should return all edges.
 
-    /// The minimum width and height required for a room object to be listed as a "main room" for the purposes of algorithmic generation
-    int mainRoomWidthThreshold;
+    /// Generator knobs
+    int roomBoxesToGenerate;
+
+
+    float averageRoomWidth; // The average (or mean) room height in the random normal distribution of room dimensions.
+    float averageRoomHeight;
+    float stdWidthDeviation;
+    float stdHeightDeviation;
+    int mainRoomWidthThreshold; // The minimum width and height required for a room object to be listed as a "main room" for the purposes of algorithmic generation
     int mainRoomHeightThreshold;
+
+    int preferedHallwayLayout;   // Determines whether the initial hallway pathing axis will prefer creating a somewhat more convex or concave dungeon.
+
+    float hallwayAdoptionRate;   // The chance that a cell next to a hallway will be chosen to become a hallway type cell.
+    float hallwayExtensionRate;  // The chance that the adopted cell will become a hallway extension cell.
+    float hallwayConversionRate; // The chance that the adopted cell will hallway will become a proper hallway cell.
 
     /// Concerning the distribution of rooms by physics simulation:
     std::vector<RoomGenBox*>mainRooms;
@@ -137,9 +163,8 @@ private:
 
     /// Concerning the use of a minimum spanning tree to adjust the connectivity of the dungeon:
     std::vector<MinTreeEdge>minTreeInput;
-    float removedEdgeReturnPercentage;  // Adjusts the extra connectivity of the area. 0% should leave the tree as is. 100% should return all edges.
 
-    /// Using mersenne twister for random number generation.
+    /// Random number generator
     boost::random::mt19937 mtRng;
 
 
@@ -161,10 +186,15 @@ public:
 
     std::vector<RoomGenBox*>roomGenBoxes;
 
-    std::vector<TriEdge>triEdges;
+    std::vector<TriEdge>triEdges;            // TriEdges hold pixel coordinates of endpoint nodes. See delaunay.h.
 
-    std::vector<MinTreeEdge>minTreeOutput;
+    std::vector<MinTreeEdge>minTreeOutput;   // MinTreeEdges hold cell coordinates of endpoint nodes See mintree.h.
     MinTreeGraph mtg;
+
+#ifdef D_SHOW_LOADING_VISUALIZATION
+    // The following is purposeless if the visualization is not going to be shown.
+    std::vector<TriEdge>demoEdges;
+#endif //D_SHOW_LOADING_VISUALIZATION
 
     std::vector<int>genLayout;
 
@@ -187,8 +217,10 @@ public:
 
 
     //Debug and demonstration stuff
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
     bool D_GET_GENERATOR_VISUALIZATION_PAUSE();
     void D_UNPAUSE_VISUALIZATION();
+#endif //D_GEN_VISUALIZATION_PHASE_PAUSE
 };
 extern Area *area;
 

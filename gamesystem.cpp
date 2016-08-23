@@ -3,7 +3,6 @@
 
 /// MATH AND PHYSICS
 
-
 b2Vec2 physicsGravity(0.0f, 0.0f);
 
 bool physicsCanSleep = true;

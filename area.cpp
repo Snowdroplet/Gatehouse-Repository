@@ -109,35 +109,69 @@ int Area::GetGenerationPhase()
 /// Reset / (re)initialize everything relevant to generating an area.
 void Area::ResetGeneratorState()
 {
+    /// Random
     mtRng.seed(static_cast<unsigned int>(std::time(0)));
+
+    /// State flags
+    D_GENERATORDEBUGSTASIS = true;
+    D_GENERATORVISUALIZATIONPAUSE = false;
 
     generationPhase = GEN_INACTIVE;
     generationComplete = true;
     generationPhaseComplete = false;
 
-    averageRoomWidth = MINI_TILESIZE*5; // 5 Cells wide
-    averageRoomHeight = MINI_TILESIZE*5;
-
-    mainRoomWidthThreshold = MINI_TILESIZE*6;
-    mainRoomHeightThreshold = MINI_TILESIZE*6;
-
     bodiesGenerated = false;
     bodiesDistributed = false;
 
+    /// Knobs
+    roomBoxesToGenerate = 180;
+
+    averageRoomWidth = MINI_TILESIZE*7;
+    averageRoomHeight = MINI_TILESIZE*7;
+    stdWidthDeviation = averageRoomWidth*0.30;
+    stdHeightDeviation = averageRoomHeight*0.30;
+
+    mainRoomWidthThreshold = MINI_TILESIZE*8;
+    mainRoomHeightThreshold = MINI_TILESIZE*8;
+
+    SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
+
+    preferedHallwayLayout = PREFER_CONVEX;
+
+    hallwayAdoptionRate = 1.0;
+    hallwayExtensionRate = 0.85;
+    hallwayConversionRate = 0.1;
+
+    /// Physics bodies
     roomGenBody.type = b2_dynamicBody;
     roomGenBody.fixedRotation = true;
     roomGenBody.linearDamping = 0.0f;
     roomGenBody.allowSleep = true;
 
-    SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
+    /// Container reset
+    for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
+    {
+        delete *it;
+        roomGenBoxes.erase(it);
+    }
+    std::vector<RoomGenBox*>().swap(roomGenBoxes);
+    std::vector<RoomGenBox*>().swap(mainRooms);
+    std::vector<Triangle>().swap(triangles);
+    std::vector<TriEdge>().swap(triEdges);
+    std::vector<MinTreeEdge>().swap(minTreeInput);
+    std::vector<MinTreeEdge>().swap(minTreeOutput);
+    std::vector<int>().swap(genLayout);
+
+
+
 
     for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
     {
         genLayout.push_back(GEN_CELL_EMPTY);
     }
 
-    D_GENERATORDEBUGSTASIS = true;
-    D_GENERATORVISUALIZATIONPAUSE = false;
+
+
 }
 
 void Area::Generate()
@@ -163,8 +197,8 @@ void Area::Generate()
         */
 
         // Room dimensions randomized. Probability represented by normal distribution.
-        boost::random::normal_distribution<float> randomRoomWidth (averageRoomWidth,averageRoomWidth*0.25);   // (Average, 25% standard deviation)
-        boost::random::normal_distribution<float> randomRoomHeight(averageRoomHeight,averageRoomHeight*0.25);
+        boost::random::normal_distribution<float> randomRoomWidth (averageRoomWidth,stdWidthDeviation);   // (Average, 25% standard deviation)
+        boost::random::normal_distribution<float> randomRoomHeight(averageRoomHeight,stdHeightDeviation);
 
         // Random point in circle selected using random radius and angle. Probability is uniform.
         boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.25);    // (Range min, range max)
@@ -313,7 +347,7 @@ void Area::Generate()
     }
 
 
-    else if(generationPhase == GEN_GRAPH_CREATION)
+    else if(generationPhase == GEN_TRIANGULATION)
     {
 
         /**                ### DELAUNAY TRIANGULATION AND MINIMUM SPANNING TREE  ###
@@ -326,12 +360,6 @@ void Area::Generate()
 
         2)      Generate the SECOND graph as a vector of node ID pairs (edges) from the triangulation.
             Each node IDs is the index of the cell corresponding to a main room's center coordinates.
-
-        3)      Using the Kruskal algorithm (details be be found in mintree.h/cpp),
-            generate and output a minimum spanning tree from the SECOND graph.
-
-        4)      Shuffle and add a random percentage of the edges culled by the MST back to give the area a bit more connectivity.
-
 
         */
 
@@ -351,6 +379,11 @@ void Area::Generate()
         triangles = triangulation.triangulate(mainRoomCenterCoords); // Pass vector of main-room-center coordinates to triangulation function.
         triEdges = triangulation.getTriEdges();
 
+        generationPhaseComplete = true;
+    }
+
+    else if(generationPhase == GEN_MST)
+    {
 #ifdef D_GEN_TRIANGULATION
         std::cout << std::endl;
         std::cout << "### Triangulation results: ###" << std::endl;
@@ -368,6 +401,12 @@ void Area::Generate()
             std::cout << e << std::endl;
 #endif // D_GEN_TRIANGULATION
 
+        /**         ### (JURY-RIGGED) MINIMUM SPANNING TREE ###
+        1)      Using the Kruskal algorithm (details be be found in mintree.h/cpp),
+            generate and output a minimum spanning tree from the SECOND graph.
+
+        2)      Shuffle and add a random percentage of the edges culled by the MST back to give the area a bit more connectivity.
+        */
 
         for(std::vector<TriEdge>::iterator it = triEdges.begin(); it != triEdges.end(); ++it)
         {
@@ -473,13 +512,14 @@ void Area::Generate()
 
                 demoEdges.push_back(TriEdge(node1Coords,node2Coords));
             }
-
+#ifdef D_TRI_MST_COMBINATION
+            std::endl;
             for(unsigned int i = 0; i < demoEdges.size(); i++)
             {
-                std::cout << std::endl;
                 std::cout << "Contained in demoedges:" << std::endl;
                 std::cout << demoEdges[i].p1.x << ", " << demoEdges[i].p1.y << " -- " << demoEdges[i].p2.x << ", " << demoEdges[i].p2.y << std::endl;
             }
+#endif //D_TRI_MST_COMBINATION
         }
 
         generationPhaseComplete = true;
@@ -494,7 +534,7 @@ void Area::Generate()
             are set as a MAIN ROOM cell.
 
         3)  Create a path between two center cells linked by an edge
-            and set all cells on the path as HALLWAY
+            and set all cells on the path as HALLWAY SKELETON
             except MAIN ROOM cells.
         */
 
@@ -533,15 +573,37 @@ void Area::Generate()
             int endCellX  = endCellID%areaCellWidth;
             int endCellY  = endCellID/areaCellWidth;
 
-            bool hallwayPathAxis = rand()%PATH_Y_AXIS; // Random whether we start by closing the X difference or the Y difference first.
+            bool hallwayPathAxis;         // The axis on which distance to the target cell is to be closed, first.
+            bool hallwayComplete = false; // Two center nodes are considered linked once the current cell (pathCell) and the end cell match.
 
-            /// Add later:
-            ///        -vary distance closed per step
-            ///        -a chance to switch the pathing axis midway
-            ///        -a chance to mis-steer
-            ///        the end X/Ycell.
+            // bool allowDiagonalPath = false; // Don't do it yet.
 
-            while(!(pathCellX == endCellX && pathCellY == endCellY)) //While the path has not yet reached the end X/Y cell
+            switch(preferedHallwayLayout) //This currently doesn't actually work
+            {
+                case PREFER_CONVEX:
+                    // The initial hallway pathing axis prefers the direction that is a longer distance from from the center. This produces somewhat rounder layouts since
+                    // a) due to the triangulation's generally convex shape, only rooms that are on a the triangulation's edge have a chance of reaching corner areas
+                    // b) less hallway overlap in the areas closer to the center
+                    if(std::abs(pathCellX-areaCellWidth/2) < std::abs(pathCellY-areaCellHeight/2))
+                        hallwayPathAxis = PATH_X_AXIS;
+                    else
+                        hallwayPathAxis = PATH_Y_AXIS;
+                break;
+
+                case PREFER_CONCAVE:
+                    // The opposite idea of PREFER_CONVEX. Attempt to produce a more star shaped layout.
+                    if(std::abs(pathCellX-areaCellWidth/2) > std::abs(pathCellY-areaCellHeight/2))
+                        hallwayPathAxis = PATH_X_AXIS;
+                    else
+                        hallwayPathAxis = PATH_Y_AXIS;
+                break;
+
+                case NO_LAYOUT_PREFERENCE:
+                    hallwayPathAxis = rand()%PATH_Y_AXIS; // Random whether we start by closing the X difference or the Y difference first.
+                break;
+            }
+
+            while(!hallwayComplete)
             {
                 if(hallwayPathAxis == PATH_X_AXIS) // Close the X distance
                 {
@@ -551,7 +613,7 @@ void Area::Generate()
                         for(int i = 0; i < std::abs(endCellX-pathCellX); i++)
                         {
                             if(genLayout[pathCellY*areaCellWidth + pathCellX+i] != GEN_CELL_MAIN_ROOM)
-                                genLayout[pathCellY* areaCellWidth + pathCellX+i] = GEN_CELL_HALLWAY;
+                                genLayout[pathCellY* areaCellWidth + pathCellX+i] = GEN_CELL_HALLWAY_SKELETON;
                         }
                     }
                     else if(pathCellX >= endCellX) // Target X cell is to the left or on the same row
@@ -560,12 +622,13 @@ void Area::Generate()
                         for(int i = 0; i < std::abs(endCellX-pathCellX); i++)
                         {
                             if(genLayout[pathCellY*areaCellWidth + pathCellX-i] != GEN_CELL_MAIN_ROOM)
-                                genLayout[pathCellY*areaCellWidth + pathCellX-i] = GEN_CELL_HALLWAY;
+                                genLayout[pathCellY*areaCellWidth + pathCellX-i] = GEN_CELL_HALLWAY_SKELETON;
                         }
                     }
                     pathCellX = endCellX; // Update current X cell to target X cell
-                    hallwayPathAxis = PATH_Y_AXIS; // Switch the path making to the Y axis
                 }
+
+
                 else if(hallwayPathAxis == PATH_Y_AXIS) // Close the Y distance
                 {
                     if(pathCellY < endCellY) // Target Y cell is below
@@ -574,21 +637,32 @@ void Area::Generate()
                         for(int i = 0; i < std::abs(endCellY-pathCellY); i++)
                         {
                             if(genLayout[(pathCellY+i)*areaCellWidth + pathCellX] != GEN_CELL_MAIN_ROOM)
-                                genLayout[(pathCellY+i)*areaCellWidth + pathCellX] = GEN_CELL_HALLWAY;
+                                genLayout[(pathCellY+i)*areaCellWidth + pathCellX] = GEN_CELL_HALLWAY_SKELETON;
                         }
                     }
-                    else if(pathCellX >= endCellY) // Target Y cell is above or on the same row
+                    else if(pathCellY >= endCellY) // Target Y cell is above or on the same row
                     {
                         // Cells above the current cell are converted to hallway, down to target Y
                         for(int i = 0; i < std::abs(endCellY-pathCellY); i++)
                         {
                             if(genLayout[(pathCellY-i)*areaCellWidth + pathCellX] != GEN_CELL_MAIN_ROOM)
-                                genLayout[(pathCellY-i)*areaCellWidth + pathCellX] = GEN_CELL_HALLWAY;
+                                genLayout[(pathCellY-i)*areaCellWidth + pathCellX] = GEN_CELL_HALLWAY_SKELETON;
                         }
                     }
                     pathCellY = endCellY; // Update current Y cell to target Y cell
-                    hallwayPathAxis = PATH_X_AXIS; // Switch the path making to the X axis
                 }
+
+
+                if(pathCellX == endCellX && pathCellY == endCellY) //Nothing more needs to be done if we've reached the endpoint.
+                    hallwayComplete = true;
+                else // Switch axis
+                {
+                    if(hallwayPathAxis == PATH_X_AXIS)
+                        hallwayPathAxis = PATH_Y_AXIS;
+                    else if(hallwayPathAxis == PATH_Y_AXIS)
+                        hallwayPathAxis = PATH_X_AXIS;
+                }
+
             }
         }
 
@@ -597,12 +671,76 @@ void Area::Generate()
 
     else if(generationPhase == GEN_LAYOUT_FILL)
     {
-        /**  ### FILLING THE DUNGEON WITH HALLROOMS ###
-             In any non non-main room
-             where any of its cells are HALLWAY cells,
+        /**  ### FILLING OUT THE LAYOUT ###
+
+        Note: Hallway skeletons turn into hallways or hallway extensions.
+        The difference is that proper hallways convert rooms (see #2)
+        while hallway extensions do not.
+
+        1)   Empty cells adjacent to hallways skeletons
+             have a chance to become a hallway type cell.   (somewhat even probability)
+             If chosen, they will:
+             a) turn into hallway extension cells           (likely)
+             b) turn into hallways cells proper             (fairly unlikely)
+
+        2)   In any non non-main room
+             where any of its cells are hallway cells,
              all cells in the room are set as HALLROOM cells
              including HALLWAY cells.
         */
+
+        // Widen hallways on each side with hallway extension cells.
+        // Hallway extension cells are the same as hallways, EXCEPT they do not convert cells rooms into HALLROOMS.
+
+        // Maybe I should diffrentiate between main hallways, side hallways, and make-shift tunnels... And make wideness/cleanliness of the path adjustable?
+        boost::random::bernoulli_distribution<float> adopt(hallwayAdoptionRate);  // The chance that a cell next to a hallway will be chosen to become a hallway type cell.
+        boost::random::bernoulli_distribution<float> hEx(hallwayExtensionRate);   // The chance that the adopted cell will become a hallway extension cell.
+        boost::random::bernoulli_distribution<float> hCon(hallwayConversionRate); // The chance that the adopted cell will hallway will become a proper hallway cell.
+
+
+        for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
+        {
+            if(genLayout[i] == GEN_CELL_HALLWAY_SKELETON)
+            {
+                genLayout[i] = GEN_CELL_HALLWAY;
+
+                if(adopt(mtRng)
+                   && genLayout[i-areaCellWidth] == GEN_CELL_EMPTY) // check above
+                {
+                    if(hCon(mtRng))
+                        genLayout[i-areaCellWidth] = GEN_CELL_HALLWAY;
+                    else if(hEx(mtRng))
+                        genLayout[i-areaCellWidth] = GEN_CELL_HALLWAY_EXTENSION;
+
+                }
+                if(adopt(mtRng)
+                   && genLayout[i+areaCellWidth] == GEN_CELL_EMPTY) // check below
+                {
+                    if(hCon(mtRng))
+                        genLayout[i+areaCellWidth] = GEN_CELL_HALLWAY;
+                    else if(hEx(mtRng))
+                        genLayout[i+areaCellWidth] = GEN_CELL_HALLWAY_EXTENSION;
+                }
+                if(adopt(mtRng)
+                   && genLayout[i+1] == GEN_CELL_EMPTY) // check right
+                {
+                    if(hCon(mtRng))
+                        genLayout[i+1] = GEN_CELL_HALLWAY;
+                    else if(hEx(mtRng))
+                        genLayout[i+1] = GEN_CELL_HALLWAY_EXTENSION;
+                }
+                if(adopt(mtRng)
+                   && genLayout[i-1] == GEN_CELL_EMPTY) // check left
+                {
+                    if(hCon(mtRng))
+                        genLayout[i-1] = GEN_CELL_HALLWAY;
+                    else if(hEx(mtRng))
+                        genLayout[i-1] = GEN_CELL_HALLWAY_EXTENSION;
+                }
+            }
+
+        }
+
 
         for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
         {

@@ -646,6 +646,14 @@ void LoadingDrawing()
                                                      y*MINI_TILESIZE                 - loadingCamY,
                                                      x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
                                                      y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     POISON_GREEN);
+                            break;
+
+                        case GEN_CELL_HALLWAY_SKELETON:
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
                                                      FIRE_ORANGE);
                             break;
 
@@ -654,7 +662,15 @@ void LoadingDrawing()
                                                      y*MINI_TILESIZE                 - loadingCamY,
                                                      x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
                                                      y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
-                                                     LIGHTNING_YELLOW);
+                                                     FIRE_ORANGE);
+                            break;
+
+                        case GEN_CELL_HALLWAY_EXTENSION:
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     BLOOD_RED);
                             break;
 
                         case GEN_CELL_HALL_ROOM:
@@ -662,7 +678,7 @@ void LoadingDrawing()
                                                      y*MINI_TILESIZE                 - loadingCamY,
                                                      x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
                                                      y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
-                                                     FIRE_ORANGE);
+                                                     DARK_YELLOW);
                             break;
                         }
                     }
@@ -713,8 +729,8 @@ void LoadingDrawing()
             }
 
 
-            /// Draw the room connection graph/tree
-            if(area->GetGenerationPhase() >= GEN_GRAPH_CREATION) //Draw from graph creation phase onwards
+            /// Draw the room connection graph
+            if(area->GetGenerationPhase() == GEN_TRIANGULATION || area->GetGenerationPhase() == GEN_MST) //Draw up to MST
             {
                 // Draw the graph created by delaunay triangulation
                 for(std::vector<TriEdge>::iterator it = area->triEdges.begin(); it != area->triEdges.end(); ++it)
@@ -726,6 +742,9 @@ void LoadingDrawing()
                                  DARK_VIOLET,2);
                 }
 
+            }
+            else if(area->GetGenerationPhase() >= GEN_MST)
+            {
                 // Draw the graph created the the minimum spanning tree/ re-addition of edges.
                 for(std::vector<TriEdge>::iterator it = area->demoEdges.begin(); it != area->demoEdges.end(); ++it)
                 {
@@ -831,10 +850,10 @@ void DrawDebugOverlay()
     {
         //Draw crosshair on the screen and coordinate of crosshair
         std::string posStr = "(" + std::to_string(loadingCamX+SCREEN_W/2) + ", " + std::to_string(loadingCamY+SCREEN_H/2) + ")";
-        s_al_draw_text(terminalFont,al_map_rgb(180,0,155),0,0,ALLEGRO_ALIGN_LEFT,posStr);
+        s_al_draw_text(terminalFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
 
-        al_draw_line(SCREEN_W/2,0,SCREEN_W/2,SCREEN_H,al_map_rgb(180,0,155),1);
-        al_draw_line(0,SCREEN_H/2,SCREEN_W,SCREEN_H/2,al_map_rgb(180,0,155),1);
+        al_draw_line(SCREEN_W/2,0,SCREEN_W/2,SCREEN_H,HOLY_INDIGO,1);
+        al_draw_line(0,SCREEN_H/2,SCREEN_W,SCREEN_H/2,HOLY_INDIGO,1);
 
 
     }
