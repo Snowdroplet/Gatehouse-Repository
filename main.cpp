@@ -27,6 +27,9 @@
 
 #include "node.h"
 #include "graph.h"
+
+#include "generator.h"
+
 #include "area.h"
 
 #include "item.h"
@@ -34,9 +37,9 @@
 #include "player.h"
 #include "npc.h"
 
-b2World *physics;
-Player *player;
+Generator *generator;
 Area *area;
+Player *player;
 
 std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to move.
@@ -143,8 +146,9 @@ int main(int argc, char *argv[])
 
     LoadResources();
 
-    physics = new b2World(physicsGravity);
-    physics->SetAllowSleeping(true);
+
+    generator = new Generator(); // Create a generator object
+
 
 #ifdef D_CREATE_TESTING_AREA
     area = new Area(); // Create random test area
@@ -223,10 +227,9 @@ int main(int argc, char *argv[])
     SavePlayerState(player);
     //End
 
-    delete physics;
-
     delete player;
     delete area;
+    delete generator;
 
     UnloadResources();
     al_destroy_timer(FPStimer);
@@ -512,7 +515,7 @@ void LoadingLogic()
 #ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
         if(keyInput[KEY_Q] && D_PROGRESSPAUSEDVISUALIZATIONTIMER == 0)
         {
-            area->D_UNPAUSE_VISUALIZATION();
+            generator->D_UNPAUSE_VISUALIZATION();
             D_PROGRESSPAUSEDVISUALIZATIONTIMER = 100;
         }
 
@@ -525,16 +528,21 @@ void LoadingLogic()
         D_PROGRESSPAUSEDVISUALIZATIONTIMER --;
 #endif // D_GEN_VISUALIZATION_PHASE_PAUSE
 
+
+        /// ** There is a design bug here: 1) needGeneration is a global in gamesystem and can be botched if generators are running in the background.
+        ///    Should make this more nuanced. Maybe a vector of needGenerations for each level.
     if(needGeneration
 #ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
-            && !area->D_GET_GENERATOR_VISUALIZATION_PAUSE()
+            && !generator->D_GET_GENERATOR_VISUALIZATION_PAUSE()
 #endif // D_GEN_VISUALIZATION_PHASE_PAUSE
       )
     {
-        area->Generate();
-        if(area->GetGenerationComplete())
+        generator->Generate();
+        if(generator->GetGenerationComplete())
             needGeneration = false;
     }
+
+
 
 #ifdef D_TERMINATE_LOADING_SIGNAL
     if(D_TERMINATELOADINGPHASESIGNAL)
@@ -633,13 +641,13 @@ void LoadingDrawing()
             }
 
             /// Draw room layout as coloured rectangles
-            if(area->GetGenerationPhase() >= GEN_LAYOUT_SKELETON) // Draw from cell layout phase onwards
+            if(generator->GetGenerationPhase() >= GEN_LAYOUT_SKELETON) // Draw from cell layout phase onwards
             {
                 for(int y = 0; y < areaCellHeight; y++)
                 {
                     for(int x = 0; x < areaCellWidth; x++)
                     {
-                        switch(area->genLayout[y*areaCellWidth+x])
+                        switch(generator->genLayout[y*areaCellWidth+x])
                         {
                         case GEN_CELL_MAIN_ROOM:
                             al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
@@ -686,9 +694,9 @@ void LoadingDrawing()
             }
 
             ///Draw room generation boxes
-            if(area->GetGenerationPhase() >= GEN_PHYSICAL_DISTRIBUTION) // Draw from physics simulation onwards
+            if(generator->GetGenerationPhase() >= GEN_PHYSICAL_DISTRIBUTION) // Draw from physics simulation onwards
             {
-                for(std::vector<RoomGenBox*>::iterator it = area->roomGenBoxes.begin(); it != area->roomGenBoxes.end(); ++it)
+                for(std::vector<RoomGenBox*>::iterator it = generator->roomGenBoxes.begin(); it != generator->roomGenBoxes.end(); ++it)
                 {
 
                     // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
@@ -723,17 +731,17 @@ void LoadingDrawing()
                                    (*it)->x1-loadingCamX+4,
                                    (*it)->y1-loadingCamY+4,
                                    ALLEGRO_ALIGN_LEFT,
-                                   std::to_string(it-area->roomGenBoxes.begin()));
+                                   std::to_string(it-generator->roomGenBoxes.begin()));
 
                 }
             }
 
 
             /// Draw the room connection graph
-            if(area->GetGenerationPhase() == GEN_TRIANGULATION || area->GetGenerationPhase() == GEN_MST) //Draw up to MST
+            if(generator->GetGenerationPhase() == GEN_TRIANGULATION || generator->GetGenerationPhase() == GEN_MST) //Draw up to MST
             {
                 // Draw the graph created by delaunay triangulation
-                for(std::vector<TriEdge>::iterator it = area->triEdges.begin(); it != area->triEdges.end(); ++it)
+                for(std::vector<TriEdge>::iterator it = generator->triEdges.begin(); it != generator->triEdges.end(); ++it)
                 {
                     al_draw_line((*it).p1.x        -loadingCamX,
                                  (*it).p1.y        -loadingCamY,
@@ -743,10 +751,10 @@ void LoadingDrawing()
                 }
 
             }
-            else if(area->GetGenerationPhase() >= GEN_MST)
+            else if(generator->GetGenerationPhase() >= GEN_MST)
             {
                 // Draw the graph created the the minimum spanning tree/ re-addition of edges.
-                for(std::vector<TriEdge>::iterator it = area->demoEdges.begin(); it != area->demoEdges.end(); ++it)
+                for(std::vector<TriEdge>::iterator it = generator->demoEdges.begin(); it != generator->demoEdges.end(); ++it)
                 {
                     al_draw_line((*it).p1.x        -loadingCamX,
                                  (*it).p1.y        -loadingCamY,
@@ -827,13 +835,40 @@ void DrawTiles()
     {
         for(int x = startCellX; x < endCellX; x++)
         {
-            al_draw_bitmap(gfxTiles
-                           [
-                               area->tilemap[y * areaCellWidth + x]
-                           ],
-                           x*32 + SCREEN_W/2 - player->xPosition,
-                           y*32 + PLAY_H/2 - player->yPosition,
-                           0);
+
+            int cellIndex = y*areaCellWidth+x;
+
+            int floorRegionDrawX = area->floormapImageCategory[cellIndex]%area->floormapImageIndex[cellIndex]*TILESIZE;
+
+            int floorRegionDrawY = FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->floormapImageCategory[cellIndex]*TILESIZE
+                                   + area->floormapImageIndex[cellIndex]/FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
+
+
+            al_draw_bitmap_region(gfxFloorTiles,
+                                  floorRegionDrawX,
+                                  floorRegionDrawY,
+                                  floorRegionDrawX+TILESIZE,
+                                  floorRegionDrawY+TILESIZE,
+                                  x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                  y*TILESIZE + PLAY_H/2 - player->yPosition,
+                                  0);
+
+            if(area->wallmap[cellIndex] != WALL_EMPTY)
+            {
+                int wallRegionDrawX = area->wallmapImageCategory[cellIndex]%area->wallmapImageIndex[cellIndex]*TILESIZE;
+
+                int wallRegionDrawY =  WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->wallmapImageCategory[cellIndex]*TILESIZE
+                                   + area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
+
+                al_draw_bitmap_region(gfxWallTiles,
+                                      wallRegionDrawX,
+                                      wallRegionDrawY,
+                                      wallRegionDrawX+TILESIZE,
+                                      wallRegionDrawY+TILESIZE,
+                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                      y*TILESIZE + PLAY_H/2 - player->yPosition,
+                                      0);
+            }
         }
     }
 }

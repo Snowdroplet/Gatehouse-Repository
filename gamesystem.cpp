@@ -3,14 +3,6 @@
 
 /// MATH AND PHYSICS
 
-b2Vec2 physicsGravity(0.0f, 0.0f);
-
-bool physicsCanSleep = true;
-
-//float32 timeStep =  1.0f / 60.0f;
-//int32 velocityIterations = 10;
-//int32 positionIterations = 8;
-
 /// GAME CONSTANTS
 
 
@@ -25,6 +17,9 @@ ALLEGRO_MOUSE_STATE mouseState;
 
 int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;   //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
 int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
+
+int camX = 0;
+int camY = 0;
 
 #ifdef D_SHOW_LOADING_VISUALIZATION
 bool D_SHOWLOADINGVISUALIZATION = true;

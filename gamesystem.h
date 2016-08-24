@@ -14,7 +14,7 @@
 
 /// Main
 
-//#define D_CREATE_TESTING_AREA                       // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
+#define D_CREATE_TESTING_AREA                         // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
 
 #define D_DRAW_DEBUG_OVERLAY                          // Draws additional debug information on screen, such as the camera's X/Y position
 
@@ -51,14 +51,6 @@
 /// MATH AND PHYSICS
 
 const float PI = 3.141592;
-
-extern b2Vec2 physicsGravity;
-extern b2World *physics;
-
-extern bool physicsCanSleep;
-//extern float32 timeStep;
-//extern int32 velocityIterations;
-//extern int32 positionIterations;
 
 
 /// GAME CONSTANTS
@@ -112,6 +104,9 @@ const int STATS_BAR_OPEN_Y = 580;
 
 extern int loadingCamX; //Top left corner of loading screen camera.
 extern int loadingCamY;
+
+extern int camX; //Top left corner of the in-game camera.
+extern int camY;
 
 #ifdef D_SHOW_LOADING_VISUALIZATION
 extern bool D_SHOWLOADINGVISUALIZATION; // Show the room generation visualization instead of a loading screen
@@ -215,6 +210,14 @@ enum enumWallTypes
     WALL_HOLE = 3,       //Can be levitated over
     WALL_MOAT = 4,       //Can be levitated or swam over
     WALL_DOOR = 5        //Can be opened, closed, or broken
+};
+
+enum enumFloorTypes
+{
+    FLOOR_EMPTY = -1,    // There is *somehow* no floor here, not even a hole. The floor tile is not drawn.
+    FLOOR_REGULAR = 0    // Default floor
+
+    // Add all types of variations on floor here, like... Mossy? Puddly?
 };
 
 

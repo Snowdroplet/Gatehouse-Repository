@@ -1,13 +1,20 @@
 #include "resource.h"
 
+/// Declaration
 ALLEGRO_BITMAP *debugPathTracer = NULL;
 ALLEGRO_BITMAP *gfxPlayer = NULL;
 ALLEGRO_BITMAP *gfxNPCPassive[2];
 ALLEGRO_BITMAP *gfxTerminal = NULL;
-ALLEGRO_BITMAP *gfxTiles[3];
-ALLEGRO_BITMAP *gfxItems[8];
+
+ALLEGRO_BITMAP *gfxFloorTiles = NULL;
+ALLEGRO_BITMAP *gfxWallTiles = NULL;
+
 ALLEGRO_FONT   *terminalFont = NULL;
 ALLEGRO_FONT   *titleFont = NULL;
+
+/// Constants
+
+
 
 void LoadResources()
 {
@@ -20,9 +27,8 @@ void LoadResources()
     gfxNPCPassive[0] = al_load_bitmap("placeholderSlime.png");
     gfxNPCPassive[1] = al_load_bitmap("placeholderQuickling.png");
 
-    gfxTiles[0] = al_load_bitmap("placeholderFloor0.png");
-    gfxTiles[1] = al_load_bitmap("placeholderFloor1.png");
-    gfxTiles[2] = al_load_bitmap("placeholderFloor2.png");
+    gfxFloorTiles = al_load_bitmap("floorTiles.png");
+    gfxWallTiles = al_load_bitmap("wallTiles.png");
 
     terminalFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
     titleFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
@@ -39,8 +45,8 @@ void UnloadResources()
     for(int i = 0; i < 2; i++)
         al_destroy_bitmap(gfxNPCPassive[i]);
 
-    for(int i = 0; i < 3; i++)
-        al_destroy_bitmap(gfxTiles[i]);
+    al_destroy_bitmap(gfxFloorTiles);
+    al_destroy_bitmap(gfxWallTiles);
 
     al_destroy_font(terminalFont);
     al_destroy_font(titleFont);
