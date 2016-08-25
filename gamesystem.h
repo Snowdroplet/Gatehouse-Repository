@@ -15,6 +15,7 @@
 /// Main
 
 #define D_CREATE_TESTING_AREA                         // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
+#define D_CREATE_TESTING_PLAYER                       // Creates a new "test" player instead of reading one from the deserialization of playerfile.
 
 #define D_DRAW_DEBUG_OVERLAY                          // Draws additional debug information on screen, such as the camera's X/Y position
 
@@ -24,7 +25,8 @@
 #define D_TEST_PATHFINDING                            // Press 'T' and 'Y' at the same time to output a test path from the PC's cell to a random destination cell.
 
 
-/// Area
+/// Generator
+#define D_GEN_PHASE_CHECK                           //Output debug information to console when completing a generation phase function
 //#define D_GEN_PHYS_DIST_RANDOM                      // Output debug information to console regarding the use of physics bodies to distribute room objects.
 //#define D_GEN_TRIANGULATION                         // Output debug information to console regarding the use of delaunay triangulation to determine which main rooms should be connected to each other.
 //#define D_VECTOR_UNIQUE_NODE_ID                     // Output debug information to console regarding the process of listing the IDs of every unique center room cell.
@@ -32,7 +34,7 @@
 // CURRENTLY UNUSED -- #define D_CELL_LAYOUT          // Output debug information to console regarding the process of determining the map's cell layout.
 
 
-/// Both Main and Area
+/// Both Main and Generator
 #define D_SHOW_LOADING_VISUALIZATION                  // Demonstrate the area generation as a visualization.
 
 #define D_TERMINATE_LOADING_SIGNAL                    // Press 'Z' to change the game phase from loading to game.
@@ -195,6 +197,8 @@ extern int subMenuOpen;
 
 extern int areaCellWidth;  //How many cells long the field is, not how many pixels long the cell is.
 extern int areaCellHeight;
+extern int areaCellArea;
+
 extern int areaWidth;
 extern int areaHeight;
 extern int miniAreaWidth;
@@ -204,20 +208,23 @@ extern int currentMap; // 0 is debug for now
 
 enum enumWallTypes
 {
-    WALL_EMPTY = 0,      //Not a wall
-    WALL_IMPASSABLE = 1, //Indestructable barrier
-    WALL_BREAKABLE = 2,  //Breakable barrier
-    WALL_HOLE = 3,       //Can be levitated over
-    WALL_MOAT = 4,       //Can be levitated or swam over
-    WALL_DOOR = 5        //Can be opened, closed, or broken
+    WT_WALL_EMPTY = -1,      //**Empty means nothing needs to exist, be drawn, or be simulated. Unless, say, a wall is destroyed and walls need to be created to "contain" the empty space created.**
+
+    WT_WALL_IMPASSABLE = 0, //Indestructable barrier
+    WT_WALL_BREAKABLE = 1,  //Breakable barrier
+    WT_WALL_HOLE = 2,       //Can be levitated over
+    WT_WALL_MOAT = 3,       //Can be levitated or swam over
+    WT_WALL_DOOR = 4        //Can be opened, closed, or broken
 };
 
 enum enumFloorTypes
 {
-    FLOOR_EMPTY = -1,    // There is *somehow* no floor here, not even a hole. The floor tile is not drawn.
-    FLOOR_REGULAR = 0    // Default floor
+    FT_FLOOR_EMPTY = -1,    //**Empty means that nothing needs to exist, be drawn, or be simulated. Unless, say, a wall is destroyed and floor needs to be generated to "contain" the empty space created.**
 
-    // Add all types of variations on floor here, like... Mossy? Puddly?
+    FT_FLOOR_REGULAR = 0,   // Default floor
+    FT_FLOOR_RUBBLE = 1     // Floor generated on the position of a destroyed wall.
+
+                    // Add all types of variations on floor here, like... Mossy? Puddly?
 };
 
 

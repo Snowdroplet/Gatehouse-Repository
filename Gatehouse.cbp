@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/Roguelike" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/Gatehouse" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -62,17 +62,25 @@
 		<Unit filename="cast.h" />
 		<Unit filename="control.cpp" />
 		<Unit filename="control.h" />
+		<Unit filename="delaunay.cpp" />
+		<Unit filename="delaunay.h" />
 		<Unit filename="eat.h" />
 		<Unit filename="extfile.cpp" />
 		<Unit filename="extfile.h" />
 		<Unit filename="gamesystem.cpp" />
 		<Unit filename="gamesystem.h" />
+		<Unit filename="generator.cpp" />
+		<Unit filename="generator.h" />
 		<Unit filename="gods.h" />
 		<Unit filename="graph.cpp" />
 		<Unit filename="graph.h" />
 		<Unit filename="item.cpp" />
 		<Unit filename="item.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="mintree.cpp" />
+		<Unit filename="mintree.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="node.cpp" />
 		<Unit filename="node.h" />
 		<Unit filename="npc.cpp" />
@@ -85,7 +93,10 @@
 		<Unit filename="read.h" />
 		<Unit filename="resource.cpp" />
 		<Unit filename="resource.h" />
-		<Unit filename="roomgenobject.h" />
+		<Unit filename="roomgenbox.cpp" />
+		<Unit filename="roomgenbox.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="spell.h" />
 		<Unit filename="terminal.cpp" />
 		<Unit filename="terminal.h" />

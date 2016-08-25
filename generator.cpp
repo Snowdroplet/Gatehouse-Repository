@@ -2,11 +2,13 @@
 
 Generator::Generator()
 {
-    ResetState();
+    InitialState();
 }
 
 Generator::~Generator()
 {
+    ReleaseOutputContainers();
+
     for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
     {
         delete *it;
@@ -119,7 +121,7 @@ void Generator::PhysicalDistribution()
 
     if(!bodiesDistributed)
     {
-        physics->Step(1/30.0f, 1, 10); // (Time step, number of velocity iterations, number of position iterations)
+        physics->Step(timeStep, velocityIterations, positionIterations); // (Time step, number of velocity iterations, number of position iterations)
 
         bodiesDistributed = true;
         for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
@@ -158,6 +160,9 @@ void Generator::PhysicalDistribution()
         delete physics;
 
         generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+        std::cout << "Physical generation completed..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
     }
 }
 
@@ -174,6 +179,9 @@ void Generator::MainRoomSelection()
     }
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Main rooms selected..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 void Generator::Triangulation()
@@ -208,6 +216,9 @@ void Generator::Triangulation()
     triEdges = triangulation.getTriEdges();
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Triangulation completed..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 void Generator::MinimumSpanningTree()
@@ -351,6 +362,9 @@ void Generator::MinimumSpanningTree()
     }
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Minimum spanning tree generated..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 void Generator::LayoutSkeleton()
@@ -495,6 +509,9 @@ void Generator::LayoutSkeleton()
     }
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Layout skeleton completed" << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 void Generator::LayoutFill()
@@ -526,7 +543,7 @@ void Generator::LayoutFill()
     boost::random::bernoulli_distribution<float> hCon(hallwayConversionRate); // The chance that the adopted cell will hallway will become a proper hallway cell.
 
 
-    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
+    for(int i = 0; i < areaCellArea; i++)
     {
         if(genLayout[i] == GEN_CELL_HALLWAY_SKELETON)
         {
@@ -618,46 +635,176 @@ void Generator::LayoutFill()
     }
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Layout filled out..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 void Generator::Commit()
 {
-    /// Commit the layout
+    /// DETAIL AND FINALIZE THE LAYOUT ARRAYS
+
+    // The theme of dungeon wall/ floor to draw
+    int whichFloormapCategory = FC_COLD_DUNGEON_FLOOR;
+    int whichWallmapCategory = WC_LIGHT_DUNGEON_WALL;
 
     for(int i = 0; i < areaCellHeight*areaCellHeight; i++)
     {
+        int whatFloormapImageIndex = 0; /* Whether adjacent cells have floor tiles of the same category,
+                                                      * represented in the form 0 0 0 0.  (1 = true)
+                                                      *                         U L R D           */
+        int whatWallmapImageIndex = 0;  /* Whether adjacent cells have wall tiles of the same category,
+                                                      * represented in the form 0 0 0 0.  (1 = true)
+                                                      *                         U L R D           */
 
-        floormap[i] = FLOOR_REGULAR;
-        occupied[i] = false;
+        occupied[i] = false; // All rooms are currently unoccupied by Beings
+        floormapImageCategory[i] = whichFloormapCategory; // ***Will be more nuanced later.***
+        wallmapImageCategory[i] = whichWallmapCategory;   // ***Will be more nuanced later.***
+
+        if(genLayout[i] == GEN_CELL_EMPTY || genLayout[i] == GEN_CELL_WALL) // If empty or meant to be occupied by a wall, then (re)assert the floor's non-existence.
+            floormap[i] = FT_FLOOR_EMPTY;
+        else                                                                // Everything else is given flooring.
+        {
+            floormap[i] = FT_FLOOR_REGULAR;
+        }
+
+        if(genLayout[i] != GEN_CELL_WALL) // If the cell is not meant to be occupied by a wall, (re)assert the wall's non-existence.
+            wallmap[i] = WT_WALL_EMPTY;
 
         switch(genLayout[i])
         {
         case GEN_CELL_EMPTY:
-            wallmap[i] = WALL_IMPASSABLE;
+
             break;
 
         case GEN_CELL_MAIN_ROOM:
-            wallmap[i] = WALL_EMPTY;
+            wallmap[i] = WT_WALL_EMPTY;
             break;
         case GEN_CELL_HALL_ROOM:
-            wallmap[i] = WALL_EMPTY;
+            wallmap[i] = WT_WALL_EMPTY;
             break;
 
         case GEN_CELL_HALLWAY:
-            wallmap[i] = WALL_EMPTY;
+            wallmap[i] = WT_WALL_EMPTY;
             break;
 
         case GEN_CELL_HALLWAY_EXTENSION:
-            wallmap[i] = WALL_EMPTY;
+            wallmap[i] = WT_WALL_EMPTY;
             break;
 
         case GEN_CELL_WALL:
-            wallmap[i] = WALL_IMPASSABLE;
+            wallmap[i] = WT_WALL_IMPASSABLE;
             break;
         }
+
+        if(floormap[i] == FT_FLOOR_REGULAR)
+        {
+            if(i > areaCellWidth // Not on the top row
+                    && floormap[i-areaCellWidth] == FT_FLOOR_REGULAR // Check row above for floor
+                    && floormapImageCategory[i-areaCellWidth] == floormapImageCategory[i]) // Check row above for same category of floor
+            {
+                whatFloormapImageIndex += 1000;
+            }
+
+            if(i%areaCellWidth > 0 // Not the left-edge column
+                    && floormap[i-1] == FT_FLOOR_REGULAR // Check row to the left for floor
+                    && floormapImageCategory[i-1] == floormapImageCategory[i])
+            {
+                whatFloormapImageIndex += 0100;
+            }
+
+            if(i%areaCellWidth < areaCellWidth-1 // Not the right-edge column
+                    && floormap[i+1] == FT_FLOOR_REGULAR // Check row to the right for floor
+                    && floormapImageCategory[i+1] == floormapImageCategory[i])
+            {
+                whatFloormapImageIndex += 0010;
+            }
+
+            if(i/areaCellWidth < areaCellHeight // Not on the bottom row
+                    && floormap[i+areaCellWidth] == FT_FLOOR_REGULAR // Check row below for floor
+                    && floormap[i+areaCellWidth] == floormapImageCategory[i])
+            {
+                whatFloormapImageIndex += 0001;
+            }
+
+            switch(whatFloormapImageIndex)
+            {
+            case 0000: floormapImageIndex[i] = SI_MID_FLOOR; break;
+            case 0001: floormapImageIndex[i] = SI_UP_FLOOR; break;
+            case 0010: floormapImageIndex[i] = SI_LEFT_FLOOR; break;
+            case 0011: floormapImageIndex[i] = SI_NW_FLOOR; break;
+            case 0100: floormapImageIndex[i] = SI_RIGHT_FLOOR; break;
+            case 0101: floormapImageIndex[i] = SI_NE_FLOOR; break;
+            case 0110: floormapImageIndex[i] = SI_ZZ_FLOOR; break;
+            case 0111: floormapImageIndex[i] = SI_N_FLOOR; break;
+            case 1000: floormapImageIndex[i] = SI_DOWN_FLOOR; break;
+            case 1001: floormapImageIndex[i] = SI_II_FLOOR; break;
+            case 1010: floormapImageIndex[i] = SI_SW_FLOOR; break;
+            case 1011: floormapImageIndex[i] = SI_W_FLOOR; break;
+            case 1100: floormapImageIndex[i] = SI_SE_FLOOR; break;
+            case 1101: floormapImageIndex[i] = SI_E_FLOOR; break;
+            case 1110: floormapImageIndex[i] = SI_S_FLOOR; break;
+            case 1111: floormapImageIndex[i] = SI_MID_FLOOR; break;
+            }
+        }
+
+        if(wallmap[i] != WT_WALL_EMPTY)
+        {
+            if(i > areaCellWidth // Not on the top row
+                    && wallmap[i-areaCellWidth] != WT_WALL_EMPTY // Check above row for wall
+                    && wallmapImageCategory[i-areaCellWidth] == wallmapImageCategory[i]) // Check above row for same category of wall
+            {
+                whatWallmapImageIndex += 1000;
+            }
+
+            if(i%areaCellWidth > 0 // Not the left-edge column
+                    && wallmap[i-1] != WT_WALL_EMPTY
+                    && wallmapImageCategory[i-1] == wallmapImageCategory[i])
+            {
+                whatWallmapImageIndex += 0100;
+            }
+
+            if(i%areaCellWidth < areaCellWidth-1 // Not the right-edge column
+                    && wallmap[i+1] != WT_WALL_EMPTY
+                    && wallmapImageCategory[i+1] == wallmapImageCategory[i])
+            {
+                whatWallmapImageIndex += 0010;
+            }
+
+            if(i/areaCellWidth < areaCellHeight // Not on the bottom row
+                    && wallmap[i+areaCellWidth] != WT_WALL_EMPTY
+                    && wallmap[i+areaCellWidth] == wallmapImageCategory[i])
+            {
+                whatWallmapImageIndex += 0001;
+            }
+
+            switch(whatWallmapImageIndex)
+            {
+            case 0000: wallmapImageIndex[i] = SI_MID_WALL; break;
+            case 0001: wallmapImageIndex[i] = SI_ZZ_WALL; break; // Properly SI_UP_WALL, but same tile
+            case 0010: wallmapImageIndex[i] = SI_ZZ_WALL; break; // Properly SI_LEFT_WALL, but same tile
+            case 0011: wallmapImageIndex[i] = SI_NW_WALL; break;
+            case 0100: wallmapImageIndex[i] = SI_ZZ_WALL; break; // Properly SI_RIGHT_WALL, but same tile
+            case 0101: wallmapImageIndex[i] = SI_NE_WALL; break;
+            case 0110: wallmapImageIndex[i] = SI_ZZ_WALL; break;
+            case 0111: wallmapImageIndex[i] = SI_N_WALL; break;
+            case 1000: wallmapImageIndex[i] = SI_DOWN_WALL; break;
+            case 1001: wallmapImageIndex[i] = SI_II_WALL; break;
+            case 1010: wallmapImageIndex[i] = SI_SW_WALL; break;
+            case 1011: wallmapImageIndex[i] = SI_W_WALL; break;
+            case 1100: wallmapImageIndex[i] = SI_SE_WALL; break;
+            case 1101: wallmapImageIndex[i] = SI_E_FLOOR; break;
+            case 1110: wallmapImageIndex[i] = SI_S_FLOOR; break;
+            case 1111: wallmapImageIndex[i] = SI_CROSS_WALL; break;
+            }
+        }
+
     }
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Layout finalized - Ready to read." << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 
@@ -666,7 +813,9 @@ void Generator::Generate()
 {
     switch(generationPhase)
     {
-    case GEN_INACTIVE:
+    case GEN_INACTIVE:                // Wasteful phase that pretty much exists just so I can hit Q to start the engine.
+        std::cout << "Generator test begins..." << std::endl;
+        InitialOutputContainers();
         generationComplete = false;
         generationPhaseComplete = true;
         break;
@@ -698,12 +847,17 @@ void Generator::Generate()
     case GEN_COMMIT:
         Commit();
         break;
-
     }
 
-    if(generationPhase == GEN_COMMIT)
+    if(generationPhase == GEN_COMPLETE)
     {
-        ResetState();
+#ifdef D_GEN_PHASE_CHECK
+        std::cout << "Generation complete!" << std::endl;
+#endif // D_GEN_PHASE_CHECK
+        InitialState();
+#ifdef D_GEN_PHASE_CHECK
+        std::cout << "Generator flags reset for reuse." << std::endl;
+#endif // D_GEN_PHASE_CHECK
         generationComplete = true;
     }
     else if(generationPhaseComplete)
@@ -717,29 +871,31 @@ void Generator::Generate()
     }
 }
 
-void Generator::Result(
-std::vector<bool>*a,
-std::vector<int> *b,
-std::vector<int> *c,
+/*
+void Generator::Output(
+    std::vector<bool>&a,
+    std::vector<int> &b,
+    std::vector<int> &c,
 
-std::vector<int> *d,
-std::vector<int> *e,
-std::vector<int> *f,
-std::vector<int> *g)
+    std::vector<int> &d,
+    std::vector<int> &e,
+    std::vector<int> &f,
+    std::vector<int> &g)
 {
-    *a = occupied;
-    *b = floormap;
-    *c = wallmap;
+    a = occupied;
+    b = floormap;
+    c = wallmap;
 
-    *d = floormapImageCategory;
-    *e = floormapImageIndex;
-    *f = wallmapImageCategory;
-    *g = wallmapImageIndex;
+    d = floormapImageCategory;
+    e = floormapImageIndex;
+    f = wallmapImageCategory;
+    g = wallmapImageIndex;
 }
+*/
 
 
 
-void Generator::ResetState()
+void Generator::InitialState()
 {
     /// Random
     mtRng.seed(static_cast<unsigned int>(std::time(0)));
@@ -749,7 +905,7 @@ void Generator::ResetState()
     D_GENERATORVISUALIZATIONPAUSE = false;
 
     generationPhase = GEN_INACTIVE;
-    generationComplete = true;           // Will become false as soon as we reach Generate()'s GEN_INACTIVE case.
+    generationComplete = false;
     generationPhaseComplete = false;
 
     bodiesGenerated = false;
@@ -781,16 +937,16 @@ void Generator::ResetState()
     physics->SetAllowSleeping(true);
     b2Vec2 physicsGravity(0.0f, 0.0f);
 
-    //float32 timeStep =  1.0f / 60.0f;
-    //int32 velocityIterations = 10;
-    //int32 positionIterations = 8;
+    timeStep =  1.0f / 10.0f;
+    velocityIterations = 1;
+    positionIterations = 10;
 
     roomGenBody.type = b2_dynamicBody;
     roomGenBody.fixedRotation = true;
-    roomGenBody.linearDamping = 0.0f;
+    roomGenBody.linearDamping = 0.3f;
     roomGenBody.allowSleep = true;
 
-    /// Container reset
+    /// Vector memory reset
     for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
     {
         delete *it;
@@ -803,11 +959,30 @@ void Generator::ResetState()
     std::vector<MinTreeEdge>().swap(minTreeInput);
     std::vector<MinTreeEdge>().swap(minTreeOutput);
     std::vector<int>().swap(genLayout);
+}
 
-    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
-    {
-        genLayout.push_back(GEN_CELL_EMPTY);
-    }
+void Generator::InitialOutputContainers()
+{
+    genLayout.reserve(areaCellArea);
+    occupied.reserve(areaCellArea);
+    floormap.reserve(areaCellArea);
+    wallmap.reserve(areaCellArea);
+    floormapImageCategory.reserve(areaCellArea);
+    floormapImageIndex.reserve(areaCellArea);
+    wallmapImageCategory.reserve(areaCellArea);
+    wallmapImageIndex.reserve(areaCellArea);
+}
+
+void Generator::ReleaseOutputContainers()
+{
+    std::vector<bool>().swap(occupied);
+    std::vector<int>().swap(floormap);
+    std::vector<int>().swap(wallmap);
+
+    std::vector<int>().swap(floormapImageCategory);
+    std::vector<int>().swap(floormapImageIndex);
+    std::vector<int>().swap(wallmapImageCategory);
+    std::vector<int>().swap(wallmapImageIndex);
 }
 
 void Generator::SetRemovedEdgeReturnPercentage(float rerp)

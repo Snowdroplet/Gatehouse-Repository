@@ -64,6 +64,8 @@ int subMenuOpen;
 
 int areaCellWidth = 100; // May become variable in the future.
 int areaCellHeight = 100;
+int areaCellArea = areaCellWidth*areaCellHeight;
+
 int areaWidth = TILESIZE*areaCellWidth;
 int areaHeight = TILESIZE*areaCellHeight;
 int miniAreaWidth = MINI_TILESIZE*areaCellWidth;

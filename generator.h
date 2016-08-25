@@ -26,14 +26,15 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 
 enum enumGenerationPhases
 {
-    GEN_INACTIVE = 0,
+    GEN_INACTIVE = 0,             // Wasteful phase that pretty much exists just so I can hit Q to start the engine.
     GEN_PHYSICAL_DISTRIBUTION = 1,
     GEN_MAIN_ROOM_SELECTION = 2,
     GEN_TRIANGULATION = 3,
     GEN_MST = 4,
     GEN_LAYOUT_SKELETON = 5,
     GEN_LAYOUT_FILL = 6,
-    GEN_COMMIT = 7
+    GEN_COMMIT = 7,
+    GEN_COMPLETE = 8
 };
 
 enum enumGenLayoutCellTypes
@@ -100,9 +101,9 @@ private:
     b2World *physics;
     b2Vec2 physicsGravity;
 
-    //extern float32 timeStep;
-    //extern int32 velocityIterations;
-    //extern int32 positionIterations;
+    float32 timeStep;
+    int32 velocityIterations;
+    int32 positionIterations;
 
     std::vector<RoomGenBox*>mainRooms;
 
@@ -129,27 +130,8 @@ private:
     void LayoutFill();
     void Commit();
 
-    void ResetState();              // Reset generator state flags and variables concerning generation.
-
-    /// Generator's output - Vectors correspond to those in Area.
-    void Result(std::vector<bool>*a,
-                std::vector<int> *b,
-                std::vector<int> *c,
-
-                std::vector<int> *d,
-                std::vector<int> *e,
-                std::vector<int> *f,
-                std::vector<int> *g
-                );
-
-    std::vector<bool>occupied;               // a
-    std::vector<int>floormap;                // b
-    std::vector<int>wallmap;                 // c
-
-    std::vector<int>floormapImageCategory;   // d
-    std::vector<int>floormapImageIndex;      // e
-    std::vector<int>wallmapImageCategory;    // f
-    std::vector<int>wallmapImageIndex;       // g
+    void InitialState();              // Set generator state flags and variables concerning generation to their initial state.
+    void InitialOutputContainers();   // Set the containers used to output generated area layout to their initial state.
 
 
 public:
@@ -170,12 +152,30 @@ public:
 
     std::vector<int>genLayout;
 
-
-
     Generator();
     ~Generator();
 
     void Generate();                // Generates an area.
+    /// Output vectors corresponding to vectors in Area.
+    std::vector<bool>occupied;               // a
+    std::vector<int>floormap;                // b
+    std::vector<int>wallmap;                 // c
+
+    std::vector<int>floormapImageCategory;   // d
+    std::vector<int>floormapImageIndex;      // e
+    std::vector<int>wallmapImageCategory;    // f
+    std::vector<int>wallmapImageIndex;       // g
+    /*
+    void Output(std::vector<bool>&a,
+                std::vector<int> &b,
+                std::vector<int> &c,
+
+                std::vector<int> &d,
+                std::vector<int> &e,
+                std::vector<int> &f,
+                std::vector<int> &g
+               );
+    */
 
     /// Retrieve generator state info
     bool GetGenerationComplete();   // Simply returns generation completion flag.
@@ -183,6 +183,8 @@ public:
 
     /// Functions to turn the knobs before hitting Generate()
     void SetRemovedEdgeReturnPercentage(float rerp);
+
+    void ReleaseOutputContainers();   // Swap output containers with empty vectors.
 
 
     ///Debug and demonstration stuff

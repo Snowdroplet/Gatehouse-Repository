@@ -181,17 +181,17 @@ int main(int argc, char *argv[])
 
 #endif
 
-    //player = new Player(5,5);
-    player = new Player(true); //true to initalize saved player - Remove in end for atrium map
-    LoadPlayerState("player",player);
-    player->InitByArchive();
+    player = new Player(50,50);
+    //player = new Player(true); //true to initalize saved player - Remove in end for atrium map
+    //LoadPlayerState("player",player);
+    //player->InitByArchive();
 
     //End testing
 
     beings.push_back(player);
 
-    beings.push_back(new NPC(SLIME,6,4));
-    beings.push_back(new NPC(QUICKLING,8,6));
+    beings.push_back(new NPC(SLIME,45,45));
+    beings.push_back(new NPC(QUICKLING,55,55));
 
     al_start_timer(FPStimer);
 
@@ -516,7 +516,7 @@ void LoadingLogic()
         if(keyInput[KEY_Q] && D_PROGRESSPAUSEDVISUALIZATIONTIMER == 0)
         {
             generator->D_UNPAUSE_VISUALIZATION();
-            D_PROGRESSPAUSEDVISUALIZATIONTIMER = 100;
+            D_PROGRESSPAUSEDVISUALIZATIONTIMER = 50;
         }
 
 #endif // D_GEN_VISUALIZATION_PHASE_PAUSE
@@ -529,17 +529,39 @@ void LoadingLogic()
 #endif // D_GEN_VISUALIZATION_PHASE_PAUSE
 
 
-        /// ** There is a design bug here: 1) needGeneration is a global in gamesystem and can be botched if generators are running in the background.
-        ///    Should make this more nuanced. Maybe a vector of needGenerations for each level.
-    if(needGeneration
-#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
-            && !generator->D_GET_GENERATOR_VISUALIZATION_PAUSE()
-#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
-      )
+    /// ** There is a design bug here: 1) needGeneration is a global in gamesystem and can be botched if generators are running in the background.
+    ///    Should make this more nuanced. Maybe a vector of needGenerations for each level.
+    if(needGeneration)
     {
-        generator->Generate();
-        if(generator->GetGenerationComplete())
-            needGeneration = false;
+#ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
+        if(!generator->D_GET_GENERATOR_VISUALIZATION_PAUSE())
+#endif // D_GEN_VISUALIZATION_PHASE_PAUSE
+        {
+            generator->Generate();
+            if(generator->GetGenerationComplete())
+                needGeneration = false;
+        }
+    }
+    else // !needGeneration
+    {
+        // What is produced by the generator becomes the area.
+
+        area->occupied = generator->occupied;
+        area->floormap = generator->floormap;
+        area->wallmap  = generator->wallmap;
+        area->floormapImageCategory = generator->floormapImageCategory;
+        area->wallmapImageCategory  = generator->wallmapImageCategory;
+        area->wallmapImageIndex     = generator->wallmapImageIndex;
+
+        // ***Set being positions here
+
+
+        // Release memory
+        generator->ReleaseOutputContainers();
+
+
+        // Loading complete! Go to main game.
+        mainPhase = MAIN_PHASE_GAME;
     }
 
 
@@ -838,36 +860,37 @@ void DrawTiles()
 
             int cellIndex = y*areaCellWidth+x;
 
-            int floorRegionDrawX = area->floormapImageCategory[cellIndex]%area->floormapImageIndex[cellIndex]*TILESIZE;
-
-            int floorRegionDrawY = FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->floormapImageCategory[cellIndex]*TILESIZE
-                                   + area->floormapImageIndex[cellIndex]/FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
-
-
-            al_draw_bitmap_region(gfxFloorTiles,
-                                  floorRegionDrawX,
-                                  floorRegionDrawY,
-                                  floorRegionDrawX+TILESIZE,
-                                  floorRegionDrawY+TILESIZE,
-                                  x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                  y*TILESIZE + PLAY_H/2 - player->yPosition,
-                                  0);
-
-            if(area->wallmap[cellIndex] != WALL_EMPTY)
+            if(area->floormap[cellIndex] != FT_FLOOR_EMPTY)
             {
-                int wallRegionDrawX = area->wallmapImageCategory[cellIndex]%area->wallmapImageIndex[cellIndex]*TILESIZE;
+                int floorRegionDrawX = area->floormapImageIndex[cellIndex]%FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
+                int floorRegionDrawY = FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->floormapImageCategory[cellIndex]*TILESIZE
+                                        + area->floormapImageIndex[cellIndex]/FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
 
+
+                al_draw_bitmap_region(gfxFloorTiles,
+                                    floorRegionDrawX,
+                                    floorRegionDrawY,
+                                    floorRegionDrawX+TILESIZE,
+                                    floorRegionDrawY+TILESIZE,
+                                    x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                    y*TILESIZE + PLAY_H/2 - player->yPosition,
+                                    0);
+            }
+
+            if(area->wallmap[cellIndex] != WT_WALL_EMPTY)
+            {
+                int wallRegionDrawX = area->wallmapImageIndex[cellIndex]%FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
                 int wallRegionDrawY =  WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->wallmapImageCategory[cellIndex]*TILESIZE
-                                   + area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
+                                       + area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
 
                 al_draw_bitmap_region(gfxWallTiles,
-                                      wallRegionDrawX,
-                                      wallRegionDrawY,
-                                      wallRegionDrawX+TILESIZE,
-                                      wallRegionDrawY+TILESIZE,
-                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                      y*TILESIZE + PLAY_H/2 - player->yPosition,
-                                      0);
+                                    wallRegionDrawX,
+                                    wallRegionDrawY,
+                                    wallRegionDrawX+TILESIZE,
+                                    wallRegionDrawY+TILESIZE,
+                                    x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                    y*TILESIZE + PLAY_H/2 - player->yPosition,
+                                    0);
             }
         }
     }

@@ -6,17 +6,17 @@ Area::Area()
     floor = "test floor";
     dLevel = 0;
 
-    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
+    for(int i = 0; i < areaCellArea; i++)
     {
         occupied.push_back(false);
-        wallmap.push_back(WALL_EMPTY);
-        floormap.push_back(FLOOR_REGULAR);
+        wallmap.push_back(WT_WALL_EMPTY);
+        floormap.push_back(FT_FLOOR_EMPTY);
 
-        floormapImageCategory.push_back(COLD_DUNGEON_FLOOR);
-        floormapImageIndex.push_back(MID_FLOOR);
+        floormapImageCategory.push_back(FC_COLD_DUNGEON_FLOOR);
+        floormapImageIndex.push_back(SI_MID_FLOOR);
 
-        wallmapImageCategory.push_back(LIGHT_DUNGEON_WALL);
-        wallmapImageIndex.push_back(MID_WALL);
+        wallmapImageCategory.push_back(WC_LIGHT_DUNGEON_WALL);
+        wallmapImageIndex.push_back(SI_MID_WALL);
     }
 
 }
