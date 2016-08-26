@@ -98,6 +98,8 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="spell.h" />
+		<Unit filename="steeringagent.cpp" />
+		<Unit filename="steeringagent.h" />
 		<Unit filename="terminal.cpp" />
 		<Unit filename="terminal.h" />
 		<Extensions>

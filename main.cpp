@@ -663,7 +663,7 @@ void LoadingDrawing()
             }
 
             /// Draw room layout as coloured rectangles
-            if(generator->GetGenerationPhase() >= GEN_LAYOUT_SKELETON) // Draw from cell layout phase onwards
+            if(generator->GetGenerationPhase() >= GEN_LAYOUT_FLOOR_SKELETON) // Draw from cell layout phase onwards
             {
                 for(int y = 0; y < areaCellHeight; y++)
                 {
@@ -709,6 +709,13 @@ void LoadingDrawing()
                                                      x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
                                                      y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
                                                      DARK_YELLOW);
+                            break;
+                        case GEN_CELL_WALL_SKELETON:
+                            al_draw_filled_rectangle(x*MINI_TILESIZE                 - loadingCamX,
+                                                     y*MINI_TILESIZE                 - loadingCamY,
+                                                     x*MINI_TILESIZE + MINI_TILESIZE - loadingCamX,
+                                                     y*MINI_TILESIZE + MINI_TILESIZE - loadingCamY,
+                                                     DARK_VIOLET);
                             break;
                         }
                     }

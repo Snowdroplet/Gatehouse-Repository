@@ -15,6 +15,7 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 #include "gamesystem.h"
 #include "resource.h"
 #include "roomgenbox.h"
+#include "steeringagent.h"
 #include "delaunay.h"
 #include "mintree.h"
 
@@ -26,26 +27,45 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 
 enum enumGenerationPhases
 {
-    GEN_INACTIVE = 0,             // Wasteful phase that pretty much exists just so I can hit Q to start the engine.
+    GEN_INACTIVE = 0,
     GEN_PHYSICAL_DISTRIBUTION = 1,
     GEN_MAIN_ROOM_SELECTION = 2,
     GEN_TRIANGULATION = 3,
     GEN_MST = 4,
-    GEN_LAYOUT_SKELETON = 5,
-    GEN_LAYOUT_FILL = 6,
-    GEN_COMMIT = 7,
-    GEN_COMPLETE = 8
+    GEN_LAYOUT_FLOOR_SKELETON = 5,
+    GEN_LAYOUT_FLOOR_FILL = 6,
+    GEN_LAYOUT_WALL_SKELETON = 7,
+    GEN_LAYOUT_WALL_FILL = 8,
+    GEN_COMMIT = 9,
+    GEN_COMPLETE = 10
 };
 
 enum enumGenLayoutCellTypes
 {
-    GEN_CELL_EMPTY = 0,
-    GEN_CELL_MAIN_ROOM = 1,
-    GEN_CELL_HALL_ROOM = 2,
-    GEN_CELL_HALLWAY_SKELETON = 3,
-    GEN_CELL_HALLWAY = 4,
-    GEN_CELL_HALLWAY_EXTENSION = 5,
-    GEN_CELL_WALL = 6,
+    /// Nothing
+    GEN_CELL_EMPTY                = -1,
+
+    /// Floor
+    GEN_CELL___FLOOR_MARKER_BEGIN = 0,          // Useful for applications like this:   if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && < GEN_CELL___FLOOR_MARKER_END)
+                                                // To prevent rather confusing induction regarding what cells we are including or excluding.
+
+    GEN_CELL_MAIN_ROOM            = 1,
+    GEN_CELL_HALL_ROOM            = 2,
+    GEN_CELL_HALLWAY_SKELETON     = 3,
+    GEN_CELL_HALLWAY              = 4,
+    GEN_CELL_HALLWAY_EXTENSION    = 5,
+
+    GEN_CELL___FLOOR_MARKER_END   = 6,
+
+    /// Walls
+    GEN_CELL___MARKER_WALLS_BEGIN = 7,
+
+    GEN_CELL_WALL_SKELETON        = 8,
+    GEN_CELL_WALL_DOOR            = 9,
+    GEN_CELL_WALL_IMPASSABLE      = 10,
+
+    GEN_CELL___MARKER_WALLS_END   = 11,
+
 };
 
 enum enumHallwayPathAxes
@@ -96,7 +116,7 @@ private:
     float hallwayExtensionRate;  // The chance that the adopted cell will become a hallway extension cell.
     float hallwayConversionRate; // The chance that the adopted cell will hallway will become a proper hallway cell.
 
-    /// Concerning the distribution of rooms by physics simulation:
+    /// Concerning the distribution of room objects by physics simulation:
 
     b2World *physics;
     b2Vec2 physicsGravity;
@@ -105,11 +125,20 @@ private:
     int32 velocityIterations;
     int32 positionIterations;
 
-    std::vector<RoomGenBox*>mainRooms;
 
     b2BodyDef roomGenBody;
     b2PolygonShape roomGenPolygonShape;
     b2FixtureDef roomGenFixture;
+
+    /// Concering the use of seperation steering behavior to distribute room objects:
+    std::vector<SteeringAgent>steeringAgents;
+    Point ComputeSteeringAgentAlignment(SteeringAgent a);
+    Point ComputeSteeringAgentCohesion(SteeringAgent a);
+    Point ComputeSteeringAgentSeparation(SteeringAgent a);
+    void UpdateSteeringAgents();
+
+    /// Rooms where dimensions meet a certain threshold size.
+    std::vector<RoomGenBox*>mainRooms;
 
     /// Concerning the use of delaunay triangulation to generate a connecting all the main rooms:
     std::vector<Triangle>triangles;
@@ -126,8 +155,10 @@ private:
     void MainRoomSelection();
     void Triangulation();
     void MinimumSpanningTree();
-    void LayoutSkeleton();
-    void LayoutFill();
+    void LayoutFloorSkeleton();
+    void LayoutFloorFill();
+    void LayoutWallSkeleton();
+    void LayoutWallFill();
     void Commit();
 
     void InitialState();              // Set generator state flags and variables concerning generation to their initial state.
@@ -144,6 +175,7 @@ public:
 
     std::vector<MinTreeEdge>minTreeOutput;   // MinTreeEdges hold cell coordinates of endpoint nodes See mintree.h.
     MinTreeGraph mtg;
+
 
 #ifdef D_SHOW_LOADING_VISUALIZATION
     // The following is purposeless if the visualization is not going to be shown.
@@ -165,17 +197,6 @@ public:
     std::vector<int>floormapImageIndex;      // e
     std::vector<int>wallmapImageCategory;    // f
     std::vector<int>wallmapImageIndex;       // g
-    /*
-    void Output(std::vector<bool>&a,
-                std::vector<int> &b,
-                std::vector<int> &c,
-
-                std::vector<int> &d,
-                std::vector<int> &e,
-                std::vector<int> &f,
-                std::vector<int> &g
-               );
-    */
 
     /// Retrieve generator state info
     bool GetGenerationComplete();   // Simply returns generation completion flag.
