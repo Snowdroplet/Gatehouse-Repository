@@ -648,17 +648,51 @@ void Generator::LayoutWallSkeleton()
     /// If a cell is empty
     /// and is next to a floor cell
     /// it becomes a wall.
-    for(int i = 0; i < areaCellHeight*areaCellWidth; i++)
+    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
     {
-        if(genLayout[i] == GEN_CELL_EMPTY)
+        if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL___FLOOR_MARKER_END) // Check if this cell is floor
         {
-            // (Don't forget that logical OR is lower precedence than logical AND.)
-            if((i > areaCellWidth                  && genLayout[i-areaCellWidth] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i-areaCellWidth] < GEN_CELL___FLOOR_MARKER_END)  // Not on top edge - Check Above
-            || (i%areaCellWidth > 0                && genLayout[i-1] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i-1] < GEN_CELL___FLOOR_MARKER_END)  // Not on left edge - Check left
-            || (i%areaCellWidth < areaCellWidth-1  && genLayout[i+i] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i+1] < GEN_CELL___FLOOR_MARKER_END)  // Not on right edge - Check right
-            || (i/areaCellWidth < areaCellHeight-1 && genLayout[i+areaCellWidth] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL___FLOOR_MARKER_END)) // Not on bottom edge - Check below
+
+            if(i >= areaCellWidth) // Not on top edge
             {
-                genLayout[i] = GEN_CELL_WALL_SKELETON;
+                if(genLayout[i-areaCellWidth] == GEN_CELL_EMPTY) // Check above for empty space
+                    genLayout[i-areaCellWidth] = GEN_CELL_WALL_SKELETON;
+            }
+            if(i%areaCellWidth > 0) // Not on left edge
+            {
+                if(genLayout[i-1] == GEN_CELL_EMPTY)  // Check left for any type of floor
+                    genLayout[i-1] = GEN_CELL_WALL_SKELETON;
+            }
+            if(i%areaCellWidth < areaCellWidth-1) // Not on right edge
+            {
+                if(genLayout[i+1] == GEN_CELL_EMPTY)  // Check right for any type of floor
+                    genLayout[i+1] = GEN_CELL_WALL_SKELETON;
+            }
+            if(i/areaCellWidth < areaCellHeight-1) // Not on bottom edge
+            {
+                if(genLayout[i+areaCellWidth] == GEN_CELL_EMPTY) // Check below for any type of floor
+                    genLayout[i+areaCellWidth] = GEN_CELL_WALL_SKELETON;
+            }
+
+            if(i >= areaCellWidth && i%areaCellWidth > 0) // Not on top edge or left edge
+            {
+                if(genLayout[i-areaCellWidth-1] == GEN_CELL_EMPTY)
+                    genLayout[i-areaCellWidth-1] = GEN_CELL_WALL_SKELETON;
+            }
+            if(i >= areaCellWidth && i%areaCellWidth < areaCellWidth-1) // Not on top edge or right edge
+            {
+                if(genLayout[i-areaCellWidth+1] == GEN_CELL_EMPTY)
+                    genLayout[i-areaCellWidth+1] = GEN_CELL_WALL_SKELETON;
+            }
+            if(i/areaCellWidth < areaCellHeight-1 && i%areaCellWidth > 0) // Not on the bottom edge or the left edge
+            {
+                if(genLayout[i+areaCellWidth-1] == GEN_CELL_EMPTY)
+                    genLayout[i+areaCellWidth-1] = GEN_CELL_WALL_SKELETON;
+            }
+            if(i/areaCellWidth < areaCellHeight-1 && i%areaCellWidth < areaCellWidth-1)
+            {
+                if(genLayout[i+areaCellWidth+1] == GEN_CELL_EMPTY)
+                    genLayout[i+areaCellWidth+1] = GEN_CELL_WALL_SKELETON;
             }
         }
     }
@@ -684,7 +718,7 @@ void Generator::Commit()
     /// ### See InitialOutputContainers() for default, empty states. ###
 
     // The theme of dungeon wall/ floor to draw
-    int whichFloormapCategory = FC_COLD_DUNGEON_FLOOR;
+    int whichFloormapCategory = FC_STONE_DUNGEON_FLOOR;
     int whichWallmapCategory = WC_LIGHT_DUNGEON_WALL;
 
     for(int i = 0; i < areaCellHeight*areaCellHeight; i++)
@@ -700,108 +734,100 @@ void Generator::Commit()
         wallmapImageCategory[i] = whichWallmapCategory;   // ***Will be more nuanced later.***
 
 
-        if(genLayout[i] == GEN_CELL_WALL_IMPASSABLE)
-            wallmap[i] = WT_WALL_IMPASSABLE;
+        ///                  ########### DETAIL THE FLOOR ##########
 
-        if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL___FLOOR_MARKER_END)
+        if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL___FLOOR_MARKER_END) //Cell is a type of floor // ***Will be more nuanced later.***
+        {
             floormap[i] = FT_FLOOR_REGULAR;
 
-
-        ///                     ########### DETAIL THE WALLS ##########
-
-        if(wallmap[i] != WT_WALL_EMPTY) // Not empty - A wall exists on this cell
-        {
-            if(i > areaCellWidth // Not on the top row
-                    && wallmap[i-areaCellWidth] != WT_WALL_EMPTY) // Check above row for wall's existence
+            if(i >= areaCellWidth) // Not on the top row
             {
-                whatWallmapImageIndex += 1000;
+                if(genLayout[i-areaCellWidth] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i-areaCellWidth] < GEN_CELL___FLOOR_MARKER_END) // Check row above for floor    ***Beware, we are no longer checking for the same category of flooring***
+                    whatFloormapImageIndex += 1000; // U = 1
             }
-
-            if(i%areaCellWidth > 0 // Not the left-edge column
-                    && wallmap[i-1] != WT_WALL_EMPTY) // Check to the left for wall's existence
+            if(i%areaCellWidth > 0) // Not the left-edge column
             {
-                whatWallmapImageIndex += 100;
+                if(genLayout[i-1] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i-1] < GEN_CELL___FLOOR_MARKER_END) // Check row to the left for floor
+                    whatFloormapImageIndex += 0100; // L = 1
             }
-
-            if(i%areaCellWidth < areaCellWidth-1 // Not the right-edge column
-                    && wallmap[i+1] != WT_WALL_EMPTY) // Check to the right for wall's existence
+            if(i%areaCellWidth < areaCellWidth-1) // Not the right-edge column
             {
-                whatWallmapImageIndex += 10;
+                if(genLayout[i+1] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i+1] < GEN_CELL___FLOOR_MARKER_END) // Check row to the right for floor
+                    whatFloormapImageIndex += 0010; // R = 1
             }
-
-            if(i/areaCellWidth < areaCellHeight-1 // Not on the bottom row
-                    && wallmap[i+areaCellWidth] != WT_WALL_EMPTY) // Check below for wall's existence
+            if(i/areaCellWidth < areaCellHeight-1) // Not on the bottom row
             {
-                whatWallmapImageIndex += 1;
-            }
-
-            switch(whatWallmapImageIndex)
-            {
-            case    0: wallmapImageIndex[i] = SI_MID_WALL; break;
-            case    1: wallmapImageIndex[i] = SI_ZZ_WALL; break; // Properly SI_UP_WALL, but same tile
-            case   10: wallmapImageIndex[i] = SI_ZZ_WALL; break; // Properly SI_LEFT_WALL, but same tile
-            case   11: wallmapImageIndex[i] = SI_NW_WALL; break;
-            case  100: wallmapImageIndex[i] = SI_ZZ_WALL; break; // Properly SI_RIGHT_WALL, but same tile
-            case  101: wallmapImageIndex[i] = SI_NE_WALL; break;
-            case  110: wallmapImageIndex[i] = SI_ZZ_WALL; break;
-            case  111: wallmapImageIndex[i] = SI_N_WALL; break;
-            case 1000: wallmapImageIndex[i] = SI_DOWN_WALL; break;
-            case 1001: wallmapImageIndex[i] = SI_II_WALL; break;
-            case 1010: wallmapImageIndex[i] = SI_SW_WALL; break;
-            case 1011: wallmapImageIndex[i] = SI_W_WALL; break;
-            case 1100: wallmapImageIndex[i] = SI_SE_WALL; break;
-            case 1101: wallmapImageIndex[i] = SI_E_FLOOR; break;
-            case 1110: wallmapImageIndex[i] = SI_S_FLOOR; break;
-            case 1111: wallmapImageIndex[i] = SI_CROSS_WALL; break;
-            }
-        }
-
-        ///                               ########### FLOOR ##########
-
-        if(floormap[i] != FT_FLOOR_EMPTY) // Not empty - Floor exists on this cell
-        {
-            if(i > areaCellWidth // Not on the top row
-                    && floormap[i-areaCellWidth] != FT_FLOOR_EMPTY) // Check row above for floor    ***Beware, we are no longer checking for the same category of flooring***
-            {
-                whatFloormapImageIndex += 1000;
-            }
-
-            if(i%areaCellWidth > 0 // Not the left-edge column
-                    && floormap[i-1] != FT_FLOOR_EMPTY) // Check row to the left for floor's existence
-            {
-                whatFloormapImageIndex += 100;
-            }
-
-            if(i%areaCellWidth < areaCellWidth-1 // Not the right-edge column
-                    && floormap[i+1] != FT_FLOOR_EMPTY) // Check row to the right for floor's existence
-            {
-                whatFloormapImageIndex += 10;
-            }
-
-            if(i/areaCellWidth < areaCellHeight-1 // Not on the bottom row
-                    && floormap[i+areaCellWidth] != FT_FLOOR_EMPTY) // Check row below for floor's existence
-            {
-                whatFloormapImageIndex += 1;
+                if(genLayout[i+areaCellWidth] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL___FLOOR_MARKER_END) // Check row below for floor
+                    whatFloormapImageIndex += 0001; // D = 1
             }
 
             switch(whatFloormapImageIndex)
             {
-            case    0: floormapImageIndex[i] = SI_MID_FLOOR; break;
-            case    1: floormapImageIndex[i] = SI_UP_FLOOR; break;
-            case   10: floormapImageIndex[i] = SI_LEFT_FLOOR; break;
-            case   11: floormapImageIndex[i] = SI_NW_FLOOR; break;
-            case  100: floormapImageIndex[i] = SI_RIGHT_FLOOR; break;
-            case  101: floormapImageIndex[i] = SI_NE_FLOOR; break;
-            case  110: floormapImageIndex[i] = SI_ZZ_FLOOR; break;
-            case  111: floormapImageIndex[i] = SI_N_FLOOR; break;
-            case 1000: floormapImageIndex[i] = SI_DOWN_FLOOR; break;
-            case 1001: floormapImageIndex[i] = SI_II_FLOOR; break;
-            case 1010: floormapImageIndex[i] = SI_SW_FLOOR; break;
-            case 1011: floormapImageIndex[i] = SI_W_FLOOR; break;
-            case 1100: floormapImageIndex[i] = SI_SE_FLOOR; break;
-            case 1101: floormapImageIndex[i] = SI_E_FLOOR; break;
-            case 1110: floormapImageIndex[i] = SI_S_FLOOR; break;
-            case 1111: floormapImageIndex[i] = SI_MID_FLOOR; break;
+            case 0000: floormapImageIndex[i] = SI_XXXX_FLOOR; break;
+            case 0001: floormapImageIndex[i] = SI_XXXD_FLOOR; break;
+            case 0010: floormapImageIndex[i] = SI_XXRX_FLOOR; break;
+            case 0011: floormapImageIndex[i] = SI_XXRD_FLOOR; break;
+            case 0100: floormapImageIndex[i] = SI_XLXX_FLOOR; break;
+            case 0101: floormapImageIndex[i] = SI_XLXD_FLOOR; break;
+            case 0110: floormapImageIndex[i] = SI_XLRX_FLOOR; break;
+            case 0111: floormapImageIndex[i] = SI_XLRD_FLOOR; break;
+            case 1000: floormapImageIndex[i] = SI_UXXX_FLOOR; break;
+            case 1001: floormapImageIndex[i] = SI_UXXD_FLOOR; break;
+            case 1010: floormapImageIndex[i] = SI_UXRX_FLOOR; break;
+            case 1011: floormapImageIndex[i] = SI_UXRD_FLOOR; break;
+            case 1100: floormapImageIndex[i] = SI_ULXX_FLOOR; break;
+            case 1101: floormapImageIndex[i] = SI_ULXD_FLOOR; break;
+            case 1110: floormapImageIndex[i] = SI_ULRX_FLOOR; break;
+            case 1111: floormapImageIndex[i] = SI_ULRD_FLOOR; break;
+            }
+        }
+
+        ///                     ########### DETAIL THE WALLS ##########
+
+        if(genLayout[i] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i] < GEN_CELL___WALL_MARKER_END) // Cell is a type of wall // ***Will be more nuanced later.***
+        {
+            wallmap[i] = WT_WALL_IMPASSABLE;
+
+            if(i >= areaCellWidth)// Not on the top row
+            {
+                if(genLayout[i-areaCellWidth] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i-areaCellHeight] < GEN_CELL___WALL_MARKER_END) // Check above row for wall's existence
+                    whatWallmapImageIndex += 1000; // U = 1
+            }
+            if(i%areaCellWidth > 0) // Not the left-edge column
+            {
+                if(genLayout[i-1] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i-1] < GEN_CELL___WALL_MARKER_END) // Check to the left for wall's existence
+                    whatWallmapImageIndex += 0100; // L = 1
+            }
+            if(i%areaCellWidth < areaCellWidth-1) // Not the right-edge column
+            {
+                if(genLayout[i+1] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i+1] < GEN_CELL___WALL_MARKER_END) // Check to the right for wall's existence
+                    whatWallmapImageIndex += 0010; // R = 1
+            }
+
+            if(i/areaCellWidth < areaCellHeight-1) // Not on the bottom row
+            {
+                if(genLayout[i+areaCellWidth] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL___WALL_MARKER_END) // Check below for wall's existence
+                    whatWallmapImageIndex += 0001; // D = 1
+            }
+
+            switch(whatWallmapImageIndex)
+            {
+            case 0000: wallmapImageIndex[i] = SI_XXXX_WALL; break;
+            case 0001: wallmapImageIndex[i] = SI_XXXD_WALL; break;
+            case 0010: wallmapImageIndex[i] = SI_XXRX_WALL; break;
+            case 0011: wallmapImageIndex[i] = SI_XXRD_WALL; break;
+            case 0100: wallmapImageIndex[i] = SI_XLXX_WALL; break;
+            case 0101: wallmapImageIndex[i] = SI_XLXD_WALL; break;
+            case 0110: wallmapImageIndex[i] = SI_XLRX_WALL; break;
+            case 0111: wallmapImageIndex[i] = SI_XLRD_WALL; break;
+            case 1000: wallmapImageIndex[i] = SI_UXXX_WALL; break;
+            case 1001: wallmapImageIndex[i] = SI_UXXD_WALL; break;
+            case 1010: wallmapImageIndex[i] = SI_UXRX_WALL; break;
+            case 1011: wallmapImageIndex[i] = SI_UXRD_WALL; break;
+            case 1100: wallmapImageIndex[i] = SI_ULXX_WALL; break;
+            case 1101: wallmapImageIndex[i] = SI_ULXD_WALL; break;
+            case 1110: wallmapImageIndex[i] = SI_ULRX_WALL; break;
+            case 1111: wallmapImageIndex[i] = SI_ULRD_WALL; break;
             }
         }
 

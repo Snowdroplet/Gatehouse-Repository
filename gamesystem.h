@@ -14,7 +14,7 @@
 
 /// Main
 
-#define D_CREATE_TESTING_AREA                         // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
+//#define D_CREATE_TESTING_AREA                         // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
 #define D_CREATE_TESTING_PLAYER                       // Creates a new "test" player instead of reading one from the deserialization of playerfile.
 
 #define D_DRAW_DEBUG_OVERLAY                          // Draws additional debug information on screen, such as the camera's X/Y position
@@ -96,10 +96,6 @@ int scaleY = (windowHeight - scaleH) / 2;
 
 const int TILESIZE = 32;     //The size of a cell
 const int MINI_TILESIZE = TILESIZE/4; //The size of a cell in the map viewer/ room generation
-
-const int TERMINAL_H = 120;
-const int PLAY_H = SCREEN_H-TERMINAL_H;
-
 
 const int STATS_BAR_OPEN_X = 210;
 const int STATS_BAR_OPEN_Y = 580;
@@ -197,7 +193,6 @@ extern int subMenuOpen;
 
 extern int areaCellWidth;  //How many cells long the field is, not how many pixels long the cell is.
 extern int areaCellHeight;
-extern int areaCellArea;
 
 extern int areaWidth;
 extern int areaHeight;

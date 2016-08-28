@@ -592,7 +592,7 @@ void GameDrawing()
 
         DrawTiles();
 
-        al_draw_bitmap(gfxPlayer,SCREEN_W/2, PLAY_H/2,0);
+        al_draw_bitmap(gfxPlayer,SCREEN_W/2, SCREEN_H/2, 0);
 
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
@@ -601,7 +601,7 @@ void GameDrawing()
                 if((*it)->animationState == PASSIVE)
                     al_draw_bitmap(gfxNPCPassive[(*it)->spriteID + (*it)->animationFrame],
                                    (*it)->xPosition + SCREEN_W/2 - player->xPosition,
-                                   (*it)->yPosition + PLAY_H/2 - player->yPosition,
+                                   (*it)->yPosition + SCREEN_H/2 - player->yPosition,
                                    0);
             }
         }
@@ -780,7 +780,7 @@ void LoadingDrawing()
                 }
 
             }
-            else if(generator->GetGenerationPhase() >= GEN_MST)
+            else if(generator->GetGenerationPhase() >= GEN_MST && generator->GetGenerationPhase() <= GEN_LAYOUT_FLOOR_SKELETON)
             {
                 // Draw the graph created the the minimum spanning tree/ re-addition of edges.
                 for(std::vector<TriEdge>::iterator it = generator->demoEdges.begin(); it != generator->demoEdges.end(); ++it)
@@ -822,8 +822,10 @@ void DrawGUI()
 {
     ALLEGRO_COLOR colorToDraw = NEUTRAL_WHITE;
 
-    al_draw_bitmap(gfxTerminal,0,SCREEN_H - TERMINAL_H,0);
+    // Draw the (now unused)
+    //al_draw_bitmap(gfxTerminal,0,SCREEN_H - TERMINAL_H,0);
 
+    // Draw the text that would go in the terminal (make a better terminal later)
     for(int i = 0; i < EXCERPT_NUM_LINES; ++i)
     {
         s_al_draw_text(terminalFont,colorToDraw,
@@ -833,9 +835,9 @@ void DrawGUI()
                        terminalExcerpt[i]);
     }
 
+    // Draw turn counter (put it in an appropriate place later)
     std::string statText;
     statText = "turn" + std::to_string(turn);
-
     s_al_draw_text(terminalFont,NEUTRAL_WHITE,STATS_BAR_OPEN_X,STATS_BAR_OPEN_Y,ALLEGRO_ALIGN_LEFT,statText);
 
 }
@@ -844,11 +846,11 @@ void DrawTiles()
 {
     //Assumes 800x600 window and 120 height terminal
 
-    int startCellX = player->xCell-14; // 13, being just about higher than 25/2 (800/32)
+    int startCellX = player->xCell-14; // **** Make this scalable later
     if(startCellX < 0)
         startCellX = 0;
 
-    int startCellY = player->yCell-9; // 8, being just about higher than 15/2 ((600-120)/32)
+    int startCellY = player->yCell-9; // **** Make this scalable later - Like AreaHeight/TILESIZE/2, but ought to be precomputed.
     if(startCellY < 0)
         startCellY = 0;
 
@@ -867,36 +869,40 @@ void DrawTiles()
 
             int cellIndex = y*areaCellWidth+x;
 
-            if(area->floormap[cellIndex] != FT_FLOOR_EMPTY)
+            /// Draw the floor
+            if(area->floormap[cellIndex] != FT_FLOOR_EMPTY) // Floor exists on this cell
             {
                 int floorRegionDrawX = area->floormapImageIndex[cellIndex]%FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
-                int floorRegionDrawY = FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->floormapImageCategory[cellIndex]*TILESIZE
-                                        + area->floormapImageIndex[cellIndex]/FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
+                int floorRegionDrawY = FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY * area->floormapImageCategory[cellIndex] * TILESIZE
+                                                                        +
+                                       area->floormapImageIndex[cellIndex]/FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
 
 
                 al_draw_bitmap_region(gfxFloorTiles,
                                     floorRegionDrawX,
                                     floorRegionDrawY,
-                                    floorRegionDrawX+TILESIZE,
-                                    floorRegionDrawY+TILESIZE,
+                                    TILESIZE,
+                                    TILESIZE,
                                     x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                    y*TILESIZE + PLAY_H/2 - player->yPosition,
+                                    y*TILESIZE + SCREEN_H/2 - player->yPosition,
                                     0);
             }
 
-            if(area->wallmap[cellIndex] != WT_WALL_EMPTY)
+            /// Draw the walls
+            if(area->wallmap[cellIndex] != WT_WALL_EMPTY) // Wall exists on this cell
             {
-                int wallRegionDrawX = area->wallmapImageIndex[cellIndex]%FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
-                int wallRegionDrawY =  WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY*area->wallmapImageCategory[cellIndex]*TILESIZE
-                                       + area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
+                int wallRegionDrawX = area->wallmapImageIndex[cellIndex]%WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
+                int wallRegionDrawY = WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY * area->wallmapImageCategory[cellIndex] * TILESIZE
+                                                                        +
+                                       area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
 
                 al_draw_bitmap_region(gfxWallTiles,
                                     wallRegionDrawX,
                                     wallRegionDrawY,
-                                    wallRegionDrawX+TILESIZE,
-                                    wallRegionDrawY+TILESIZE,
+                                    TILESIZE,
+                                    TILESIZE,
                                     x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                    y*TILESIZE + PLAY_H/2 - player->yPosition,
+                                    y*TILESIZE + SCREEN_H/2 - player->yPosition,
                                     0);
             }
         }

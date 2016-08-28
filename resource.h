@@ -9,10 +9,10 @@
 /// Game asset constants
 
 const int FLOOR_TILE_SHEET_CELLWIDTH = 7; // 0 to 6
-const int FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 3; // 0 to 3
+const int FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 3; // 0 to 2
 
 const int WALL_TILE_SHEET_CELLWIDTH = 6; // 0 to 5
-const int WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 3; // 0 to 3
+const int WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 3; // 0 to 2
 
 enum enumItemSpriteIDs
 {
@@ -33,10 +33,14 @@ enum enumFloorCategories
 
 enum enumFloorShapeIndex
 {
-    /*            0                  1                   2                    3                    4                  5                     6         */
-    /*0*/   SI_NW_FLOOR =  0,   SI_N_FLOOR  =  1,  SI_NE_FLOOR =  2,    SI_UP_FLOOR =  3,  /*            */    SI_BOX_FLOOR =  5,  /*                 */
-    /*1*/    SI_W_FLOOR =  7, SI_MID_FLOOR =   8,   SI_E_FLOOR =  9,    SI_II_FLOOR = 10,  SI_LEFT_FLOOR = 11,  SI_ZZ_FLOOR = 12,  SI_RIGHT_FLOOR = 13,
-    /*2*/   SI_SW_FLOOR = 14,   SI_S_FLOOR  = 15,  SI_SE_FLOOR = 16,  SI_DOWN_FLOOR = 17,  /*                                                         */
+    // Naming convention: ULRD = adjacent flooring in all directions, XXXX = no adjacent flooring
+    /*            0                   1                   2                   3                       4                5                    6           */
+    /*0*/   SI_XXRD_FLOOR =  0, SI_XLRD_FLOOR =  1, SI_XLXD_FLOOR =  2, SI_XXXD_FLOOR =  3,  /*              */  SI_XXXX_FLOOR =  5,  /*                */
+    /*1*/   SI_UXRD_FLOOR =  7, SI_ULRD_FLOOR =  8, SI_ULXD_FLOOR =  9, SI_UXXD_FLOOR = 10,  SI_XXRX_FLOOR = 11, SI_XLRX_FLOOR = 12,  SI_XLXX_FLOOR = 13,
+    /*2*/   SI_UXRX_FLOOR = 14, SI_ULRX_FLOOR = 15, SI_ULXX_FLOOR = 16, SI_UXXX_FLOOR = 17,  /*                                                         */
+
+    SI_TEST_FLOOR = SI_ULRD_FLOOR
+
 };
 
 enum enumWallCategories
@@ -49,12 +53,20 @@ enum enumWallCategories
 
 enum enumWallShapeIndex
 {
-    // NOTE THAT SI_UP, LEFT, and RIGHT all use SI_ZZ WALL.
+    /// Note: SI_TEST_WALL (4 left 1 down) is unused except as the default vector filler
 
-    /*              0                 1                2                  3                   4                5       */
-    /*0*/   SI_NW_WALL =  0,    SI_ZZ_WALL = 1,  SI_NE_WALL =  2,  SI_MID_WALL = 3,      SI_N_WALL =  4,  /*           */
-    /*1*/   SI_II_WALL =  6,  SI_DOWN_WALL = 7,  /*    x       */    SI_W_WALL = 9,  SI_CROSS_WALL = 10,  SI_E_WALL = 11,
-    /*2*/   SI_SW_WALL = 12,  /*      x      */  SI_SE_WALL = 14,  /*     x      */      SI_S_WALL = 16   /*           */
+    /*            0                   1                  2                   3                  4                  5         */
+    /*0*/   SI_XXRD_WALL =  0,  SI_XLRX_WALL = 1,  SI_XLXD_WALL = 2,  SI_TEST_WALL = 3,  SI_XLRD_WALL =  4,  /*    x         */
+    /*1*/   SI_UXXD_WALL =  6,  SI_UXXX_WALL = 7,  /*    x        */  SI_UXRD_WALL = 9,  SI_ULRD_WALL = 10,  SI_ULXD_WALL = 11,
+    /*2*/   SI_UXRX_WALL = 12,  /*    x        */  SI_ULXX_WALL = 14, /*    x        */  SI_ULRX_WALL = 16,  /*    x         */
+
+                            /* Repeats */
+                    SI_XLXX_WALL = SI_XLRX_WALL,
+                    SI_XXRX_WALL = SI_XLRX_WALL,
+
+                    SI_XXXD_WALL = SI_UXXD_WALL,
+
+                    SI_XXXX_WALL = SI_UXXX_WALL
 };
 
 extern ALLEGRO_BITMAP *debugPathTracer;
