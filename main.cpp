@@ -314,6 +314,35 @@ void GameLogic()
                 player->Move(NO_DIRECTION);
                 submittedPlayerCommand = true;
             }
+
+#ifdef D_CELL_INFO_AT_PLAYER
+            static int debugCellInfoRequestDelay = 0;
+
+            if(keyInput[KEY_K] && keyInput[KEY_L])
+            {
+                if(debugCellInfoRequestDelay <= 0)
+                {
+                    int x =  player->xCell;
+                    int y =  player->yCell;
+                    int index = y*areaCellWidth+x;
+                    std::cout << std::endl;
+                    std::cout << "#### DEBUG CELL INFO REQUEST####" << std::endl;
+                    std::cout << "Coordinates: " << x << ", " << y << std::endl;
+                    std::cout << "Cell Index: " << index << std::endl;
+                    std::cout << "Cell wall type: " << area->wallmap[index] << std::endl;
+                    std::cout << "Cell floor type: " << area->floormap[index] << std::endl;
+                    std::cout << "Cell wall shape index: " << area->wallmapImageIndex[index] << std::endl;
+                    std::cout << "Cell floor shape index: " << area->floormapImageIndex[index] << std::endl;
+
+
+                    debugCellInfoRequestDelay = 300;
+                }
+            }
+
+            if(debugCellInfoRequestDelay > 0)
+                debugCellInfoRequestDelay --;
+#endif // D_CELL_INFO_AT_PLAYER
+
 #ifdef D_TEST_PATHFINDING
             static int debugPathRequestDelay = 0;
 
@@ -551,6 +580,7 @@ void LoadingLogic()
         area->wallmap  = generator->wallmap;
         area->floormapImageCategory = generator->floormapImageCategory;
         area->wallmapImageCategory  = generator->wallmapImageCategory;
+        area->floormapImageIndex    = generator->floormapImageIndex;
         area->wallmapImageIndex     = generator->wallmapImageIndex;
 
         // ***Set being positions here
@@ -850,7 +880,7 @@ void DrawTiles()
     if(startCellX < 0)
         startCellX = 0;
 
-    int startCellY = player->yCell-9; // **** Make this scalable later - Like AreaHeight/TILESIZE/2, but ought to be precomputed.
+    int startCellY = player->yCell-10; // **** Make this scalable later - Like AreaHeight/TILESIZE/2, but ought to be precomputed.
     if(startCellY < 0)
         startCellY = 0;
 
@@ -858,7 +888,7 @@ void DrawTiles()
     if(endCellX > areaCellWidth)
         endCellX = areaCellHeight;
 
-    int endCellY = player->yCell+9;
+    int endCellY = player->yCell+10;
     if(endCellY > areaCellHeight)
         endCellY = areaCellHeight;
 

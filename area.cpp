@@ -6,32 +6,46 @@ Area::Area()
     floor = "test floor";
     dLevel = 0;
 
-    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
-    {
-        occupied.push_back(false);
-        wallmap.push_back(WT_WALL_EMPTY);
-        floormap.push_back(FT_FLOOR_EMPTY);
-
-        floormapImageCategory.push_back(FC_STONE_DUNGEON_FLOOR);
-        floormapImageIndex.push_back(SI_TEST_FLOOR);
-
-        wallmapImageCategory.push_back(WC_LIGHT_DUNGEON_WALL);
-        wallmapImageIndex.push_back(SI_TEST_WALL);
-    }
+    InitialContainers();
 
 }
 
 /// Savefile constructor: All necessary variables are initialized from the serialized "areafile."
 Area::Area(bool savedArea)
 {
+
 }
 
 void Area::InitByArchive()
 {
 }
 
+void Area::InitialContainers()
+{
+    occupied = std::vector<bool>(areaCellWidth*areaCellHeight,false); // All cells are unoccupied by default
+    floormap = std::vector<int>(areaCellWidth*areaCellHeight, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default
+    wallmap = std::vector<int>(areaCellWidth*areaCellHeight, WT_WALL_EMPTY); // All wall spaces are nonexistent by default
+    floormapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, FC_STONE_DUNGEON_FLOOR); // The dungeon style, by default
+    floormapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, SI_TEST_FLOOR); // Test floor by default. Shows if cells have been generated improperly
+    wallmapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, WC_LIGHT_DUNGEON_WALL); // The dungeon wall style, by default
+    wallmapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, SI_TEST_WALL); // Test wall by default. Shows if cells have been generated improperly
+}
+
+void Area::ReleaseContainers()
+{
+    std::vector<bool>().swap(occupied);
+    std::vector<int>().swap(floormap);
+    std::vector<int>().swap(wallmap);
+
+    std::vector<int>().swap(floormapImageCategory);
+    std::vector<int>().swap(floormapImageIndex);
+    std::vector<int>().swap(wallmapImageCategory);
+    std::vector<int>().swap(wallmapImageIndex);
+}
+
 Area::~Area()
 {
+    ReleaseContainers();
 
 }
 

@@ -34,10 +34,10 @@ enum enumFloorCategories
 enum enumFloorShapeIndex
 {
     // Naming convention: ULRD = adjacent flooring in all directions, XXXX = no adjacent flooring
-    /*            0                   1                   2                   3                       4                5                    6           */
-    /*0*/   SI_XXRD_FLOOR =  0, SI_XLRD_FLOOR =  1, SI_XLXD_FLOOR =  2, SI_XXXD_FLOOR =  3,  /*              */  SI_XXXX_FLOOR =  5,  /*                */
-    /*1*/   SI_UXRD_FLOOR =  7, SI_ULRD_FLOOR =  8, SI_ULXD_FLOOR =  9, SI_UXXD_FLOOR = 10,  SI_XXRX_FLOOR = 11, SI_XLRX_FLOOR = 12,  SI_XLXX_FLOOR = 13,
-    /*2*/   SI_UXRX_FLOOR = 14, SI_ULRX_FLOOR = 15, SI_ULXX_FLOOR = 16, SI_UXXX_FLOOR = 17,  /*                                                         */
+    /*            0                   1                   2                   3                    4                    5                    6          */
+    /*0*/   SI_XXRD_FLOOR =  0, SI_XLRD_FLOOR =  1, SI_XLXD_FLOOR =  2, SI_XXXD_FLOOR =  3,  /*    x          */  SI_XXXX_FLOOR =  5,  /*    x          */
+    /*1*/   SI_UXRD_FLOOR =  7, SI_ULRD_FLOOR =  8, SI_ULXD_FLOOR =  9, SI_UXXD_FLOOR = 10,  SI_XXRX_FLOOR = 11,  SI_XLRX_FLOOR = 12,  SI_XLXX_FLOOR = 13,
+    /*2*/   SI_UXRX_FLOOR = 14, SI_ULRX_FLOOR = 15, SI_ULXX_FLOOR = 16, SI_UXXX_FLOOR = 17,  /*    x                    x                    x          */
 
     SI_TEST_FLOOR = SI_ULRD_FLOOR
 
@@ -55,18 +55,18 @@ enum enumWallShapeIndex
 {
     /// Note: SI_TEST_WALL (4 left 1 down) is unused except as the default vector filler
 
-    /*            0                   1                  2                   3                  4                  5         */
+    /*            0                   1                  2                  3                  4                   5         */
     /*0*/   SI_XXRD_WALL =  0,  SI_XLRX_WALL = 1,  SI_XLXD_WALL = 2,  SI_TEST_WALL = 3,  SI_XLRD_WALL =  4,  /*    x         */
     /*1*/   SI_UXXD_WALL =  6,  SI_UXXX_WALL = 7,  /*    x        */  SI_UXRD_WALL = 9,  SI_ULRD_WALL = 10,  SI_ULXD_WALL = 11,
     /*2*/   SI_UXRX_WALL = 12,  /*    x        */  SI_ULXX_WALL = 14, /*    x        */  SI_ULRX_WALL = 16,  /*    x         */
 
                             /* Repeats */
-                    SI_XLXX_WALL = SI_XLRX_WALL,
-                    SI_XXRX_WALL = SI_XLRX_WALL,
+                    SI_XLXX_WALL = SI_XLRX_WALL, // 0100 = 0110
+                    SI_XXRX_WALL = SI_XLRX_WALL, // 0010 = 0110
 
-                    SI_XXXD_WALL = SI_UXXD_WALL,
+                    SI_XXXD_WALL = SI_UXXD_WALL, // 0001 = 1001
 
-                    SI_XXXX_WALL = SI_UXXX_WALL
+                    SI_XXXX_WALL = SI_UXXX_WALL  // 0000 = 1000
 };
 
 extern ALLEGRO_BITMAP *debugPathTracer;

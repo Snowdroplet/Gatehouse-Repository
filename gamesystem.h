@@ -26,15 +26,12 @@
 
 
 /// Generator
-#define D_GEN_PHASE_CHECK                           //Output debug information to console when completing a generation phase function
+#define D_GEN_PHASE_CHECK                             //Output debug information to console when completing a generation phase function
 //#define D_GEN_PHYS_DIST_RANDOM                      // Output debug information to console regarding the use of physics bodies to distribute room objects.
 //#define D_GEN_TRIANGULATION                         // Output debug information to console regarding the use of delaunay triangulation to determine which main rooms should be connected to each other.
 //#define D_VECTOR_UNIQUE_NODE_ID                     // Output debug information to console regarding the process of listing the IDs of every unique center room cell.
 //#define D_TRI_MST_COMBINATION                       // Output debug information to console regarding the minimum spanning tree derived from the triangulation's graph.
 // CURRENTLY UNUSED -- #define D_CELL_LAYOUT          // Output debug information to console regarding the process of determining the map's cell layout.
-
-
-/// Both Main and Generator
 #define D_SHOW_LOADING_VISUALIZATION                  // Demonstrate the area generation as a visualization.
 
 #define D_TERMINATE_LOADING_SIGNAL                    // Press 'Z' to change the game phase from loading to game.
@@ -43,10 +40,14 @@
 /// Graph
 #define D_TEST_NODE_LISTS                             // Output debug information to console regarding the A* procedure of adding/removing of pathfinding nodes to the open/closed lists.
 #define D_TEST_PARENT_OPTIMIZATION                    // Output debug information to console regarding the A* procedure of re-parenting adjacent nodes with a detour is found with a lower total movecost.
-#define D_TEST_OUTPUT_PATH_REQUEST                    // Output the shortest path or lack thereof to console when RequestPath() completes its task.
+#define D_TEST_OUTPUT_PATH_REQUEST                    // Press 'T' + 'Y' to output the shortest path or lack thereof to console when RequestPath() completes its task.
 
 /// Mintree
 //#define D_PRINTOUT_MST                              // Output the node pairs found to console when Kruskal() completes its task.
+
+/// Area
+#define D_CELL_INFO_AT_PLAYER                         // Press 'K' + 'L' to output information about the cell that the player is standing on to console
+
 
 /// ******************************************************************************************
 
