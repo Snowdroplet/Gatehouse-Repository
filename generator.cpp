@@ -16,153 +16,139 @@ Generator::~Generator()
     }
 }
 
-void Generator::PhysicalDistribution()
+void Generator::GenerateRoomBoxes()
 {
-    /**                   ### ROOM OBJECTS DISTRIBUTED VIA PHYSICS SIMULATION ###
-           1) Create many overlapping PHYSICS BODIES within a circle of random size according to the normal distribution.
-           2) Create ROOM OBJECTS corresponding to physics bodies in shape and position.
-           3) Distribute PHYSICS BODIES into field via Box2D physics simulation so that none overlap.
-           4) Constantly update positions of ROOM OBJECTS to match PHYSICS BODIES.
-           5) When all bodies are at rest, align ROOM OBJECTS to grid.
-       */
+    /**                  ### ROOM BOXES DISTRIBUTED ###
+        1) Create many overlapping ROOM BOXES within a circle of random size according to a normal distribution.
+    */
 
     // Room dimensions randomized. Probability represented by normal distribution.
     boost::random::normal_distribution<float> randomRoomWidth (averageRoomWidth,stdWidthDeviation);   // (Average, 25% standard deviation)
     boost::random::normal_distribution<float> randomRoomHeight(averageRoomHeight,stdHeightDeviation);
 
     // Random point in circle selected using random radius and angle. Probability is uniform.
-    boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.25);    // (Range min, range max)
+    boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.20);    // (Range min, range max)
     boost::random::uniform_real_distribution<double> randomGenTheta(0.0,2*PI);
 
     static int roomsToGenerate = 150;
 
-    if(!bodiesGenerated)
+    for(int i = 0; i < roomsToGenerate; i++)
     {
-        for(int i = 0; i < roomsToGenerate; i++)
-        {
-#ifdef D_GEN_PHYS_DIST_RANDOM
-            std::cout << std::endl;
-            std::cout << "#Generating room #" << i << std::endl;
-#endif // D_GEN_PHYS_DIST_RANDOM
+        int roomWidth = randomRoomWidth(mtRng);  // Implicit conversion to int for the purposes of the modulo operation below.
+        int roomHeight = randomRoomHeight(mtRng);
 
-            int roomWidth = randomRoomWidth(mtRng);  // Implicit conversion to int for the purposes of the modulo operation below.
-            int roomHeight = randomRoomHeight(mtRng);
-
-            // Prevent the creation of rooms less than two tiles wide or high
-            if(roomWidth < MINI_TILESIZE*2)
-                roomWidth = MINI_TILESIZE*2;
-            if(roomHeight < MINI_TILESIZE*2)
-                roomHeight = MINI_TILESIZE*2;
-
-#ifdef D_GEN_PHYS_DIST_RANDOM
-            std::cout << "Room width before rounding: " << roomWidth << std::endl;
-            std::cout << "Room height before rounding: " << roomHeight << std::endl;
-#endif // D_GEN_PHYS_DIST_RANDOM
-
-            // Round room dimensions to the nearest multiple of MINI_TILESIZE.
-            if(roomWidth%MINI_TILESIZE > MINI_TILESIZE/2)             // If rounding up to nearest MINI_TILESIZE:
-                roomWidth += MINI_TILESIZE - roomWidth%MINI_TILESIZE; // Increase dimensions by to meet nearest multiple of MINI_TILESIZE.
-            else                                            // If rounding down to nearest MINI_TILESIZE:
-                roomWidth -= roomWidth%MINI_TILESIZE;            // Decrease dimensions by excess of nearest multiple of MINI_TILESIZE.
-
-            if(roomHeight%MINI_TILESIZE > MINI_TILESIZE/2)
-                roomHeight += MINI_TILESIZE - roomHeight%MINI_TILESIZE;
-            else
-                roomHeight -= roomHeight%MINI_TILESIZE;
-
-#ifdef D_GEN_PHYS_DIST_RANDOM
-            std::cout << "Room width after rounding: " << roomWidth << std::endl;
-            std::cout << "Room height after rounding: " << roomHeight << std::endl;
-#endif // D_GEN_PHYS_DIST_RANDOM
-
-            // Take a random point in the circle
-            double circleCenterX = miniAreaWidth/2;  // Circle center position in the world may vary at a later point in development.
-            double circleCenterY = miniAreaHeight/2;
-
-            double genRadius = randomGenRadius(mtRng);
-            double genTheta = randomGenTheta(mtRng);
-
-            double genX = genRadius*cos(genTheta);
-            double genY = genRadius*sin(genTheta);
-
-#ifdef D_GEN_PHYS_DIST_RANDOM
-            std::cout << "Random generation circle --" << std::endl;
-            std::cout << "x: " << circleCenterX << ", y: " << circleCenterY << std::endl;
-            std::cout << "r: " << genRadius << ", Theta in radians: " << genTheta << std::endl;
-            std::cout << "r cos(t) = " << genX << ", r sin(t) = " << genY << std::endl;
-#endif // D_GEN_PHYS_DIST_RANDOM
-
-            //Generate PHYSICS BODY centered at chosen random point in circle.
-            roomGenBody.position.Set(circleCenterX+genX,circleCenterY+genY); // Set position of body in the world to chosen random point in circle.
-            b2Body *body = physics->CreateBody(&roomGenBody);  // Create body according to roomGenBody's description. Physics is the name of the simulation's world object.
+        // Prevent the creation of rooms less than two tiles wide or high
+        if(roomWidth < MINI_TILESIZE*2)
+            roomWidth = MINI_TILESIZE*2;
+        if(roomHeight < MINI_TILESIZE*2)
+            roomHeight = MINI_TILESIZE*2;
 
 
-            // Describe the shape of the fixture that will be created on the PHYSICS BODY.
-            b2Vec2 genPolyVertices[4];                          // Vertices are used to create a rectangle. Coordinates are listed counterclockwise.
-            genPolyVertices[0].Set(-roomWidth/2, -roomHeight/2); // Top Left.
-            genPolyVertices[1].Set(-roomWidth/2,  roomHeight/2); // Bottom Left.
-            genPolyVertices[2].Set( roomWidth/2,  roomHeight/2); // Bottom Right.
-            genPolyVertices[3].Set( roomWidth/2, -roomHeight/2); // Top Right.
+        // Round room dimensions to the nearest multiple of MINI_TILESIZE.
+        if(roomWidth%MINI_TILESIZE > MINI_TILESIZE/2)             // If rounding up to nearest MINI_TILESIZE:
+            roomWidth += MINI_TILESIZE - roomWidth%MINI_TILESIZE; // Increase dimensions by to meet nearest multiple of MINI_TILESIZE.
+        else                                                      // If rounding down to nearest MINI_TILESIZE:
+            roomWidth -= roomWidth%MINI_TILESIZE;                 // Decrease dimensions by excess of nearest multiple of MINI_TILESIZE.
 
-            // Set the fixture to the shape described above.
-            roomGenPolygonShape.Set(genPolyVertices,4);         // (Receives vertice array, number of elements in vertice array)
-            roomGenFixture.shape = &roomGenPolygonShape;        //  Fixture takes on shape described above.
+        if(roomHeight%MINI_TILESIZE > MINI_TILESIZE/2)
+            roomHeight += MINI_TILESIZE - roomHeight%MINI_TILESIZE;
+        else
+            roomHeight -= roomHeight%MINI_TILESIZE;
 
-            // Attach fixture to PHYSICS BODY.
-            body->CreateFixture(&roomGenFixture);              // Attach fixture to aformentioned body, according to roomGenFixture's description.
 
-            // Create ROOM OBJECT corresponding to the PHYSICS BODY in both shape and position.
-            roomGenBoxes.push_back(new RoomGenBox(i, body, roomWidth, roomHeight)); // (Corresponding PHYSICS BODY, width of ROOM OBJECT, height of ROOM OBJECT).
+        // Take a random point in the circle
+        double circleCenterX = miniAreaWidth/2;  // Circle center position in the world may vary at a later point in development.
+        double circleCenterY = miniAreaHeight/2;
 
-        }
+        double genRadius = randomGenRadius(mtRng);
+        double genTheta = randomGenTheta(mtRng);
 
-        bodiesGenerated = true;
+        double genX = genRadius*cos(genTheta);
+        double genY = genRadius*sin(genTheta);
+
+        roomGenBoxes.push_back(new RoomGenBox(i,circleCenterX+genX,circleCenterY+genY, roomWidth, roomHeight));
+
     }
 
-    if(!bodiesDistributed)
-    {
-        physics->Step(timeStep, velocityIterations, positionIterations); // (Time step, number of velocity iterations, number of position iterations)
+    generationPhaseComplete = true;
+}
 
-        bodiesDistributed = true;
+void Generator::Separation()
+{
+    /**                  ### ROOM OBJECTS SEPERATED ###
+        1) Separate ROOM BOXES until none are overlapping
+    */
+
+
+    static bool overlapCheckPassed = false;
+
+    if(!overlapCheckPassed)
+    {
+        overlapCheckPassed = true;
+
+        // Compare every room object with every other room object for intersections
+        // Implement spatial partitioning of some sort later in development to reduce time complexity
+
+        for(std::vector<RoomGenBox*>::iterator a = roomGenBoxes.begin(); a != roomGenBoxes.end(); ++a)
+        {
+            for(std::vector<RoomGenBox*>::iterator b = a; b != roomGenBoxes.end(); ++b)
+            {
+                if((*b)->x1 < (*a)->x2 && (*b)->x2 > (*a)->x1 &&
+                   (*b)->y1 < (*a)->y2 && (*b)->y2 > (*a)->y1)
+                {
+                    (*a)->overlaps.push_back(*b);
+                }
+
+            }
+
+            // Any room objects that overlap with another will be seperated.
+            // Note that this 'b' is not the same 'b' as in the loop above.
+            if(!(*a)->overlaps.empty())
+            {
+                overlapCheckPassed = false;
+
+                for(std::vector<RoomGenBox*>::iterator b = (*a)->overlaps.begin(); b != (*a)->overlaps.end(); ++b)
+                {
+                    if((*b)->x3 < (*a)->x3)
+                    {
+                        (*b)->x2 = (*a)->x1;
+                        (*b)->x1 = (*b)->x2 - (*b)->width;
+                        (*b)->UpdateMidpoint();
+                    }
+                    else if((*b)->x3 > (*a)->x3)
+                    {
+                        (*b)->x1 = (*a)->x2;
+                        (*b)->x2 = (*b)->x1 + (*b)->width;
+                        (*b)->UpdateMidpoint();
+                    }
+
+                    if((*b)->y3 < (*a)->y3)
+                    {
+                        (*b)->y2 = (*a)->y1;
+                        (*b)->y1 = (*b)->y2 - (*b)->height;
+                        (*b)->UpdateMidpoint();
+                    }
+                    else if((*b)->y3 > (*a)->y3)
+                    {
+                        (*b)->y1 = (*a)->y2;
+                        (*b)->y2 = (*b)->y1 + (*b)->height;
+                        (*b)->UpdateMidpoint();
+                    }
+
+                }
+                (*a)->overlaps.clear();
+            }
+        }
+    }
+    else if(overlapCheckPassed)
+    {
+        // Snap resting room objects to grid
         for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
         {
-            (*it)->UpdatePosition();
-
-            if((*it)->correspondingB2Body->IsAwake())
-                bodiesDistributed = false;
+            (*it)->SnapToGrid();
         }
-
-        physics->ClearForces();
-    }
-    else if(bodiesDistributed)
-    {
-
-        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
-        {
-            (*it)->correspondingB2Body = NULL; // Nullify all pointers to corresponding PHYSICS BODIES, as the relationship is no longer necessary
-            (*it)->SnapToGrid(); // Snap ROOM OBJECTS to grid by flooring them to the nearest MINI_TILESIZE.
-            if((*it)->BoundaryDeletionCheck(1))//Remove rooms which are within 1 cell of the edge of the area, or even outside.
-            {
-                delete *it;
-                roomGenBoxes.erase(it);
-            }
-            else
-                ++it;
-
-        }
-
-        // Destroy all PHYSICS BODIES
-        for(b2Body* b = physics->GetBodyList(); b; b = b->GetNext())
-        {
-            physics->DestroyBody(b);
-        }
-
-        delete physics;
 
         generationPhaseComplete = true;
-#ifdef D_GEN_PHASE_CHECK
-        std::cout << "Physical generation completed..." << std::endl;
-#endif // D_GEN_PHASE_CHECK
     }
 }
 
@@ -204,7 +190,7 @@ void Generator::Triangulation()
     for(std::vector<RoomGenBox*>::iterator it = mainRooms.begin(); it != mainRooms.end(); ++it)
     {
         // The main-room-center coordinate to record
-        Vec2f centerCoord( ((*it)->x3) , ((*it)->y3) );
+        Vec2f centerCoord( ((*it)->x3), ((*it)->y3) );
 
         // Record the main-room-center coordinate in a vector -- The vector will be passed to the triangulation function.
         mainRoomCenterCoords.push_back(centerCoord);
@@ -249,8 +235,8 @@ void Generator::MinimumSpanningTree()
 
     for(std::vector<TriEdge>::iterator it = triEdges.begin(); it != triEdges.end(); ++it)
     {
-        int nodeA = GetCenterCellID( (*it).p1.x , (*it).p1.y);
-        int nodeB = GetCenterCellID( (*it).p2.x , (*it).p2.y);
+        int nodeA = GetCenterCellID( (*it).p1.x, (*it).p1.y);
+        int nodeB = GetCenterCellID( (*it).p2.x, (*it).p2.y);
 
         Vec2f coordsA = (*it).p1;
         Vec2f coordsB = (*it).p2;
@@ -346,8 +332,8 @@ void Generator::MinimumSpanningTree()
     {
         for(std::vector<MinTreeEdge>::iterator it = minTreeOutput.begin(); it != minTreeOutput.end(); ++it)
         {
-            Vec2f node1Coords((*it).node1ID%areaCellWidth*MINI_TILESIZE ,(*it).node1ID/areaCellWidth*MINI_TILESIZE);
-            Vec2f node2Coords((*it).node2ID%areaCellWidth*MINI_TILESIZE ,(*it).node2ID/areaCellWidth*MINI_TILESIZE );
+            Vec2f node1Coords((*it).node1ID%areaCellWidth*MINI_TILESIZE,(*it).node1ID/areaCellWidth*MINI_TILESIZE);
+            Vec2f node2Coords((*it).node2ID%areaCellWidth*MINI_TILESIZE,(*it).node2ID/areaCellWidth*MINI_TILESIZE );
 
             demoEdges.push_back(TriEdge(node1Coords,node2Coords));
         }
@@ -650,7 +636,7 @@ void Generator::LayoutWallSkeleton()
     /// it becomes a wall.
     for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
     {
-        if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL___FLOOR_MARKER_END) // Check if this cell is floor
+        if(genLayout[i] > GEN_CELL_FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL_FLOOR_MARKER_END) // Check if this cell is floor
         {
 
             if(i >= areaCellWidth) // Not on top edge
@@ -737,34 +723,34 @@ void Generator::Commit()
 
         ///                  ########### DETAIL THE FLOOR ##########
 
-        if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL___FLOOR_MARKER_END) //Cell is a type of floor // ***Will be more nuanced later.***
+        if(genLayout[i] > GEN_CELL_FLOOR_MARKER_BEGIN && genLayout[i] < GEN_CELL_FLOOR_MARKER_END) //Cell is a type of floor // ***Will be more nuanced later.***
         {
             floormap[i] = FT_FLOOR_REGULAR;
 
             if(i >= areaCellWidth) // Not on the top row
             {
-                if(genLayout[i-areaCellWidth] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i-areaCellWidth] < GEN_CELL___FLOOR_MARKER_END) // Check row above for floor    ***Beware, we are no longer checking for the same category of flooring***
+                if(genLayout[i-areaCellWidth] > GEN_CELL_FLOOR_MARKER_BEGIN && genLayout[i-areaCellWidth] < GEN_CELL_FLOOR_MARKER_END) // Check row above for floor    ***Beware, we are no longer checking for the same category of flooring***
                 {
                     whatFloormapImageIndex += 1000; // U = 1
                 }
             }
             if(i%areaCellWidth > 0) // Not the left-edge column
             {
-                if(genLayout[i-1] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i-1] < GEN_CELL___FLOOR_MARKER_END) // Check row to the left for floor
+                if(genLayout[i-1] > GEN_CELL_FLOOR_MARKER_BEGIN && genLayout[i-1] < GEN_CELL_FLOOR_MARKER_END) // Check row to the left for floor
                 {
-                     whatFloormapImageIndex += 100; // L = 1
+                    whatFloormapImageIndex += 100; // L = 1
                 }
             }
             if(i%areaCellWidth < areaCellWidth-1) // Not the right-edge column
             {
-                if(genLayout[i+1] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i+1] < GEN_CELL___FLOOR_MARKER_END) // Check row to the right for floor
+                if(genLayout[i+1] > GEN_CELL_FLOOR_MARKER_BEGIN && genLayout[i+1] < GEN_CELL_FLOOR_MARKER_END) // Check row to the right for floor
                 {
                     whatFloormapImageIndex += 10; // R = 1
                 }
             }
             if(i/areaCellWidth < areaCellHeight-1) // Not on the bottom row
             {
-                if(genLayout[i+areaCellWidth] > GEN_CELL___FLOOR_MARKER_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL___FLOOR_MARKER_END) // Check row below for floor
+                if(genLayout[i+areaCellWidth] > GEN_CELL_FLOOR_MARKER_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL_FLOOR_MARKER_END) // Check row below for floor
                 {
                     whatFloormapImageIndex += 1; // D = 1
                 }
@@ -772,34 +758,66 @@ void Generator::Commit()
 
             switch(whatFloormapImageIndex)
             {
-            case    0: floormapImageIndex[i] = SI_XXXX_FLOOR; break;
-            case    1: floormapImageIndex[i] = SI_XXXD_FLOOR; break;
-            case   10: floormapImageIndex[i] = SI_XXRX_FLOOR; break;
-            case   11: floormapImageIndex[i] = SI_XXRD_FLOOR; break;
-            case  100: floormapImageIndex[i] = SI_XLXX_FLOOR; break;
-            case  101: floormapImageIndex[i] = SI_XLXD_FLOOR; break;
-            case  110: floormapImageIndex[i] = SI_XLRX_FLOOR; break;
-            case  111: floormapImageIndex[i] = SI_XLRD_FLOOR; break;
-            case 1000: floormapImageIndex[i] = SI_UXXX_FLOOR; break;
-            case 1001: floormapImageIndex[i] = SI_UXXD_FLOOR; break;
-            case 1010: floormapImageIndex[i] = SI_UXRX_FLOOR; break;
-            case 1011: floormapImageIndex[i] = SI_UXRD_FLOOR; break;
-            case 1100: floormapImageIndex[i] = SI_ULXX_FLOOR; break;
-            case 1101: floormapImageIndex[i] = SI_ULXD_FLOOR; break;
-            case 1110: floormapImageIndex[i] = SI_ULRX_FLOOR; break;
-            case 1111: floormapImageIndex[i] = SI_ULRD_FLOOR; break;
+            case    0:
+                floormapImageIndex[i] = SI_XXXX_FLOOR;
+                break;
+            case    1:
+                floormapImageIndex[i] = SI_XXXD_FLOOR;
+                break;
+            case   10:
+                floormapImageIndex[i] = SI_XXRX_FLOOR;
+                break;
+            case   11:
+                floormapImageIndex[i] = SI_XXRD_FLOOR;
+                break;
+            case  100:
+                floormapImageIndex[i] = SI_XLXX_FLOOR;
+                break;
+            case  101:
+                floormapImageIndex[i] = SI_XLXD_FLOOR;
+                break;
+            case  110:
+                floormapImageIndex[i] = SI_XLRX_FLOOR;
+                break;
+            case  111:
+                floormapImageIndex[i] = SI_XLRD_FLOOR;
+                break;
+            case 1000:
+                floormapImageIndex[i] = SI_UXXX_FLOOR;
+                break;
+            case 1001:
+                floormapImageIndex[i] = SI_UXXD_FLOOR;
+                break;
+            case 1010:
+                floormapImageIndex[i] = SI_UXRX_FLOOR;
+                break;
+            case 1011:
+                floormapImageIndex[i] = SI_UXRD_FLOOR;
+                break;
+            case 1100:
+                floormapImageIndex[i] = SI_ULXX_FLOOR;
+                break;
+            case 1101:
+                floormapImageIndex[i] = SI_ULXD_FLOOR;
+                break;
+            case 1110:
+                floormapImageIndex[i] = SI_ULRX_FLOOR;
+                break;
+            case 1111:
+                floormapImageIndex[i] = SI_ULRD_FLOOR;
+                break;
             }
         }
 
         ///                     ########### DETAIL THE WALLS ##########
 
-        if(genLayout[i] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i] < GEN_CELL___WALL_MARKER_END) // Cell is a type of wall // ***Will be more nuanced later.***
+        if(genLayout[i] > GEN_CELL_MARKER_WALLS_BEGIN && genLayout[i] < GEN_CELL_MARKER_WALLS_END) // Cell is a type of wall // ***Will be more nuanced later.***
         {
 
             wallmap[i] = WT_WALL_IMPASSABLE;
             if(i >= areaCellWidth)// Not on the top row
             {
-                if(genLayout[i-areaCellWidth] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i-areaCellWidth] < GEN_CELL___WALL_MARKER_END) // Check above row for wall's existence
+                if(genLayout[i-areaCellWidth] > GEN_CELL_MARKER_WALLS_BEGIN && genLayout[i-areaCellWidth] < GEN_CELL_MARKER_WALLS_END) // Check above row for wall's existence
                 {
                     whatWallmapImageIndex += 1000; // U = 1
                 }
@@ -807,7 +825,7 @@ void Generator::Commit()
 
             if(i%areaCellWidth > 0) // Not the left-edge column
             {
-                if(genLayout[i-1] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i-1] < GEN_CELL___WALL_MARKER_END) // Check to the left for wall's existence
+                if(genLayout[i-1] > GEN_CELL_MARKER_WALLS_BEGIN && genLayout[i-1] < GEN_CELL_MARKER_WALLS_END) // Check to the left for wall's existence
                 {
                     whatWallmapImageIndex += 100; // L = 1
                 }
@@ -815,7 +833,7 @@ void Generator::Commit()
 
             if(i%areaCellWidth < areaCellWidth-1) // Not the right-edge column
             {
-                if(genLayout[i+1] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i+1] < GEN_CELL___WALL_MARKER_END) // Check to the right for wall's existence
+                if(genLayout[i+1] > GEN_CELL_MARKER_WALLS_BEGIN && genLayout[i+1] < GEN_CELL_MARKER_WALLS_END) // Check to the right for wall's existence
                 {
                     whatWallmapImageIndex += 10; // R = 1
                 }
@@ -823,7 +841,7 @@ void Generator::Commit()
 
             if(i/areaCellWidth < areaCellHeight-1) // Not on the bottom row
             {
-                if(genLayout[i+areaCellWidth] > GEN_CELL___WALL_MARKER_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL___WALL_MARKER_END) // Check below for wall's existence
+                if(genLayout[i+areaCellWidth] > GEN_CELL_MARKER_WALLS_BEGIN && genLayout[i+areaCellWidth] < GEN_CELL_MARKER_WALLS_END) // Check below for wall's existence
                 {
                     whatWallmapImageIndex += 1; // D = 1
                 }
@@ -831,22 +849,54 @@ void Generator::Commit()
 
             switch(whatWallmapImageIndex)
             {
-            case 0:    wallmapImageIndex[i] = SI_XXXX_WALL; break; // index correct
-            case 1:    wallmapImageIndex[i] = SI_XXXD_WALL; break; // index correct
-            case 10:   wallmapImageIndex[i] = SI_XXRX_WALL; break; // index correct
-            case 11:   wallmapImageIndex[i] = SI_XXRD_WALL; break; // index = 0 - (But XXRD is supposed to be 0 anyway)
-            case 100:  wallmapImageIndex[i] = SI_XLXX_WALL; break; // index correct
-            case 101:  wallmapImageIndex[i] = SI_XLXD_WALL; break; // index correct
-            case 110:  wallmapImageIndex[i] = SI_XLRX_WALL; break; // index correct
-            case 111:  wallmapImageIndex[i] = SI_XLRD_WALL; break; // index correct
-            case 1000: wallmapImageIndex[i] = SI_UXXX_WALL; break; // index correct
-            case 1001: wallmapImageIndex[i] = SI_UXXD_WALL; break; // index correct
-            case 1010: wallmapImageIndex[i] = SI_UXRX_WALL; break; // Error - index = 0
-            case 1011: wallmapImageIndex[i] = SI_UXRD_WALL; break; // Error - index = 0
-            case 1100: wallmapImageIndex[i] = SI_ULXX_WALL; break; // Error - index = 0
-            case 1101: wallmapImageIndex[i] = SI_ULXD_WALL; break; // Error - index = 0
-            case 1110: wallmapImageIndex[i] = SI_ULRX_WALL; break; // Error - index = 0
-            case 1111: wallmapImageIndex[i] = SI_ULRD_WALL; break; // Possible error, but it's very rare to see a 1111 cell
+            case 0:
+                wallmapImageIndex[i] = SI_XXXX_WALL;
+                break; // index correct
+            case 1:
+                wallmapImageIndex[i] = SI_XXXD_WALL;
+                break; // index correct
+            case 10:
+                wallmapImageIndex[i] = SI_XXRX_WALL;
+                break; // index correct
+            case 11:
+                wallmapImageIndex[i] = SI_XXRD_WALL;
+                break; // index = 0 - (But XXRD is supposed to be 0 anyway)
+            case 100:
+                wallmapImageIndex[i] = SI_XLXX_WALL;
+                break; // index correct
+            case 101:
+                wallmapImageIndex[i] = SI_XLXD_WALL;
+                break; // index correct
+            case 110:
+                wallmapImageIndex[i] = SI_XLRX_WALL;
+                break; // index correct
+            case 111:
+                wallmapImageIndex[i] = SI_XLRD_WALL;
+                break; // index correct
+            case 1000:
+                wallmapImageIndex[i] = SI_UXXX_WALL;
+                break; // index correct
+            case 1001:
+                wallmapImageIndex[i] = SI_UXXD_WALL;
+                break; // index correct
+            case 1010:
+                wallmapImageIndex[i] = SI_UXRX_WALL;
+                break; // Error - index = 0
+            case 1011:
+                wallmapImageIndex[i] = SI_UXRD_WALL;
+                break; // Error - index = 0
+            case 1100:
+                wallmapImageIndex[i] = SI_ULXX_WALL;
+                break; // Error - index = 0
+            case 1101:
+                wallmapImageIndex[i] = SI_ULXD_WALL;
+                break; // Error - index = 0
+            case 1110:
+                wallmapImageIndex[i] = SI_ULRX_WALL;
+                break; // Error - index = 0
+            case 1111:
+                wallmapImageIndex[i] = SI_ULRD_WALL;
+                break; // Possible error, but it's very rare to see a 1111 cell
             }
         }
 
@@ -864,15 +914,19 @@ void Generator::Generate()
 {
     switch(generationPhase)
     {
-    case GEN_INACTIVE:                // Wasteful phase that pretty much exists just so I can hit Q to start the engine.
+    case GEN_INACTIVE:                // Wasteful phase that exists just so I can hit Q to start the simulation.
         std::cout << "Generator test begins..." << std::endl;
         InitialOutputContainers();
         generationComplete = false;
         generationPhaseComplete = true;
         break;
 
-    case GEN_PHYSICAL_DISTRIBUTION:
-        PhysicalDistribution();
+    case GEN_ROOM_BOXES:
+        GenerateRoomBoxes();
+        break;
+
+    case GEN_SEPARATION:
+        Separation();
         break;
 
     case GEN_MAIN_ROOM_SELECTION:
@@ -943,9 +997,6 @@ void Generator::InitialState()
     generationComplete = false;
     generationPhaseComplete = false;
 
-    bodiesGenerated = false;
-    bodiesDistributed = false;
-
     /// Knobs
 
     roomBoxesToGenerate = 180;
@@ -965,21 +1016,6 @@ void Generator::InitialState()
     hallwayAdoptionRate = 1.0;
     hallwayExtensionRate = 0.85;
     hallwayConversionRate = 0.1;
-
-    /// Physics bodies
-
-    physics = new b2World(physicsGravity);
-    physics->SetAllowSleeping(true);
-    b2Vec2 physicsGravity(0.0f, 0.0f);
-
-    timeStep =  1.0f / 5.0f; // Say, 1.0f /5.0f would mean a step ever 1/5th of a second.
-    velocityIterations = 1;
-    positionIterations = 10;
-
-    roomGenBody.type = b2_dynamicBody;
-    roomGenBody.fixedRotation = true;
-    roomGenBody.linearDamping = 0.3f;
-    roomGenBody.allowSleep = true;
 
     /// Vector memory reset
     for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
@@ -1018,110 +1054,6 @@ void Generator::ReleaseOutputContainers()
     std::vector<int>().swap(floormapImageIndex);
     std::vector<int>().swap(wallmapImageCategory);
     std::vector<int>().swap(wallmapImageIndex);
-}
-
-Point Generator::ComputeSteeringAgentAlignment(SteeringAgent a)
-{
-	Point p;
-	int neighborCount = 0;
-	for(std::vector<SteeringAgent>::iterator it = steeringAgents.begin(); it != steeringAgents.end(); ++it)
-	{
-		if((*it) != a)
-		{
-			if(a.DistanceFromAgent(*it) < 300)
-			{
-				p.x += (*it).velocity.x;
-				p.y += (*it).velocity.y;
-				neighborCount ++;
-			}
-		}
-	}
-	if(neighborCount == 0)
-		return p;
-    else
-    {
-        p.x /= neighborCount;
-        p.y /= neighborCount;
-        p.Normalize(1);
-        return p;
-	}
-}
-
-Point Generator::ComputeSteeringAgentCohesion(SteeringAgent a)
-{
-	Point p;
-	int neighborCount = 0;
-	for(std::vector<SteeringAgent>::iterator it = steeringAgents.begin(); it != steeringAgents.end(); ++it)
-	{
-		if((*it) != a)
-		{
-			if(a.DistanceFromAgent(*it) < 300)
-			{
-				p.x += (*it).x3;
-				p.y += (*it).y3;
-				neighborCount ++;
-			}
-		}
-	}
-	if(neighborCount == 0)
-		return p;
-	else
-    {
-        p.x /= neighborCount;
-        p.y /= neighborCount;
-
-        p = Point(p.x - a.x3, p.y - a.y3);
-        p.Normalize(1);
-        return p;
-    }
-}
-
-Point Generator::ComputeSteeringAgentSeparation(SteeringAgent a)
-{
-	Point p;
-	int neighborCount = 0;
-	for(std::vector<SteeringAgent>::iterator it = steeringAgents.begin(); it != steeringAgents.end(); ++it)
-	{
-		if((*it) != a)
-		{
-			if(a.DistanceFromAgent(*it) < 300)
-			{
-				p.x += (*it).x3 - a.x3;
-				p.y += (*it).y3 - a.y3;
-				neighborCount++;
-			}
-		}
-	}
-	if(neighborCount == 0)
-		return p;
-	else
-	{
-		p.x /= neighborCount;
-		p.y /= neighborCount;
-		p.x *= -1;
-		p.y *= -1;
-		p.Normalize(1);
-
-		return p;
-	}
-
-}
-
-void Generator::UpdateSteeringAgents()
-{
-
-	for(std::vector<SteeringAgent>::iterator it = steeringAgents.begin(); it != steeringAgents.end(); ++it)
-	{
-		Point alignment = ComputeSteeringAgentAlignment(*it);
-		Point cohesion = ComputeSteeringAgentCohesion(*it);
-		Point seperation = ComputeSteeringAgentSeparation(*it);
-
-		(*it).velocity.x += alignment.x + cohesion.x + seperation.x;
-		(*it).velocity.y += alignment.y + cohesion.y + seperation.y;
-
-		(*it).Normalize(5);
-	}
-
 }
 
 

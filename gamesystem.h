@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <allegro5/allegro5.h>
 
-#include <Box2D/Box2D.h>
+//#include <Box2D.h>
 
 
 /// *** Debug defines. Comment out line to deactivate corresponding debug functionality. ***
@@ -27,7 +27,7 @@
 
 /// Generator
 #define D_GEN_PHASE_CHECK                             //Output debug information to console when completing a generation phase function
-//#define D_GEN_PHYS_DIST_RANDOM                      // Output debug information to console regarding the use of physics bodies to distribute room objects.
+//#define D_GEN_SEPERATION                            // Output debug information to console regarding the use of seperation steering to distribute room objects.
 //#define D_GEN_TRIANGULATION                         // Output debug information to console regarding the use of delaunay triangulation to determine which main rooms should be connected to each other.
 //#define D_VECTOR_UNIQUE_NODE_ID                     // Output debug information to console regarding the process of listing the IDs of every unique center room cell.
 //#define D_TRI_MST_COMBINATION                       // Output debug information to console regarding the minimum spanning tree derived from the triangulation's graph.

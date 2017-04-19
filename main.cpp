@@ -1,3 +1,18 @@
+/***
+
+Known issues:
+
+1)If 0 main rooms are created (i.e. while debugging with a low number of generation regions), program crashes trying to determine triangulation graph
+To fix: Discard generation when < threshold main rooms are created
+
+2) Overlap check doesn't actually work when one room is completely enveloped by another room
+Check the code
+
+*/
+
+
+#define __USE_MINGW_ANSI_STDIO 0
+
 #include <cstdio>
 #include <iostream>
 #include <cstring>
@@ -753,15 +768,15 @@ void LoadingDrawing()
             }
 
             ///Draw room generation boxes
-            if(generator->GetGenerationPhase() >= GEN_PHYSICAL_DISTRIBUTION) // Draw from physics simulation onwards
+            if(generator->GetGenerationPhase() >= GEN_SEPARATION) // Draw from physics simulation onwards
             {
                 for(std::vector<RoomGenBox*>::iterator it = generator->roomGenBoxes.begin(); it != generator->roomGenBoxes.end(); ++it)
                 {
 
-                    // Concerning generationPhase == GEN_PHYSICAL_DISTRIBUTION, but always active.
-                    // Draws outlines of room objects. Orange rooms denote that the corresponding physics body is awake. Blue rooms are asleep.
+                    // Concerning generationPhase == GEN_SEPARATION, but always active.
+                    // Draws outlines of room objects. Orange denotes that the room has overlaps. Blue denotes that the room does not have overlaps.
 
-                    if((*it)->correspondingBodyAwake)
+                    if(!(*it)->overlaps.empty())
                     {
                         al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
                                           (*it)->y1 - loadingCamY,
@@ -904,18 +919,18 @@ void DrawTiles()
             {
                 int floorRegionDrawX = area->floormapImageIndex[cellIndex]%FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
                 int floorRegionDrawY = FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY * area->floormapImageCategory[cellIndex] * TILESIZE
-                                                                        +
+                                       +
                                        area->floormapImageIndex[cellIndex]/FLOOR_TILE_SHEET_CELLWIDTH*TILESIZE;
 
 
                 al_draw_bitmap_region(gfxFloorTiles,
-                                    floorRegionDrawX,
-                                    floorRegionDrawY,
-                                    TILESIZE,
-                                    TILESIZE,
-                                    x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                    y*TILESIZE + SCREEN_H/2 - player->yPosition,
-                                    0);
+                                      floorRegionDrawX,
+                                      floorRegionDrawY,
+                                      TILESIZE,
+                                      TILESIZE,
+                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                      y*TILESIZE + SCREEN_H/2 - player->yPosition,
+                                      0);
             }
 
             /// Draw the walls
@@ -923,17 +938,17 @@ void DrawTiles()
             {
                 int wallRegionDrawX = area->wallmapImageIndex[cellIndex]%WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
                 int wallRegionDrawY = WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY * area->wallmapImageCategory[cellIndex] * TILESIZE
-                                                                        +
-                                       area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
+                                      +
+                                      area->wallmapImageIndex[cellIndex]/WALL_TILE_SHEET_CELLWIDTH*TILESIZE;
 
                 al_draw_bitmap_region(gfxWallTiles,
-                                    wallRegionDrawX,
-                                    wallRegionDrawY,
-                                    TILESIZE,
-                                    TILESIZE,
-                                    x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                    y*TILESIZE + SCREEN_H/2 - player->yPosition,
-                                    0);
+                                      wallRegionDrawX,
+                                      wallRegionDrawY,
+                                      TILESIZE,
+                                      TILESIZE,
+                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                      y*TILESIZE + SCREEN_H/2 - player->yPosition,
+                                      0);
             }
         }
     }

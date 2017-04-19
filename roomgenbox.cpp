@@ -1,38 +1,40 @@
 #include "roomgenbox.h"
 
-RoomGenBox::RoomGenBox(int bn, b2Body *cb2b, int w, int h)
+RoomGenBox::RoomGenBox(int id, int x, int  y, int w, int h)
 {
-    boxNumber = bn;
+    boxNumber = id;
 
-    correspondingB2Body = cb2b;
-    correspondingBodyAwake = correspondingB2Body->IsAwake();
+    x3 = x;
+    y3 = y;
+    width = w;
+    height = h;
+    UpdateDimensions();
+
     designatedMainRoom = false;
     designatedHallRoom = false;
 
-    width = w;
-    height = h;
+
+
     cellWidth = width/MINI_TILESIZE;
     cellHeight = height/MINI_TILESIZE;
-
-    UpdatePosition();
 }
 
 RoomGenBox::~RoomGenBox()
 {
 }
 
-void RoomGenBox::UpdatePosition()
+void RoomGenBox::UpdateDimensions()
 {
-    b2Vec2 updatedPosition = correspondingB2Body->GetPosition();
-    correspondingBodyAwake = correspondingB2Body->IsAwake();
+    x1 = x3-width/2;
+    x2 = x3+width/2;
+    y1 = y3-height/2;
+    y2 = y3+height/2;
+}
 
-    x3 = updatedPosition.x;
-    y3 = updatedPosition.y;
-
-    x1 = x3 - width/2;
-    x2 = x3 + width/2;
-    y1 = y3 - height/2;
-    y2 = y3 + height/2;
+void RoomGenBox::UpdateMidpoint()
+{
+    x3 = (x2-x1)/2;
+    y3 = (y2-y1)/2;
 }
 
 void RoomGenBox::SnapToGrid()
@@ -44,8 +46,7 @@ void RoomGenBox::SnapToGrid()
     y1 -= y%MINI_TILESIZE;
     x2 -= x%MINI_TILESIZE;
     y2 -= y%MINI_TILESIZE;
-    x3 =  x1+width/2;
-    y3 =  y1+height/2;
+    UpdateMidpoint();
 
 }
 

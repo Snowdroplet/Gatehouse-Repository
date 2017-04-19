@@ -1,9 +1,6 @@
 #ifndef GENERATOR_H_INCLUDED
 #define GENERATOR_H_INCLUDED
 
-/// This generator is based on the procedure described in this article:
-/// http://www.gamasutra.com/blogs/AAdonaac/20150903/252889/Procedural_Dungeon_Generation_Algorithm.php
-
 /**
 Notes:
 a) For the purposes of the random generation algorithm, MINI_TILESIZE is used. Dimensions and positions are converted to TILESIZE in the end.
@@ -15,7 +12,6 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 #include "gamesystem.h"
 #include "resource.h"
 #include "roomgenbox.h"
-#include "steeringagent.h"
 #include "delaunay.h"
 #include "mintree.h"
 
@@ -23,21 +19,20 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 
 #include <boost/random.hpp>
 
-#include <Box2D/Box2D.h>
-
 enum enumGenerationPhases
 {
     GEN_INACTIVE = 0,
-    GEN_PHYSICAL_DISTRIBUTION = 1,
-    GEN_MAIN_ROOM_SELECTION = 2,
-    GEN_TRIANGULATION = 3,
-    GEN_MST = 4,
-    GEN_LAYOUT_FLOOR_SKELETON = 5,
-    GEN_LAYOUT_FLOOR_FILL = 6,
-    GEN_LAYOUT_WALL_SKELETON = 7,
-    GEN_LAYOUT_WALL_FILL = 8,
-    GEN_COMMIT = 9,
-    GEN_COMPLETE = 10
+    GEN_ROOM_BOXES = 1,
+    GEN_SEPARATION = 2,
+    GEN_MAIN_ROOM_SELECTION = 3,
+    GEN_TRIANGULATION = 4,
+    GEN_MST = 5,
+    GEN_LAYOUT_FLOOR_SKELETON = 6,
+    GEN_LAYOUT_FLOOR_FILL = 7,
+    GEN_LAYOUT_WALL_SKELETON = 8,
+    GEN_LAYOUT_WALL_FILL = 9,
+    GEN_COMMIT = 10,
+    GEN_COMPLETE = 11
 };
 
 enum enumGenLayoutCellTypes
@@ -46,8 +41,8 @@ enum enumGenLayoutCellTypes
     GEN_CELL_EMPTY                = -1,
 
     /// Floor
-    GEN_CELL___FLOOR_MARKER_BEGIN = 0,          // Useful for applications like this:   if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && < GEN_CELL___FLOOR_MARKER_END)
-                                                // To prevent rather confusing induction regarding what cells we are including or excluding.
+    GEN_CELL_FLOOR_MARKER_BEGIN = 0,          // Useful for applications like this:   if(genLayout[i] > GEN_CELL___FLOOR_MARKER_BEGIN && < GEN_CELL___FLOOR_MARKER_END)
+    // To prevent rather confusing induction regarding what cells we are including or excluding.
 
     GEN_CELL_MAIN_ROOM            = 1,
     GEN_CELL_HALL_ROOM            = 2,
@@ -55,16 +50,16 @@ enum enumGenLayoutCellTypes
     GEN_CELL_HALLWAY              = 4,
     GEN_CELL_HALLWAY_EXTENSION    = 5,
 
-    GEN_CELL___FLOOR_MARKER_END   = 6,
+    GEN_CELL_FLOOR_MARKER_END   = 6,
 
     /// Walls
-    GEN_CELL___MARKER_WALLS_BEGIN = 7,
+    GEN_CELL_MARKER_WALLS_BEGIN = 7,
 
     GEN_CELL_WALL_SKELETON        = 8,
     GEN_CELL_WALL_DOOR            = 9,
     GEN_CELL_WALL_IMPASSABLE      = 10,
 
-    GEN_CELL___MARKER_WALLS_END   = 11,
+    GEN_CELL_MARKER_WALLS_END   = 11,
 
 };
 
@@ -94,9 +89,6 @@ private:
     bool generationPhaseComplete;
     bool generationComplete;
 
-    bool bodiesGenerated;
-    bool bodiesDistributed;
-
     float removedEdgeReturnPercentage;  // MST: Adjusts the extra connectivity of the area. 0% should leave the tree as is. 100% should return all edges.
 
     /// Generator knobs
@@ -116,26 +108,6 @@ private:
     float hallwayExtensionRate;  // The chance that the adopted cell will become a hallway extension cell.
     float hallwayConversionRate; // The chance that the adopted cell will hallway will become a proper hallway cell.
 
-    /// Concerning the distribution of room objects by physics simulation:
-
-    b2World *physics;
-    b2Vec2 physicsGravity;
-
-    float32 timeStep;
-    int32 velocityIterations;
-    int32 positionIterations;
-
-
-    b2BodyDef roomGenBody;
-    b2PolygonShape roomGenPolygonShape;
-    b2FixtureDef roomGenFixture;
-
-    /// Concering the use of seperation steering behavior to distribute room objects:
-    std::vector<SteeringAgent>steeringAgents;
-    Point ComputeSteeringAgentAlignment(SteeringAgent a);
-    Point ComputeSteeringAgentCohesion(SteeringAgent a);
-    Point ComputeSteeringAgentSeparation(SteeringAgent a);
-    void UpdateSteeringAgents();
 
     /// Rooms where dimensions meet a certain threshold size.
     std::vector<RoomGenBox*>mainRooms;
@@ -151,7 +123,8 @@ private:
 
 
     /// These functions are to be called in order from Generate(). Do not call them out of order, or outside of generate.
-    void PhysicalDistribution();
+    void GenerateRoomBoxes();
+    void Separation();
     void MainRoomSelection();
     void Triangulation();
     void MinimumSpanningTree();
