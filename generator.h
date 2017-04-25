@@ -16,6 +16,7 @@ c) ROOM OBJECT and PHYSICS BODY are distinguished in capitals whenever they appe
 #include "mintree.h"
 
 #include <ctime>
+#include <cmath>
 
 #include <boost/random.hpp>
 
@@ -79,7 +80,7 @@ enum enumPreferredHallwayLayoutTypes
 class Generator
 {
 private:
-/// Generator state
+    /// Generator state
     bool D_GENERATORDEBUGSTASIS;
 #ifdef D_GEN_VISUALIZATION_PHASE_PAUSE
     bool D_GENERATORVISUALIZATIONPAUSE;
@@ -89,11 +90,8 @@ private:
     bool generationPhaseComplete;
     bool generationComplete;
 
-    float removedEdgeReturnPercentage;  // MST: Adjusts the extra connectivity of the area. 0% should leave the tree as is. 100% should return all edges.
-
     /// Generator knobs
     int roomBoxesToGenerate;
-
 
     float averageRoomWidth; // The average (or mean) room height in the random normal distribution of room dimensions.
     float averageRoomHeight;
@@ -101,6 +99,8 @@ private:
     float stdHeightDeviation;
     int mainRoomWidthThreshold; // The minimum width and height required for a room object to be listed as a "main room" for the purposes of algorithmic generation
     int mainRoomHeightThreshold;
+
+    float removedEdgeReturnPercentage;  // MST: Adjusts the extra connectivity of the area. 0% should leave the tree as is. 100% should return all edges.
 
     int preferedHallwayLayout;   // Determines whether the initial hallway pathing axis will prefer creating a somewhat more convex or concave dungeon.
 
@@ -177,6 +177,8 @@ public:
 
     /// Functions to turn the knobs before hitting Generate()
     void SetRemovedEdgeReturnPercentage(float rerp);
+
+
 
     void ReleaseOutputContainers();   // Swap output containers with empty vectors.
 

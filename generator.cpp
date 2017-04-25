@@ -27,12 +27,10 @@ void Generator::GenerateRoomBoxes()
     boost::random::normal_distribution<float> randomRoomHeight(averageRoomHeight,stdHeightDeviation);
 
     // Random point in circle selected using random radius and angle. Probability is uniform.
-    boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.20);    // (Range min, range max)
+    boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.40);    // (Range min, range max)
     boost::random::uniform_real_distribution<double> randomGenTheta(0.0,2*PI);
 
-    static int roomsToGenerate = 150;
-
-    for(int i = 0; i < roomsToGenerate; i++)
+    for(int i = 0; i < roomBoxesToGenerate; i++)
     {
         int roomWidth = randomRoomWidth(mtRng);  // Implicit conversion to int for the purposes of the modulo operation below.
         int roomHeight = randomRoomHeight(mtRng);
@@ -71,6 +69,9 @@ void Generator::GenerateRoomBoxes()
     }
 
     generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Room generation boxes created..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
 }
 
 void Generator::Separation()
@@ -91,76 +92,68 @@ void Generator::Separation()
 
         for(std::vector<RoomGenBox*>::iterator a = roomGenBoxes.begin(); a != roomGenBoxes.end(); ++a)
         {
-            for(std::vector<RoomGenBox*>::iterator b = a; b != roomGenBoxes.end(); ++b)
+            for(std::vector<RoomGenBox*>::iterator b = roomGenBoxes.begin(); b != roomGenBoxes.end(); ++b)
             {
-                if((*b)->x1 < (*a)->x2 && (*b)->x2 > (*a)->x1 &&
-                   (*b)->y1 < (*a)->y2 && (*b)->y2 > (*a)->y1)
+                if((*a)->CheckOverlap(*b))
                 {
-                    (*a)->overlaps.push_back(*b);
+                    overlapCheckPassed = false;
+                    (*a)->AddOverlap(*b);
                 }
-
-            }
-
-            // Any room objects that overlap with another will be seperated.
-            // Note that this 'b' is not the same 'b' as in the loop above.
-            if(!(*a)->overlaps.empty())
-            {
-                overlapCheckPassed = false;
-
-                for(std::vector<RoomGenBox*>::iterator b = (*a)->overlaps.begin(); b != (*a)->overlaps.end(); ++b)
+                else
                 {
-                    if((*b)->x3 < (*a)->x3)
-                    {
-                        (*b)->x2 = (*a)->x1;
-                        (*b)->x1 = (*b)->x2 - (*b)->width;
-                        (*b)->UpdateMidpoint();
-                    }
-                    else if((*b)->x3 > (*a)->x3)
-                    {
-                        (*b)->x1 = (*a)->x2;
-                        (*b)->x2 = (*b)->x1 + (*b)->width;
-                        (*b)->UpdateMidpoint();
-                    }
-
-                    if((*b)->y3 < (*a)->y3)
-                    {
-                        (*b)->y2 = (*a)->y1;
-                        (*b)->y1 = (*b)->y2 - (*b)->height;
-                        (*b)->UpdateMidpoint();
-                    }
-                    else if((*b)->y3 > (*a)->y3)
-                    {
-                        (*b)->y1 = (*a)->y2;
-                        (*b)->y2 = (*b)->y1 + (*b)->height;
-                        (*b)->UpdateMidpoint();
-                    }
-
+                    (*a)->ClearVelocity();
                 }
-                (*a)->overlaps.clear();
             }
         }
+
+        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        {
+            (*it)->RepulseOverlaps();
+            (*it)->ClearOverlaps();
+            (*it)->Move();
+        }
+
     }
     else if(overlapCheckPassed)
     {
         // Snap resting room objects to grid
-        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
+        for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
         {
             (*it)->SnapToGrid();
+            std::cout << "Box " << (*it)->boxNumber << ": " << (*it)->x3 << " " << (*it)->y3 << std::endl;
+
+            if((*it)->BoundaryDeletionCheck(1))
+            {
+                delete *it;
+                roomGenBoxes.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
         }
 
         generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Room generation boxes separated..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
     }
 }
 
 void Generator::MainRoomSelection()
 {
     // Room boxes above a set width/height threshold are designated main rooms.
+
+
+
+
     for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
     {
         if((*it)->width >= mainRoomWidthThreshold && (*it)->height >= mainRoomHeightThreshold)
         {
             mainRooms.push_back(*it);
             (*it)->designatedMainRoom = true;
+            std::cout << "Main " << (*it)->boxNumber << ": " << (*it)->x3 << " " << (*it)->y3 << std::endl;
         }
     }
 
@@ -999,15 +992,15 @@ void Generator::InitialState()
 
     /// Knobs
 
-    roomBoxesToGenerate = 180;
+    roomBoxesToGenerate = 150;
 
-    averageRoomWidth = MINI_TILESIZE*5;
-    averageRoomHeight = MINI_TILESIZE*5;
-    stdWidthDeviation = averageRoomWidth*0.30;
-    stdHeightDeviation = averageRoomHeight*0.30;
+    averageRoomWidth = MINI_TILESIZE*7;
+    averageRoomHeight = MINI_TILESIZE*7;
+    stdWidthDeviation = averageRoomWidth*0.50;
+    stdHeightDeviation = averageRoomHeight*0.50;
 
-    mainRoomWidthThreshold = MINI_TILESIZE*6;
-    mainRoomHeightThreshold = MINI_TILESIZE*6;
+    mainRoomWidthThreshold = MINI_TILESIZE*5;
+    mainRoomHeightThreshold = MINI_TILESIZE*5;
 
     SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
 

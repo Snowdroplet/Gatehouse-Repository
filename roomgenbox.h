@@ -4,6 +4,7 @@
 #include "gamesystem.h"
 
 #include <vector>
+#include <ctime>
 #include <boost/random.hpp>
 
 
@@ -21,8 +22,11 @@ struct RoomGenBox
     int cellWidth, cellHeight; // Dimensions in cells (or pixels/MINI_TILESIZE).
 
 
-    /// Concerning the room object's behavior during generation
+    /// Data for use in procedural generation
+    boost::random::mt19937 mtRng;
     std::vector<RoomGenBox*>overlaps;
+    int xVelocity, yVelocity;
+
 
 
     /// Misc information of this roombox
@@ -31,6 +35,15 @@ struct RoomGenBox
 
     RoomGenBox(int id, int x, int y, int w, int h);
     ~RoomGenBox();
+
+    bool CheckOverlap(RoomGenBox* other);
+    void AddOverlap(RoomGenBox* other);
+    void RepulseOverlaps();
+    void ClearOverlaps();
+
+
+    void Move();
+    void ClearVelocity();
 
     void UpdateDimensions();
     void UpdateMidpoint();

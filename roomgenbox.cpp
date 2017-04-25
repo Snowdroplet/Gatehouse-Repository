@@ -13,7 +13,7 @@ RoomGenBox::RoomGenBox(int id, int x, int  y, int w, int h)
     designatedMainRoom = false;
     designatedHallRoom = false;
 
-
+    mtRng.seed(static_cast<unsigned int>(std::time(0)));
 
     cellWidth = width/MINI_TILESIZE;
     cellHeight = height/MINI_TILESIZE;
@@ -21,6 +21,63 @@ RoomGenBox::RoomGenBox(int id, int x, int  y, int w, int h)
 
 RoomGenBox::~RoomGenBox()
 {
+    overlaps.clear();
+}
+
+bool RoomGenBox::CheckOverlap(RoomGenBox* other)
+{
+    if(other != this)
+    {
+        if(other->x1 < x2 && other->x2 > x1 &&
+           other->y1 < y2 && other->y2 > y1)
+            return true;
+        else
+            return false;
+    }
+    else
+        return false;
+}
+
+void RoomGenBox::AddOverlap(RoomGenBox* other)
+{
+    overlaps.push_back(other);
+}
+
+void RoomGenBox::RepulseOverlaps()
+{
+    for(std::vector<RoomGenBox*>::iterator it = overlaps.begin(); it != overlaps.end(); ++it)
+    {
+        float dx = x3 - (*it)->x3;
+        float dy = y3 - (*it)->y3;
+
+        boost::random::uniform_int_distribution<int> plusminus1(-1,1);
+
+        xVelocity += dx;// * plusminus1(mtRng);
+        yVelocity += dy;// * plusminus1(mtRng);
+    }
+}
+
+void RoomGenBox::ClearOverlaps()
+{
+    overlaps.clear();
+}
+
+void RoomGenBox::Move()
+{
+    if(xVelocity > 40)
+        xVelocity = 40;
+    if(yVelocity > 40)
+        yVelocity = 40;
+
+    x3 += xVelocity;
+    y3 += yVelocity;
+    UpdateDimensions();
+}
+
+void RoomGenBox::ClearVelocity()
+{
+    xVelocity = 0;
+    yVelocity = 0;
 }
 
 void RoomGenBox::UpdateDimensions()
@@ -33,8 +90,8 @@ void RoomGenBox::UpdateDimensions()
 
 void RoomGenBox::UpdateMidpoint()
 {
-    x3 = (x2-x1)/2;
-    y3 = (y2-y1)/2;
+    x3 = x2-width/2;
+    y3 = y2-height/2;
 }
 
 void RoomGenBox::SnapToGrid()
@@ -46,6 +103,7 @@ void RoomGenBox::SnapToGrid()
     y1 -= y%MINI_TILESIZE;
     x2 -= x%MINI_TILESIZE;
     y2 -= y%MINI_TILESIZE;
+
     UpdateMidpoint();
 
 }
