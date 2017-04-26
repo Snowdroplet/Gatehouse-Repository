@@ -19,15 +19,21 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/base_object.hpp>
 
-enum enumAnimationStates
+enum enumBeingAnimationStates
 {
-    //For now, NPCs only have passive, prepare and execute sprites, all facing south.
-    PASSIVE = 0,
-    PREPARE = 1, // Mid-casting animation. The first frame is also used for melee animation
-    EXECUTE = 2, // Throw a cast or an attack
+    ANIM_IDLE = 0,
+    ANIM_WALK = 1,
+    ANIM_CASTING = 2,
+    ANIM_EXECUTE = 3,
+};
 
-    //For now, only Player class has walking sprites
-    WALK = 3
+enum enumBeingPossibleActions
+{
+    ACTION_IDLE = 0,
+    ACTION_WALK = 1,
+    ACTION_CASTING = 2,
+    ACTION_EXECUTE = 3
+
 };
 
 class Being // Make this class abstract later
@@ -40,9 +46,8 @@ class Being // Make this class abstract later
     }
 
 public:
-    Graph *graph; //Pathfinding graph
-    std::vector<Node*>currentPath;
 
+    /// Identity
     int derivedType;
     int identity;
 
@@ -52,34 +57,43 @@ public:
 
     std::string name;
 
+    /// Pathfinding
+    Graph *graph; //Pathfinding graph
+    std::vector<Node*>currentPath;
+
+    /// Action and animations
+
+    std::string actionName; /// This has not yet had an array made that includes its possible values
+    int currentAction;
+    bool actionBlocked;
+    float actionCost, actionPoints;
+
     bool animationComplete;
     int spriteID;
-
-
     bool freezeFrame; // If true, hold the sprite still
     int animationState; // Which animation state: Passive, prepare, execute, walk...
     int animationFrame, animationFrameThreshold; // Which frame of the sprite to draw, how many frames exist
     int animationDelay, animationDelayThreshold; // Governs delay between frame transition
 
-    Property intrinsics[60];
-    Property properties[60]; // A being with more than 40 active properties will be anihilated by chaos.
-
-    std::vector<Item*>inventory;
-
+    /// Position
     float xPosition, yPosition; // position used for animation
     float dXPosition, dYPosition;
     int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase
 
-    std::string actionName; /// This has not yet had an array made that includes its possible values
-    bool actionBlocked;
-    float actionCost, actionPoints;
-
+    /// Unit game stats
     float baseSpeed, effectiveSpeed;
+
+    Property intrinsics[60];
+    Property properties[60]; // A being with more than 40 active properties will be anihilated by chaos.
+
+    /// Inventory
+    std::vector<Item*>inventory;
 
     Being();
     ~Being();
     void BaseLogic();
-    void ProgressAnimation(); //This only deals with the apparent movement; BaseLogic() takes care of the moveframes
+    void ProgressIdleAnimation(); //All beings will progress through idle action and animation (even) when they are not queued to move.
+    void ProgressWalkAnimation(); //This only deals with the apparent movement; BaseLogic() takes care of the moveframes
 
     void ResetPath();
 

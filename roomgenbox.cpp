@@ -47,13 +47,13 @@ void RoomGenBox::RepulseOverlaps()
 {
     for(std::vector<RoomGenBox*>::iterator it = overlaps.begin(); it != overlaps.end(); ++it)
     {
-        float dx = x3 - (*it)->x3;
-        float dy = y3 - (*it)->y3;
+        float dx = (x3 - (*it)->x3)/2;
+        float dy = (y3 - (*it)->y3)/2;
 
         boost::random::uniform_int_distribution<int> plusminus1(-1,1);
 
-        xVelocity += dx;// * plusminus1(mtRng);
-        yVelocity += dy;// * plusminus1(mtRng);
+        xVelocity += dx;
+        yVelocity += dy;
     }
 }
 

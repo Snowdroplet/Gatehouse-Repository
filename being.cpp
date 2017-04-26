@@ -8,12 +8,13 @@ Being::Being()
     active = true;
 
     freezeFrame = false;
-    animationState = PASSIVE;
+    animationState = ANIM_IDLE;
     animationFrame = 0;
     animationFrameThreshold = 0;
     animationDelay = 0;
     animationDelayThreshold = 3;
 
+    currentAction = ACTION_IDLE;
     actionName = "UNKNOWN";
     actionBlocked = false;
     actionPoints = 0;
@@ -103,21 +104,35 @@ void Being::BaseLogic()
 
 }
 
-void Being::ProgressAnimation()
+void Being::ProgressWalkAnimation()
 {
     animationComplete = false; // False but meant to be proven true if animation is incomplete
 
     if(xPosition < dXPosition)
-        xPosition += 4;
+        xPosition += 8;
     else if(xPosition > dXPosition)
-        xPosition -= 4;
+        xPosition -= 8;
     if(yPosition < dYPosition)
-        yPosition += 4;
+        yPosition += 8;
     else if(yPosition > dYPosition)
-        yPosition -= 4;
+        yPosition -= 8;
 
     if(xPosition == dXPosition && yPosition == dYPosition)
+    {
         animationComplete = true;
+        currentAction = ACTION_IDLE;
+    }
+}
+
+void Being::ProgressIdleAnimation()
+{
+    if(currentAction == ACTION_IDLE) // Once again, all beings go through progression of idle animation even when the currentAction is not "action_idle," per se.
+    {
+        /*
+        // Something on the lines of animationFrame ++;
+        */
+        animationComplete = true;
+    }
 }
 
 void Being::ResetPath()

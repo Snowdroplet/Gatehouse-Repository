@@ -5,9 +5,6 @@ Known issues:
 1)If 0 main rooms are created (i.e. while debugging with a low number of generation regions), program crashes trying to determine triangulation graph
 To fix: Discard generation when < threshold main rooms are created
 
-2) Overlap check doesn't actually work when one room is completely enveloped by another room
-Check the code
-
 */
 
 
@@ -57,7 +54,10 @@ Area *area;
 Player *player;
 
 std::vector<Being*>beings; // All beings currently in play.
-std::vector<Being*>actionQueue; // All beings queued to move.
+std::vector<Being*>actionQueue; // All beings queued to act.
+std::vector<Being*>walkAnimQueue; // All beings queued to animate walk.
+Being*currentAnimatedBeing = nullptr; // Which being is being animated, if an action other than walking is being animated.
+
 bool CompareAPDescending(Being *lhs, Being *rhs)
 {
     return lhs->actionPoints > rhs->actionPoints;
@@ -260,7 +260,9 @@ int main(int argc, char *argv[])
 void GameLogic()
 {
     static bool actionOpen = true; // Whether the system is open to new actions, whether by player or AI. When an action is taken, actionOpen becomes false.
-    static bool checkAnimationComplete = true;
+
+    static bool walkAnimQueueReleased = false;
+    static bool checkAnimationPhaseComplete = true;
 
     static std::vector<Being*>::iterator aqit; // Static action queue iterator meant to be the front element of actionQueue.
 
@@ -268,6 +270,8 @@ void GameLogic()
     {
         if(awaitingPlayerCommand)
         {
+            // ***The following mess seriously needs a function of its own later
+
             if(player->actionBlocked)
             {
                 player->actionCost = 100;
@@ -278,48 +282,56 @@ void GameLogic()
             else if(keyInput[KEY_PAD_8] || keyInput[KEY_UP])
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(NORTH);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_9] || (keyInput[KEY_UP] && keyInput[KEY_RIGHT]))
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(NORTHEAST);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_6] || keyInput[KEY_RIGHT])
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(EAST);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_3] || (keyInput[KEY_DOWN] && keyInput[KEY_RIGHT]))
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(SOUTHEAST);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_2] || keyInput[KEY_DOWN])
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(SOUTH);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_1] || (keyInput[KEY_DOWN] && keyInput[KEY_LEFT]))
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(SOUTHWEST);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_4] || keyInput[KEY_LEFT])
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(WEST);
                 submittedPlayerCommand = true;
             }
             else if(keyInput[KEY_PAD_7] || (keyInput[KEY_UP] && keyInput[KEY_LEFT]))
             {
                 player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
                 player->Move(NORTHWEST);
                 submittedPlayerCommand = true;
             }
@@ -458,7 +470,15 @@ void GameLogic()
 #ifdef D_TURN_LOGIC
                     std::cout << (*aqit)->name << " now has " << (*aqit)->actionPoints << "/" << (*aqit)->effectiveSpeed << "AP" << std::endl;
 #endif
-                    actionOpen = false;
+
+                    if((*aqit)->currentAction == ACTION_WALK)
+                        walkAnimQueue.push_back(*aqit);
+                    else if((*aqit)->currentAction != ACTION_IDLE)
+                    {
+                        walkAnimQueueReleased = true;
+                        currentAnimatedBeing = *aqit;
+                        actionOpen = false;
+                    }
                 }
                 else if((*aqit)->derivedType == BEING_TYPE_PLAYER)
                 {
@@ -483,10 +503,22 @@ void GameLogic()
                 submittedPlayerCommand = false;
                 actionOpen = false;
 
+                if(player->currentAction == ACTION_WALK)
+                    walkAnimQueue.push_back(player);
+                else if(player->currentAction != ACTION_IDLE)
+                {
+                    walkAnimQueueReleased = true;
+                    currentAnimatedBeing = player;
+                }
+
+
+
+
                 ShiftTerminal(); // This might have to be moved to be triggered by different conditions later on.
             }
+
+            //It is possible for a being to have its AP reduced (i.e. crowd control slow) while in the actionQueue and thus become ineligible to move.
             //Remove front element from action queue if it does not have enough AP (100).
-            //It is possible for a being to have its AP reduced while in the actionQueue and thus become ineligible to move.
             if((*aqit)->actionPoints < 100)
             {
 #ifdef D_TURN_LOGIC
@@ -500,6 +532,11 @@ void GameLogic()
             turnLogicPhase = GRANT_ACTION_POINTS;
         }
 
+        if(actionQueue.empty())
+        {
+            walkAnimQueueReleased = true;
+        }
+
         //If a player action/AI option has been confirmed, no further actions may be processed until its animation is complete.
         if(!actionOpen)
             turnLogicPhase = ANIMATION;
@@ -507,23 +544,51 @@ void GameLogic()
 
     if(turnLogicPhase == ANIMATION)
     {
+        checkAnimationPhaseComplete = false;
+
+        //Progress the IDLE animation of all beings by one step.
+        //Note that all beings will go through this (possibly hidden to the player) progression in idle animation (even) when they are not queued to act or animate.
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
+            (*it)->ProgressIdleAnimation();
+
+
+        if(currentAnimatedBeing != nullptr)
         {
-            //Progress the animation of all beings by one step
-            (*it)->ProgressAnimation();
+            if(currentAnimatedBeing->animationComplete)
+            {
+                checkAnimationPhaseComplete = true;
+                currentAnimatedBeing = nullptr;
+            }
+            else
+            {
+                // **Progress the animation of being in question here**
+            }
+        }
+        else if(walkAnimQueueReleased)
+        {
+            for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
+            {
+                (*it)->ProgressWalkAnimation();
+                if((*it)->animationComplete)
+                {
+                    walkAnimQueue.erase(it);
+                }
+                else
+                    ++it;
+            }
 
-            //Flag the animation phase as unfinished if any being's animation is incomplete
-            //e.g. draw position does not match x/y position corresponding to current cell in a geometric translation...
-            if(!(*it)->animationComplete)
-                checkAnimationComplete = false;
-
+            if(walkAnimQueue.empty())
+            {
+                checkAnimationPhaseComplete = true;
+                walkAnimQueueReleased = false;
+            }
         }
 
         //Move on to calculation if the phase is complete, otherwise reset the flag
-        if(checkAnimationComplete)
+        if(checkAnimationPhaseComplete)
+        {
             turnLogicPhase = CALCULATION;
-        else
-            checkAnimationComplete = true;
+        }
     }
 
     if(turnLogicPhase == CALCULATION)
@@ -544,13 +609,13 @@ void LoadingLogic()
     if(ev.type == ALLEGRO_EVENT_TIMER)
     {
         if(keyInput[KEY_PAD_6])
-            loadingCamX ++;
+            loadingCamX += 4;
         if(keyInput[KEY_PAD_2])
-            loadingCamY ++;
+            loadingCamY += 4;
         if(keyInput[KEY_PAD_4])
-            loadingCamX --;
+            loadingCamX -= 4;
         if(keyInput[KEY_PAD_8])
-            loadingCamY --;
+            loadingCamY -= 4;
 #ifdef D_TERMINATE_LOADING_SIGNAL
         if(keyInput[KEY_Z])
             D_TERMINATELOADINGPHASESIGNAL = true;  // Obviously only for developmental purposes since Area::Generate is incomplete.
@@ -598,7 +663,7 @@ void LoadingLogic()
         area->floormapImageIndex    = generator->floormapImageIndex;
         area->wallmapImageIndex     = generator->wallmapImageIndex;
 
-        // ***Set being positions here
+        /// ********Set Being initial positions here **********
 
 
         // Release memory
@@ -643,7 +708,7 @@ void GameDrawing()
         {
             if((*it)->derivedType == BEING_TYPE_NPC)//As opposed to player, which is drawn seperately
             {
-                if((*it)->animationState == PASSIVE)
+                if((*it)->animationState == ANIM_IDLE)
                     al_draw_bitmap(gfxNPCPassive[(*it)->spriteID + (*it)->animationFrame],
                                    (*it)->xPosition + SCREEN_W/2 - player->xPosition,
                                    (*it)->yPosition + SCREEN_H/2 - player->yPosition,
@@ -776,29 +841,19 @@ void LoadingDrawing()
                     // Concerning generationPhase == GEN_SEPARATION, but always active.
                     // Draws outlines of room objects. Orange denotes that the room has overlaps. Blue denotes that the room does not have overlaps.
 
-                    if(!(*it)->overlaps.empty())
-                    {
-                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Awake
-                                          (*it)->y1 - loadingCamY,
-                                          (*it)->x2 - loadingCamX,
-                                          (*it)->y2 - loadingCamY,
-                                          FIRE_ORANGE, 1);
-                    }
-                    else
-                    {
-                        if((*it)->designatedMainRoom)
-                            al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
+
+                    if((*it)->designatedMainRoom)
+                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
                                               (*it)->y1 - loadingCamY,
                                               (*it)->x2 - loadingCamX,
                                               (*it)->y2 - loadingCamY,
                                               BRIGHT_GREEN, 2);
-                        else
-                            al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
+                    else
+                        al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
                                               (*it)->y1 - loadingCamY,
                                               (*it)->x2 - loadingCamX,
                                               (*it)->y2 - loadingCamY,
                                               COLD_BLUE, 1);
-                    }
 
 
                     s_al_draw_text(terminalFont, NEUTRAL_WHITE,

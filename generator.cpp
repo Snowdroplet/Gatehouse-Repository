@@ -120,7 +120,6 @@ void Generator::Separation()
         for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end();)
         {
             (*it)->SnapToGrid();
-            std::cout << "Box " << (*it)->boxNumber << ": " << (*it)->x3 << " " << (*it)->y3 << std::endl;
 
             if((*it)->BoundaryDeletionCheck(1))
             {
@@ -153,7 +152,6 @@ void Generator::MainRoomSelection()
         {
             mainRooms.push_back(*it);
             (*it)->designatedMainRoom = true;
-            std::cout << "Main " << (*it)->boxNumber << ": " << (*it)->x3 << " " << (*it)->y3 << std::endl;
         }
     }
 
@@ -994,13 +992,13 @@ void Generator::InitialState()
 
     roomBoxesToGenerate = 150;
 
-    averageRoomWidth = MINI_TILESIZE*7;
-    averageRoomHeight = MINI_TILESIZE*7;
-    stdWidthDeviation = averageRoomWidth*0.50;
-    stdHeightDeviation = averageRoomHeight*0.50;
+    averageRoomWidth = MINI_TILESIZE*6;
+    averageRoomHeight = MINI_TILESIZE*6;
+    stdWidthDeviation = averageRoomWidth*0.30;
+    stdHeightDeviation = averageRoomHeight*0.30;
 
-    mainRoomWidthThreshold = MINI_TILESIZE*5;
-    mainRoomHeightThreshold = MINI_TILESIZE*5;
+    mainRoomWidthThreshold = MINI_TILESIZE*6;
+    mainRoomHeightThreshold = MINI_TILESIZE*6;
 
     SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
 
