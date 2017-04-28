@@ -14,7 +14,7 @@
 
 /// Main
 
-//#define D_CREATE_TESTING_AREA                         // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
+#define D_CREATE_TESTING_AREA                         // Creates a new "test" area instead of reading one from the deserialization of areafile/areabase.
 #define D_CREATE_TESTING_PLAYER                       // Creates a new "test" player instead of reading one from the deserialization of playerfile.
 
 #define D_DRAW_DEBUG_OVERLAY                          // Draws additional debug information on screen, such as the camera's X/Y position
@@ -221,6 +221,14 @@ enum enumFloorTypes
     FT_FLOOR_RUBBLE = 1     // Floor generated on the position of a destroyed wall.
 
                     // Add all types of variations on floor here, like... Mossy? Puddly?
+};
+
+enum enumFeatureTypes
+{
+    FEATURE_EMPTY = -1,     //**Nonexistent
+
+    FEATURE_DOWNSTAIRS = 0,
+    FEATURE_UPSTAIRS = 1
 };
 
 

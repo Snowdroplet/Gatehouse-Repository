@@ -15,7 +15,7 @@ ALLEGRO_EVENT ev;
 ALLEGRO_MOUSE_STATE mouseState;
 
 
-int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;   //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
+int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;  //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
 int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
 
 int camX = 0;
@@ -62,8 +62,8 @@ int subMenuOpen;
 /// IN-GAME AREA
 
 
-int areaCellWidth = 100; // May become variable in the future.
-int areaCellHeight = 100;
+int areaCellWidth = 200; // May become variable in the future.
+int areaCellHeight = 200;
 int areaCellArea = areaCellWidth*areaCellHeight;
 
 int areaWidth = TILESIZE*areaCellWidth;

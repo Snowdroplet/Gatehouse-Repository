@@ -22,13 +22,17 @@ void Area::InitByArchive()
 
 void Area::InitialContainers()
 {
-    occupied = std::vector<bool>(areaCellWidth*areaCellHeight,false); // All cells are unoccupied by default
-    floormap = std::vector<int>(areaCellWidth*areaCellHeight, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default
-    wallmap = std::vector<int>(areaCellWidth*areaCellHeight, WT_WALL_EMPTY); // All wall spaces are nonexistent by default
-    floormapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, FC_STONE_DUNGEON_FLOOR); // The dungeon style, by default
-    floormapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, SI_TEST_FLOOR); // Test floor by default. Shows if cells have been generated improperly
-    wallmapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, WC_LIGHT_DUNGEON_WALL); // The dungeon wall style, by default
-    wallmapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, SI_TEST_WALL); // Test wall by default. Shows if cells have been generated improperly
+    occupied = std::vector<bool>(areaCellWidth*areaCellHeight,false); // All cells are unoccupied by default.
+    floormap = std::vector<int>(areaCellWidth*areaCellHeight, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default.
+    wallmap = std::vector<int>(areaCellWidth*areaCellHeight, WT_WALL_EMPTY); // All wall spaces are nonexistent by default.
+    featuremap = std::vector<int>(areaCellWidth*areaCellHeight, FEATURE_EMPTY); // All cells unfurnished by default.
+
+    floormapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, FC_STONE_DUNGEON_FLOOR); // The dungeon style, by default.
+    floormapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, SI_TEST_FLOOR); // Test floor by default. Shows if cells have been generated improperly.
+    wallmapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, WC_LIGHT_DUNGEON_WALL); // The dungeon wall style, by default.
+    wallmapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, SI_TEST_WALL); // Test wall by default. Shows if cells have been generated improperly.
+    featuremapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, FEATC_MISC); // The furniture style is simply an all-encompassing "misc" until further styles are introduced.
+    featuremapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, FI_ERROR); // Test furniture by default. Shows if furniture has been generated improperly.
 }
 
 void Area::ReleaseContainers()
@@ -36,11 +40,14 @@ void Area::ReleaseContainers()
     std::vector<bool>().swap(occupied);
     std::vector<int>().swap(floormap);
     std::vector<int>().swap(wallmap);
+    std::vector<int>().swap(featuremap);
 
     std::vector<int>().swap(floormapImageCategory);
     std::vector<int>().swap(floormapImageIndex);
     std::vector<int>().swap(wallmapImageCategory);
     std::vector<int>().swap(wallmapImageIndex);
+    std::vector<int>().swap(featuremapImageCategory);
+    std::vector<int>().swap(featuremapImageIndex);
 }
 
 Area::~Area()
@@ -57,7 +64,7 @@ bool SaveAreaState(Area *target)
     if(!areafile.is_open())
     {
         s_al_show_native_message_box(display, "SAVE FAILURE", "SAVE FAILURE", fileName + "could not be created/opened.",
-                                     NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                     nullptr, ALLEGRO_MESSAGEBOX_ERROR);
 
         return false;
     }
@@ -84,7 +91,7 @@ bool LoadAreaState(std::string areaName, Area *target, bool baseState)
     if(!areafile.is_open())
     {
         s_al_show_native_message_box(display, "LOAD FAILURE", "LOAD FAILURE", fileName + "could not be found/opened.",
-                                     NULL, ALLEGRO_MESSAGEBOX_ERROR);
+                                     nullptr, ALLEGRO_MESSAGEBOX_ERROR);
         return false;
     }
 

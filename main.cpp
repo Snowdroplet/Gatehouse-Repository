@@ -5,6 +5,16 @@ Known issues:
 1)If 0 main rooms are created (i.e. while debugging with a low number of generation regions), program crashes trying to determine triangulation graph
 To fix: Discard generation when < threshold main rooms are created
 
+Current work to do:
+
+
+2) Represent upstairs and downstairs somewhere
+3) Pathfinding test under actual play conditions
+
+4) Begin implementation of combat system
+
+10) Velocity of roomgenbox repulsion must be at least 1, plus or minus some random chaotic jiggling of velocity to prevent infinite loops.
+
 */
 
 
@@ -49,9 +59,9 @@ To fix: Discard generation when < threshold main rooms are created
 #include "player.h"
 #include "npc.h"
 
-Generator *generator;
-Area *area;
-Player *player;
+Generator *generator = nullptr;
+Area *area = nullptr;
+Player *player = nullptr;
 
 std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to act.
@@ -89,7 +99,7 @@ void InterpretControl(); // Merge with control module once it is possible to put
 /// MAIN
 int main(int argc, char *argv[])
 {
-    srand(time(NULL));
+    srand(time(nullptr));
 
     //Replace fprintf with native dialogue later
     if(!al_init())
@@ -170,10 +180,14 @@ int main(int argc, char *argv[])
 #endif
 
 #ifndef D_CREATE_TESTING_AREA
-    area = new Area(true); // Initialization of basic area properties unecessary because they will be deserialized from .areafile
+
+
+    area = new Area(true); // Initialization of basic area properties normally unecessary because they will be deserialized from .areafile
     if(!LoadAreaState("test area", area, false)) // Name of file: "test area" // target = area // false for area base
         gameExit = true;
     area->InitByArchive(); // The InitByArchive functions are meant to initialize the properties of objects that are not included in serialization.
+
+
 
     /* Debug for use if areafile serialization error suspected
         std::cout << "Area name: " << area->name << std::endl;
@@ -195,18 +209,6 @@ int main(int argc, char *argv[])
 
 
 #endif
-
-    player = new Player(50,50);
-    //player = new Player(true); //true to initalize saved player - Remove in end for atrium map
-    //LoadPlayerState("player",player);
-    //player->InitByArchive();
-
-    //End testing
-
-    beings.push_back(player);
-
-    beings.push_back(new NPC(SLIME,45,45));
-    beings.push_back(new NPC(QUICKLING,55,55));
 
     al_start_timer(FPStimer);
 
@@ -237,12 +239,17 @@ int main(int argc, char *argv[])
         }
     }
 
-    //Testing Savedata
-    SaveAreaState(area);
-    SavePlayerState(player);
-    //End
+    /// Save data
+    if(area != nullptr)
+        SaveAreaState(area);
 
-    delete player;
+    if(player != nullptr)
+        SavePlayerState(player);
+
+
+    if(player != nullptr)
+        delete player;
+
     delete area;
     delete generator;
 
@@ -658,13 +665,29 @@ void LoadingLogic()
         area->occupied = generator->occupied;
         area->floormap = generator->floormap;
         area->wallmap  = generator->wallmap;
-        area->floormapImageCategory = generator->floormapImageCategory;
-        area->wallmapImageCategory  = generator->wallmapImageCategory;
-        area->floormapImageIndex    = generator->floormapImageIndex;
-        area->wallmapImageIndex     = generator->wallmapImageIndex;
+        area->featuremap = generator->featuremap;
+        area->floormapImageCategory   = generator->floormapImageCategory;
+        area->wallmapImageCategory    = generator->wallmapImageCategory;
+        area->featuremapImageCategory = generator->featuremapImageCategory;
+        area->floormapImageIndex      = generator->floormapImageIndex;
+        area->wallmapImageIndex       = generator->wallmapImageIndex;
+        area->featuremapImageIndex    = generator->featuremapImageIndex;
 
         /// ********Set Being initial positions here **********
+        // Perhaps by creating and copying from a vector of initial beings?
+        // Such as generator->beingSpawnpositions[blah];
 
+        player = new Player(generator->downstairsXCell,generator->downstairsYCell);
+        //player = new Player(true); //true to initalize saved player - Remove in end for atrium map
+        //LoadPlayerState("player",player);
+        //player->InitByArchive();
+
+        //End testing
+
+        beings.push_back(player);
+
+        beings.push_back(new NPC(SLIME,generator->downstairsXCell,generator->downstairsYCell));
+        beings.push_back(new NPC(QUICKLING,generator->downstairsXCell,generator->downstairsYCell));
 
         // Release memory
         generator->ReleaseOutputContainers();
@@ -1005,6 +1028,26 @@ void DrawTiles()
                                       y*TILESIZE + SCREEN_H/2 - player->yPosition,
                                       0);
             }
+
+            /// Draw level features and furniture
+            if(area->featuremap[cellIndex] != FEATURE_EMPTY) // Feature exists on this cell
+            {
+                //std::cout << "cellIndex: " << cellIndex << ", feature: " << area->featuremap[cellIndex] << std::endl;
+
+                int featureRegionDrawX = area->featuremapImageIndex[cellIndex]%FEATURE_TILE_SHEET_CELLWIDTH*TILESIZE;
+                int featureRegionDrawY = FEATURE_TILE_SHEET_CELLHEIGHT_PER_CATEGORY * area->featuremapImageCategory[cellIndex] * TILESIZE
+                                         +
+                                         area->featuremapImageIndex[cellIndex]/FEATURE_TILE_SHEET_CELLWIDTH*TILESIZE;
+
+                al_draw_bitmap_region(gfxFeatureTiles,
+                                      featureRegionDrawX,
+                                      featureRegionDrawY,
+                                      TILESIZE,
+                                      TILESIZE,
+                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
+                                      y*TILESIZE + SCREEN_H/2 - player->yPosition,
+                                      0);
+            }
         }
     }
 }
@@ -1020,7 +1063,9 @@ void DrawDebugOverlay()
     if(mainPhase == MAIN_PHASE_LOADING)
     {
         //Draw crosshair on the screen and coordinate of crosshair
-        std::string posStr = "(" + std::to_string(loadingCamX+SCREEN_W/2) + ", " + std::to_string(loadingCamY+SCREEN_H/2) + ")";
+        int crosshairX = loadingCamX+SCREEN_W/2;
+        int crosshairY = loadingCamY+SCREEN_H/2;
+        std::string posStr = "(" + std::to_string(crosshairX) + ", " + std::to_string(crosshairY) + ") : (" ;
         s_al_draw_text(terminalFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
 
         al_draw_line(SCREEN_W/2,0,SCREEN_W/2,SCREEN_H,HOLY_INDIGO,1);

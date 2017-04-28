@@ -14,12 +14,15 @@ const int FLOOR_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 3; // 0 to 2
 const int WALL_TILE_SHEET_CELLWIDTH = 6; // 0 to 5
 const int WALL_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 3; // 0 to 2
 
+const int FEATURE_TILE_SHEET_CELLWIDTH = 4; // 0 to 3
+const int FEATURE_TILE_SHEET_CELLHEIGHT_PER_CATEGORY = 1; // 0 to 0
+
 enum enumItemSpriteIDs
 {
 
 };
 
-enum enumFloorCategories
+enum enumDungeonThemes
 {
     FC_COLD_DUNGEON_FLOOR = 0,
     FC_STONE_DUNGEON_FLOOR = 1,
@@ -60,13 +63,24 @@ enum enumWallShapeIndex
     /*1*/   SI_UXXD_WALL =  6,  SI_UXXX_WALL = 7,  /*    x        */  SI_UXRD_WALL = 9,  SI_ULRD_WALL = 10,  SI_ULXD_WALL = 11,
     /*2*/   SI_UXRX_WALL = 12,  /*    x        */  SI_ULXX_WALL = 14, /*    x        */  SI_ULRX_WALL = 16,  /*    x         */
 
-                            /* Repeats */
-                    SI_XLXX_WALL = SI_XLRX_WALL, // 0100 = 0110
-                    SI_XXRX_WALL = SI_XLRX_WALL, // 0010 = 0110
+    /* Repeats */
+    SI_XLXX_WALL = SI_XLRX_WALL, // 0100 = 0110
+    SI_XXRX_WALL = SI_XLRX_WALL, // 0010 = 0110
 
-                    SI_XXXD_WALL = SI_UXXD_WALL, // 0001 = 1001
+    SI_XXXD_WALL = SI_UXXD_WALL, // 0001 = 1001
 
-                    SI_XXXX_WALL = SI_UXXX_WALL  // 0000 = 1000
+    SI_XXXX_WALL = SI_UXXX_WALL  // 0000 = 1000
+};
+
+enum enumFeatureCategories
+{
+    FEATC_MISC = 0
+};
+
+enum enumFeatureIndex
+{
+    /*        0              1             2                 3            */
+    /*0*/  FI_EMPTY = 0,  FI_ERROR = 1, FI_UPSTAIRS = 2,  FI_DOWNSTAIRS = 3
 };
 
 extern ALLEGRO_BITMAP *debugPathTracer;
@@ -76,6 +90,7 @@ extern ALLEGRO_BITMAP *gfxNPCPassive[2];
 extern ALLEGRO_BITMAP *gfxTerminal;
 extern ALLEGRO_BITMAP *gfxFloorTiles;
 extern ALLEGRO_BITMAP *gfxWallTiles;
+extern ALLEGRO_BITMAP *gfxFeatureTiles;
 
 extern ALLEGRO_FONT   *terminalFont;
 extern ALLEGRO_FONT   *titleFont;

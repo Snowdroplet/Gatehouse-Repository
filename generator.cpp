@@ -27,7 +27,7 @@ void Generator::GenerateRoomBoxes()
     boost::random::normal_distribution<float> randomRoomHeight(averageRoomHeight,stdHeightDeviation);
 
     // Random point in circle selected using random radius and angle. Probability is uniform.
-    boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.40);    // (Range min, range max)
+    boost::random::uniform_real_distribution<double> randomGenRadius(0.0,miniAreaWidth*0.20);    // (Range min, range max)
     boost::random::uniform_real_distribution<double> randomGenTheta(0.0,2*PI);
 
     for(int i = 0; i < roomBoxesToGenerate; i++)
@@ -141,11 +141,13 @@ void Generator::Separation()
 
 void Generator::MainRoomSelection()
 {
-    // Room boxes above a set width/height threshold are designated main rooms.
+    /**                ### MAIN ROOM SELECTION ###
 
+    1) Room generation boxes above a certain height/width threshold are designated main rooms
+    2) A random room is chosen as the starting room - Contains down stairs
+    3) A random room is chosen as the ending room - Contains up stairs
 
-
-
+    */
     for(std::vector<RoomGenBox*>::iterator it = roomGenBoxes.begin(); it != roomGenBoxes.end(); ++it)
     {
         if((*it)->width >= mainRoomWidthThreshold && (*it)->height >= mainRoomHeightThreshold)
@@ -689,7 +691,7 @@ void Generator::LayoutWallFill()
 #endif // D_GEN_PHASE_CHECK
 }
 
-void Generator::Commit()
+void Generator::CommitShape()
 {
     /// ### Detail and finalize the layout for output                ###
     /// ### See InitialOutputContainers() for default, empty states. ###
@@ -899,7 +901,56 @@ void Generator::Commit()
 #endif // D_GEN_PHASE_CHECK
 }
 
+void Generator::Furnish()
+{
+    // Naively choose the first and last room (by element) to be start and end rooms.
+    // Later, record the two furthest rooms ids apart (by MST node distance before re-addition of edges).
+    mainRooms[0]->designatedStartRoom = true;
 
+    int downstairsCell = rand()%(mainRooms[0]->cellWidth*mainRooms[0]->cellHeight); // Choose a cell from the number of cells in the room (its area)
+
+    downstairsXCell = downstairsCell%areaCellHeight;
+    downstairsXCell += mainRooms[0]->x1/MINI_TILESIZE;
+
+    downstairsYCell = downstairsCell/areaCellHeight; // Int rounding drops decimal
+    downstairsYCell += mainRooms[0]->y1/MINI_TILESIZE;
+
+
+    mainRooms[mainRooms.size()-1]->designatedEndRoom = true;
+
+    int upstairsCell = rand()%(mainRooms[mainRooms.size()-1]->cellWidth*mainRooms[mainRooms.size()-1]->cellHeight);
+
+    upstairsXCell = upstairsCell%mainRooms[mainRooms.size()-1]->cellWidth;
+    upstairsXCell += mainRooms[mainRooms.size()-1]->x1/MINI_TILESIZE;
+
+    upstairsYCell = upstairsCell/mainRooms[mainRooms.size()-1]->cellHeight;
+    upstairsYCell += mainRooms[mainRooms.size()-1]->y1/MINI_TILESIZE;
+
+
+    featuremap[downstairsYCell*areaCellWidth+downstairsXCell] = FEATURE_DOWNSTAIRS;
+    featuremap[upstairsYCell*areaCellWidth+upstairsXCell] = FEATURE_UPSTAIRS;
+
+    std::cout << "Room ID " << mainRooms[0]->boxNumber << " designated start room." << std::endl;
+    std::cout << "Downstairs located at " << downstairsXCell << ", " << downstairsYCell << std::endl;
+
+    for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
+    {
+        switch(featuremap[i])
+        {
+        case FEATURE_DOWNSTAIRS:
+            featuremapImageIndex[i] = FI_DOWNSTAIRS;
+            break;
+        case FEATURE_UPSTAIRS:
+            featuremapImageIndex[i] = FI_UPSTAIRS;
+            break;
+        }
+    }
+
+    generationPhaseComplete = true;
+#ifdef D_GEN_PHASE_CHECK
+    std::cout << "Furnishing floor..." << std::endl;
+#endif // D_GEN_PHASE_CHECK
+}
 
 void Generator::Generate()
 {
@@ -948,8 +999,12 @@ void Generator::Generate()
         LayoutWallFill();
         break;
 
-    case GEN_COMMIT:
-        Commit();
+    case GEN_COMMIT_SHAPE:
+        CommitShape();
+        break;
+
+    case GEN_FURNISH:
+        Furnish();
         break;
     }
 
@@ -990,17 +1045,17 @@ void Generator::InitialState()
 
     /// Knobs
 
-    roomBoxesToGenerate = 150;
+    roomBoxesToGenerate = 250;
 
     averageRoomWidth = MINI_TILESIZE*6;
     averageRoomHeight = MINI_TILESIZE*6;
     stdWidthDeviation = averageRoomWidth*0.30;
     stdHeightDeviation = averageRoomHeight*0.30;
 
-    mainRoomWidthThreshold = MINI_TILESIZE*6;
-    mainRoomHeightThreshold = MINI_TILESIZE*6;
+    mainRoomWidthThreshold = MINI_TILESIZE*7;
+    mainRoomHeightThreshold = MINI_TILESIZE*7;
 
-    SetRemovedEdgeReturnPercentage( (float)(rand()%20) / 100 ); // 0-20%
+    SetRemovedEdgeReturnPercentage( (float)(rand()%60) / 100 ); // 0-60%
 
     preferedHallwayLayout = PREFER_CONVEX;
 
@@ -1029,10 +1084,13 @@ void Generator::InitialOutputContainers()
     occupied = std::vector<bool>(areaCellWidth*areaCellHeight,false); // All cells are unoccupied by default
     floormap = std::vector<int>(areaCellWidth*areaCellHeight, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default
     wallmap = std::vector<int>(areaCellWidth*areaCellHeight, WT_WALL_EMPTY); // All wall spaces are nonexistent by default
+    featuremap = std::vector<int>(areaCellWidth*areaCellHeight, FEATURE_EMPTY);
     floormapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, FC_COLD_DUNGEON_FLOOR); // The dungeon style is cold by default
     floormapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, 0); // All indexes 0000 by default
     wallmapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, WC_LIGHT_DUNGEON_WALL); // The dungeon wall style is light by default
-    wallmapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight); // All indexes 0000 by default
+    wallmapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, 0); // All indexes 0000 by default
+    featuremapImageCategory = std::vector<int>(areaCellWidth*areaCellHeight, FEATC_MISC); // The currently all-encompassing "misc" style of furniture
+    featuremapImageIndex = std::vector<int>(areaCellWidth*areaCellHeight, FI_EMPTY); // All cells appear unfurnished by default
 }
 
 void Generator::ReleaseOutputContainers()
@@ -1040,11 +1098,14 @@ void Generator::ReleaseOutputContainers()
     std::vector<bool>().swap(occupied);
     std::vector<int>().swap(floormap);
     std::vector<int>().swap(wallmap);
+    std::vector<int>().swap(featuremap);
 
     std::vector<int>().swap(floormapImageCategory);
     std::vector<int>().swap(floormapImageIndex);
     std::vector<int>().swap(wallmapImageCategory);
     std::vector<int>().swap(wallmapImageIndex);
+    std::vector<int>().swap(featuremapImageCategory);
+    std::vector<int>().swap(featuremapImageIndex);
 }
 
 

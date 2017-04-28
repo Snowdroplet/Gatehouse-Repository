@@ -39,6 +39,7 @@ class Area
         aar & occupied;
         aar & floormap;
         aar & wallmap;
+        aar & featuremap;
     }
 
 private:
@@ -56,6 +57,7 @@ public:
     std::vector<bool>occupied; // Impassable cells, walls, holes, and cells with monsters or NPCs considered occupied.
     std::vector<int>floormap;
     std::vector<int>wallmap;
+    std::vector<int>featuremap;
 
     /* std::vector<bool>cellDiscoveredByPlayer */
     /* std::vector<bool>cellSeenByPlayer;      */
@@ -64,6 +66,8 @@ public:
     std::vector<int>floormapImageIndex;
     std::vector<int>wallmapImageCategory;
     std::vector<int>wallmapImageIndex;
+    std::vector<int>featuremapImageCategory;
+    std::vector<int>featuremapImageIndex;
 
 
 
@@ -72,6 +76,9 @@ public:
     Area(bool savedArea);
     void InitByArchive();
     ~Area();
+
+    void InitialContainers();
+    void ReleaseContainers();
 
     void DistributeMonsters();
     void DistributeTreasure();

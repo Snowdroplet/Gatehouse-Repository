@@ -32,8 +32,9 @@ enum enumGenerationPhases
     GEN_LAYOUT_FLOOR_FILL = 7,
     GEN_LAYOUT_WALL_SKELETON = 8,
     GEN_LAYOUT_WALL_FILL = 9,
-    GEN_COMMIT = 10,
-    GEN_COMPLETE = 11
+    GEN_COMMIT_SHAPE = 10,
+    GEN_FURNISH = 11,
+    GEN_COMPLETE = 12
 };
 
 enum enumGenLayoutCellTypes
@@ -108,7 +109,6 @@ private:
     float hallwayExtensionRate;  // The chance that the adopted cell will become a hallway extension cell.
     float hallwayConversionRate; // The chance that the adopted cell will hallway will become a proper hallway cell.
 
-
     /// Rooms where dimensions meet a certain threshold size.
     std::vector<RoomGenBox*>mainRooms;
 
@@ -132,7 +132,8 @@ private:
     void LayoutFloorFill();
     void LayoutWallSkeleton();
     void LayoutWallFill();
-    void Commit();
+    void CommitShape();
+    void Furnish();
 
     void InitialState();              // Set generator state flags and variables concerning generation to their initial state.
     void InitialOutputContainers();   // Set the containers used to output generated area layout to their initial state.
@@ -165,11 +166,20 @@ public:
     std::vector<bool>occupied;               // a
     std::vector<int>floormap;                // b
     std::vector<int>wallmap;                 // c
+    std::vector<int>featuremap;              // d
 
-    std::vector<int>floormapImageCategory;   // d
-    std::vector<int>floormapImageIndex;      // e
-    std::vector<int>wallmapImageCategory;    // f
-    std::vector<int>wallmapImageIndex;       // g
+    std::vector<int>floormapImageCategory;   // e
+    std::vector<int>floormapImageIndex;      // f
+    std::vector<int>wallmapImageCategory;    // g
+    std::vector<int>wallmapImageIndex;       // h
+    std::vector<int>featuremapImageCategory;
+    std::vector<int>featuremapImageIndex;
+
+
+    /// Positions of important floor features as well as initial positions of inhabitants
+
+    int upstairsXCell, upstairsYCell; // Later on, such data should be local to furnish function and main()/ area() should be in charge of spawning beings at designated locations
+    int downstairsXCell, downstairsYCell;
 
     /// Retrieve generator state info
     bool GetGenerationComplete();   // Simply returns generation completion flag.
