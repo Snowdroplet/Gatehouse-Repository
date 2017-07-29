@@ -14,6 +14,8 @@ void Player::InitByArchive()
     derivedType = BEING_TYPE_PLAYER;
     isPlayer = true;
 
+    visibleToPlayer = true;
+
     dXPosition = xPosition = xCell*32;
     dYPosition = yPosition = yCell*32;
 }
@@ -24,6 +26,8 @@ Player::Player(int spawnXCell, int spawnYCell)
     isPlayer = true;
 
     name = "Player";
+
+    visibleToPlayer = true;
 
     effectiveSpeed = baseSpeed = 100;
 

@@ -21,6 +21,9 @@ int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
 int camX = 0;
 int camY = 0;
 
+int drawingXCellCutoff = 14; // 800/32 + 2
+int drawingYCellCutoff = 10; // 600/32 + 2 -- Make these scalable later when zooming is implemented.
+
 #ifdef D_SHOW_LOADING_VISUALIZATION
 bool D_SHOWLOADINGVISUALIZATION = true;
 #endif // D_SHOW_LOADING_VISUALIZATION

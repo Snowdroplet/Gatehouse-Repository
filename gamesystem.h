@@ -19,11 +19,11 @@
 
 #define D_DRAW_DEBUG_OVERLAY                          // Draws additional debug information on screen, such as the camera's X/Y position
 
-#define D_TURN_LOGIC                                  // Output debug information to console regarding in-game movement, turns, AP...
+//#define D_TURN_LOGIC                                  // Output debug information to console regarding in-game movement, turns, AP...
 // CURRENTLY UNUSED -- #define D_SERIALIZATION        // Output debug information to console regarding serialization.
 
 #define D_TEST_PATHFINDING                            // Press 'T' and 'Y' at the same time to output a test path from the PC's cell to a random destination cell.
-
+#define D_TEST_TRACEPATH                              // Press 'U' and 'I' at the same time to move player to last cell on path.
 
 /// Generator
 #define D_GEN_PHASE_CHECK                             //Output debug information to console when completing a generation phase function
@@ -46,7 +46,7 @@
 //#define D_PRINTOUT_MST                              // Output the node pairs found to console when Kruskal() completes its task.
 
 /// Area
-#define D_CELL_INFO_AT_PLAYER                         // Press 'K' + 'L' to output information about the cell that the player is standing on to console
+
 
 
 /// ******************************************************************************************
@@ -106,6 +106,10 @@ extern int loadingCamY;
 
 extern int camX; //Top left corner of the in-game camera.
 extern int camY;
+
+extern int drawingXCellCutoff; // Determines when a being is "offscreen"
+extern int drawingYCellCutoff;
+
 
 #ifdef D_SHOW_LOADING_VISUALIZATION
 extern bool D_SHOWLOADINGVISUALIZATION; // Show the room generation visualization instead of a loading screen

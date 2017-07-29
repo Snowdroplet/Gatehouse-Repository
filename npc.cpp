@@ -12,6 +12,8 @@ NPC::NPC(int whatNPCType, int spawnXCell, int spawnYCell)
     NPCType = whatNPCType;
     spriteID = whatNPCType;
 
+    visibleToPlayer = true;
+
     if(NPCType == SLIME)
     {
         name = "Slime";
@@ -38,6 +40,7 @@ void NPC::Logic()
 void NPC::AI()
 {
     actionCost = 100;
+    currentAction = ACTION_WALK;
     Move(rand()%8+1); // 1-9
 
     //Test code written to terminal

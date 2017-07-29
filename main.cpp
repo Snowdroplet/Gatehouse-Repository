@@ -7,8 +7,6 @@ To fix: Discard generation when < threshold main rooms are created
 
 Current work to do:
 
-
-2) Represent upstairs and downstairs somewhere
 3) Pathfinding test under actual play conditions
 
 4) Begin implementation of combat system
@@ -349,33 +347,19 @@ void GameLogic()
                 submittedPlayerCommand = true;
             }
 
-#ifdef D_CELL_INFO_AT_PLAYER
-            static int debugCellInfoRequestDelay = 0;
+#ifdef D_TEST_TRACEPATH
 
-            if(keyInput[KEY_K] && keyInput[KEY_L])
+            else if(keyInput[KEY_U] && keyInput[KEY_I])
             {
-                if(debugCellInfoRequestDelay <= 0)
+                if(!player->currentPath.empty())
                 {
-                    int x =  player->xCell;
-                    int y =  player->yCell;
-                    int index = y*areaCellWidth+x;
-                    std::cout << std::endl;
-                    std::cout << "#### DEBUG CELL INFO REQUEST####" << std::endl;
-                    std::cout << "Coordinates: " << x << ", " << y << std::endl;
-                    std::cout << "Cell Index: " << index << std::endl;
-                    std::cout << "Cell wall type: " << area->wallmap[index] << std::endl;
-                    std::cout << "Cell floor type: " << area->floormap[index] << std::endl;
-                    std::cout << "Cell wall shape index: " << area->wallmapImageIndex[index] << std::endl;
-                    std::cout << "Cell floor shape index: " << area->floormapImageIndex[index] << std::endl;
-
-
-                    debugCellInfoRequestDelay = 300;
+                    player->actionCost = 100;
+                    player->currentAction = ACTION_WALK;
+                    player->TracePath();
+                    submittedPlayerCommand = true;
                 }
             }
-
-            if(debugCellInfoRequestDelay > 0)
-                debugCellInfoRequestDelay --;
-#endif // D_CELL_INFO_AT_PLAYER
+#endif // D_TEST_TRACEPATH
 
 #ifdef D_TEST_PATHFINDING
             static int debugPathRequestDelay = 0;
@@ -386,21 +370,21 @@ void GameLogic()
                 {
                     player->ResetPath();
 
-                    int testDestX = rand()%areaCellWidth;
-                    int testDestY = rand()%areaCellHeight;
+                    int testDestX = area->upstairsXCell;
+                    int testDestY = area->upstairsYCell;
 
                     std::cout << std::endl;
                     std::cout << "####DEBUG PATH REQUEST####" << std::endl;
                     std::cout << "Start X: " << player->xCell << " | Start Y: " << player->yCell << std::endl;
                     std::cout << "Dest X: " << testDestX << " | Dest Y: " << testDestY << std::endl;
 
-                    player->currentPath = player->graph->RequestPath(player->xCell,player->yCell,testDestX,testDestY); ///ERROR!
+                    player->SetPath(testDestX,testDestY);
 
-                    std::cout << "Path retrieved." << std::endl;
+                    std::cout << "Path retrieved:" << std::endl;
 
-                    for(std::vector<Node*>::iterator it = player->currentPath.begin(); it != player->currentPath.end(); ++it)
+                    for(std::vector<Node*>::reverse_iterator rit = player->currentPath.rbegin(); rit != player->currentPath.rend(); ++rit)
                     {
-                        std::cout << (*it)->id << " ";
+                        std::cout << "(" << (*rit)->id%areaCellWidth << ", " << (*rit)->id/areaCellHeight << ") ";
                     }
                     std::cout << std::endl;
                 }
@@ -412,9 +396,15 @@ void GameLogic()
             if(debugPathRequestDelay > 0)
                 debugPathRequestDelay --;
 #endif
+
         }
 
     }
+
+/** ### 1: GRANT ACTION POINTS #####
+    -Each being receives AP according to its effective speed.
+    -Beings that have accumulated at least 100 AP are permitted to move. These beings are added to actionQueue.
+**/
 
     if(turnLogicPhase == GRANT_ACTION_POINTS)
     {
@@ -443,14 +433,51 @@ void GameLogic()
         turnLogicPhase = SORT_ACTION_QUEUE;
     }
 
+/** ### 2: SORT ACTION QUEUE ###
+    -All Beings on the action queue (having, from the previous phase, at least 100 AP) are sorted by their AP from highest to lowest AP (descending order).
+**/
+
     if(turnLogicPhase == SORT_ACTION_QUEUE)
     {
         std::sort(actionQueue.begin(), actionQueue.end(), CompareAPDescending);
         aqit = actionQueue.begin();
         turnLogicPhase = SELECT_ACTION;
     }
+
+/** ### 3: SELECT ACTION ###
+
+    actionQueue: A vector populated during phase 1 with pointers to Beings eligible to take an action (having at least 100 AP).
+    actionOpen: Whether the system is ready to receive actions, independent of whether actionQueue is populated.
+
+    walkAnimQueue: A vector populated during this phase with pointers to beings who have chosen the WALK action.
+                   In order to minimize real time spent waiting for each individual Being's walk from one cell to the next to be animated at a certain speed,
+                   this queue allows for all movement animations to be displayed simultaneously.
+    walkAnimQueueReleased: A boolean. When any unit performs an action other than walking OR when actionQueue is emptied of Beings,
+                           all walking animations queued to this point are animated.
+
+    -If the action queue is NOT empty (currently containing Beings who have least 100 AP):
+        -If actionOpen is true (system is ready to receive actions)
+            * note: the "idle" action is equivalent to moving in AP usage.
+            - NPCs choose an action according to their AI. A certain amount of AP is spent corresponding to the action.
+            - Player Beings await input from the player - When input is detected corresponding to an action, a certain amount of AP is spent corresponding to the action.
+            - In either case, actionOpen becomes false (system may not receive actions) until the action has been processed during the CALCULATION phase.
+
+
+            - Any Being that has selected the WALK action will be added to the walk animation queue (walkAnimQueue).
+            - Any Being that selects an option other than WALK will release the global walk animation queue.
+
+            - Any Being who becomes ineligible to move (having less than 100 AP) will be removed from the actionQueue.
+
+            WHEN ANY ACTION HAS BEEN CONFIRMED (!actionOpen) whether by NPC or Player, go to ANIMATION phase. No further actions may be taken until any and all necessary animations have been processed.
+
+
+    -If the action queue is empty, the cycle of phases is completed and returns to GRANT AP.
+**/
+
     if(turnLogicPhase == SELECT_ACTION)
     {
+
+
         //ActionOpen should be true if the being in queue to move has not yet chosen a player action or AI option yet.
         if(!actionQueue.empty())
         {
@@ -511,15 +538,16 @@ void GameLogic()
                 actionOpen = false;
 
                 if(player->currentAction == ACTION_WALK)
+                {
                     walkAnimQueue.push_back(player);
+                    /// Shouldn't walkanimqueue be released whenever the player moves,
+                    /// in case a player with AP greatly outnumbering the next highest being fails to see an npc's updated position?
+                }
                 else if(player->currentAction != ACTION_IDLE)
                 {
                     walkAnimQueueReleased = true;
                     currentAnimatedBeing = player;
                 }
-
-
-
 
                 ShiftTerminal(); // This might have to be moved to be triggered by different conditions later on.
             }
@@ -575,13 +603,23 @@ void GameLogic()
         {
             for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
             {
-                (*it)->ProgressWalkAnimation();
-                if((*it)->animationComplete)
+                if(abs((*it)->xCell - player->xCell) < drawingXCellCutoff &&
+                   abs((*it)->yCell - player->yCell) < drawingYCellCutoff &&
+                   (*it)->visibleToPlayer) // No point in animating something outside the screen boundaries or is invisible/obscured/imperceptible/off-screen.
+                   {
+                       (*it)->ProgressWalkAnimation();
+                        if((*it)->animationComplete)
+                        {
+                            walkAnimQueue.erase(it);
+                        }
+                        else
+                            ++it;
+                   }
+                else // Animation of this being is auto-completed if invisible/obscured/imperceptible/off-screen.
                 {
+                    (*it)->animationComplete = true;
                     walkAnimQueue.erase(it);
                 }
-                else
-                    ++it;
             }
 
             if(walkAnimQueue.empty())
@@ -673,11 +711,16 @@ void LoadingLogic()
         area->wallmapImageIndex       = generator->wallmapImageIndex;
         area->featuremapImageIndex    = generator->featuremapImageIndex;
 
+        area->downstairsXCell         = generator->downstairsXCell;
+        area->downstairsYCell         = generator->downstairsYCell;
+        area->upstairsXCell           = generator->upstairsXCell;
+        area->upstairsYCell           = generator->upstairsYCell;
+
         /// ********Set Being initial positions here **********
         // Perhaps by creating and copying from a vector of initial beings?
         // Such as generator->beingSpawnpositions[blah];
 
-        player = new Player(generator->downstairsXCell,generator->downstairsYCell);
+        player = new Player(area->downstairsXCell,area->downstairsYCell);
         //player = new Player(true); //true to initalize saved player - Remove in end for atrium map
         //LoadPlayerState("player",player);
         //player->InitByArchive();
@@ -686,8 +729,8 @@ void LoadingLogic()
 
         beings.push_back(player);
 
-        beings.push_back(new NPC(SLIME,generator->downstairsXCell,generator->downstairsYCell));
-        beings.push_back(new NPC(QUICKLING,generator->downstairsXCell,generator->downstairsYCell));
+        beings.push_back(new NPC(SLIME,area->upstairsXCell,area->upstairsYCell));
+        beings.push_back(new NPC(QUICKLING,area->upstairsXCell,area->upstairsYCell));
 
         // Release memory
         generator->ReleaseOutputContainers();
@@ -969,19 +1012,19 @@ void DrawTiles()
 {
     //Assumes 800x600 window and 120 height terminal
 
-    int startCellX = player->xCell-14; // **** Make this scalable later
+    int startCellX = player->xCell-drawingXCellCutoff;
     if(startCellX < 0)
         startCellX = 0;
 
-    int startCellY = player->yCell-10; // **** Make this scalable later - Like AreaHeight/TILESIZE/2, but ought to be precomputed.
+    int startCellY = player->yCell-drawingYCellCutoff;
     if(startCellY < 0)
         startCellY = 0;
 
-    int endCellX = player->xCell+14;
+    int endCellX = player->xCell+drawingXCellCutoff;
     if(endCellX > areaCellWidth)
         endCellX = areaCellHeight;
 
-    int endCellY = player->yCell+10;
+    int endCellY = player->yCell+drawingYCellCutoff;
     if(endCellY > areaCellHeight)
         endCellY = areaCellHeight;
 
@@ -1047,6 +1090,9 @@ void DrawTiles()
                                       x*TILESIZE + SCREEN_W/2 - player->xPosition,
                                       y*TILESIZE + SCREEN_H/2 - player->yPosition,
                                       0);
+
+
+
             }
         }
     }
@@ -1065,7 +1111,9 @@ void DrawDebugOverlay()
         //Draw crosshair on the screen and coordinate of crosshair
         int crosshairX = loadingCamX+SCREEN_W/2;
         int crosshairY = loadingCamY+SCREEN_H/2;
-        std::string posStr = "(" + std::to_string(crosshairX) + ", " + std::to_string(crosshairY) + ") : (" ;
+        int crosshairXCell = crosshairX/MINI_TILESIZE;
+        int crosshairYCell = crosshairY/MINI_TILESIZE;
+        std::string posStr = "(" + std::to_string(crosshairX) + ", " + std::to_string(crosshairY) + ") : (" + std::to_string(crosshairXCell) + ", " + std::to_string(crosshairYCell) + ")";
         s_al_draw_text(terminalFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
 
         al_draw_line(SCREEN_W/2,0,SCREEN_W/2,SCREEN_H,HOLY_INDIGO,1);
