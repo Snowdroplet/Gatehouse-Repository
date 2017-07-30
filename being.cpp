@@ -7,6 +7,8 @@ Being::Being()
     isPlayer = false;
     active = true;
 
+    visibleToPlayer = false;
+
     freezeFrame = false;
     animationState = ANIM_IDLE;
     animationFrame = 0;
@@ -25,55 +27,55 @@ Being::~Being()
     delete graph;
 }
 
-void Being::Move(int direction)
+void Being::Move(int inputDirection)
 {
-    switch(direction)
+    switch(inputDirection)
     {
-    case NORTH:
+    case INPUT_NORTH:
         if(yCell == 0)
             break;
         yCell--;
         break;
-    case NORTHEAST:
+    case INPUT_NORTHEAST:
         if(xCell == areaCellWidth-1 || yCell == 0)
             break;
         xCell++;
         yCell--;
         break;
-    case EAST:
+    case INPUT_EAST:
         if(xCell == areaCellWidth-1)
             break;
         xCell++;
         break;
-    case SOUTHEAST:
+    case INPUT_SOUTHEAST:
         if(xCell == areaCellWidth-1 || yCell == areaCellHeight-1)
             break;
         xCell++;
         yCell++;
         break;
-    case SOUTH:
+    case INPUT_SOUTH:
         if(yCell == areaCellHeight-1)
             break;
         yCell++;
         break;
-    case SOUTHWEST:
+    case INPUT_SOUTHWEST:
         if(xCell == 0 || yCell == areaCellHeight-1)
             break;
         xCell--;
         yCell++;
         break;
-    case WEST:
+    case INPUT_WEST:
         if(xCell == 0)
             break;
         xCell--;
         break;
-    case NORTHWEST:
+    case INPUT_NORTHWEST:
         if(xCell == 0 || yCell == 0)
             break;
         xCell--;
         yCell--;
         break;
-    case NO_DIRECTION:
+    case INPUT_NO_DIRECTION:
         break;
     }
 
@@ -81,9 +83,41 @@ void Being::Move(int direction)
     dYPosition = yCell*TILESIZE;
 }
 
-void Being::Teleport(int destXCell, int destYCell)
+void Being::MoveTo(int destXCell, int destYCell)
 {
+    xCell = destXCell;
+    yCell = destYCell;
+    //xPosition = dXPosition = xCell*TILESIZE;
+    //yPosition = dYPosition = yCell*TILESIZE;
+    dXPosition = xCell*TILESIZE;
+    dYPosition = yCell*TILESIZE;
+}
 
+void Being::WarpTo(int destXCell, int destYCell)
+{
+    xCell = destXCell;
+    yCell = destYCell;
+    xPosition = dXPosition = xCell*TILESIZE;
+    yPosition = dYPosition = yCell*TILESIZE;
+}
+
+void Being::SetPath(int destXCell, int destYCell)
+{
+    ResetPath();
+    currentPath = graph->RequestPath(xCell,yCell,destXCell,destYCell);
+}
+
+void Being::TracePath()
+{
+    /// Assumes that the being is on the path. The being's path should be re-set by SetPath() if it has moved off the path for any reason.
+
+    /// Check if being is on path.
+
+    int x = currentPath.back()->id%areaCellWidth;
+    int y = currentPath.back()->id/areaCellHeight;
+
+    MoveTo(x,y);
+    currentPath.pop_back();
 }
 
 void Being::BaseLogic()
@@ -122,6 +156,15 @@ void Being::ProgressWalkAnimation()
         animationComplete = true;
         currentAction = ACTION_IDLE;
     }
+}
+
+void Being::CompleteWalkAnimation()
+{
+    animationComplete = true;
+
+    xPosition = dXPosition;
+    yPosition = dYPosition;
+    currentAction = ACTION_IDLE;
 }
 
 void Being::ProgressIdleAnimation()

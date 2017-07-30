@@ -275,81 +275,12 @@ void GameLogic()
     {
         if(awaitingPlayerCommand)
         {
-            // ***The following mess seriously needs a function of its own later
 
-            if(player->actionBlocked)
-            {
-                player->actionCost = 100;
-                player->Move(NO_DIRECTION);
-                submittedPlayerCommand = true;
-                player->actionBlocked = false;
-            }
-            else if(keyInput[KEY_PAD_8] || keyInput[KEY_UP])
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(NORTH);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_9] || (keyInput[KEY_UP] && keyInput[KEY_RIGHT]))
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(NORTHEAST);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_6] || keyInput[KEY_RIGHT])
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(EAST);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_3] || (keyInput[KEY_DOWN] && keyInput[KEY_RIGHT]))
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(SOUTHEAST);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_2] || keyInput[KEY_DOWN])
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(SOUTH);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_1] || (keyInput[KEY_DOWN] && keyInput[KEY_LEFT]))
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(SOUTHWEST);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_4] || keyInput[KEY_LEFT])
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(WEST);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_7] || (keyInput[KEY_UP] && keyInput[KEY_LEFT]))
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                player->Move(NORTHWEST);
-                submittedPlayerCommand = true;
-            }
-            else if(keyInput[KEY_PAD_5])
-            {
-                player->actionCost = 100;
-                player->Move(NO_DIRECTION);
-                submittedPlayerCommand = true;
-            }
+            player->ProcessInput();
 
 #ifdef D_TEST_TRACEPATH
 
-            else if(keyInput[KEY_U] && keyInput[KEY_I])
+            if(keyInput[KEY_U] && keyInput[KEY_I])
             {
                 if(!player->currentPath.empty())
                 {
@@ -540,6 +471,7 @@ void GameLogic()
                 if(player->currentAction == ACTION_WALK)
                 {
                     walkAnimQueue.push_back(player);
+                    //walkAnimQueueReleased = true;
                     /// Shouldn't walkanimqueue be released whenever the player moves,
                     /// in case a player with AP greatly outnumbering the next highest being fails to see an npc's updated position?
                 }
@@ -603,8 +535,8 @@ void GameLogic()
         {
             for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
             {
-                if(abs((*it)->xCell - player->xCell) < drawingXCellCutoff &&
-                   abs((*it)->yCell - player->yCell) < drawingYCellCutoff &&
+                if(abs((*it)->xCell - player->xCell) <= drawingXCellCutoff &&
+                   abs((*it)->yCell - player->yCell) <= drawingYCellCutoff &&
                    (*it)->visibleToPlayer) // No point in animating something outside the screen boundaries or is invisible/obscured/imperceptible/off-screen.
                    {
                        (*it)->ProgressWalkAnimation();
@@ -617,7 +549,7 @@ void GameLogic()
                    }
                 else // Animation of this being is auto-completed if invisible/obscured/imperceptible/off-screen.
                 {
-                    (*it)->animationComplete = true;
+                    (*it)->CompleteWalkAnimation();
                     walkAnimQueue.erase(it);
                 }
             }

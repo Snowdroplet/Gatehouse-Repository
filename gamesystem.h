@@ -57,7 +57,8 @@ const float PI = 3.141592;
 
 
 /// GAME CONSTANTS
-enum enumAllDirections
+
+enum enumDirections
 {
     NO_DIRECTION = -1,
     EAST = 0,
@@ -69,6 +70,20 @@ enum enumAllDirections
     NORTH = 6,
     NORTHEAST = 7
 };
+
+enum enumInputDirections
+{
+    INPUT_NO_DIRECTION = 1111,
+    INPUT_NORTH        = 1000,
+    INPUT_WEST         =  100,
+    INPUT_EAST         =   10,
+    INPUT_SOUTH        =    1,
+    INPUT_NORTHWEST    = 1100,
+    INPUT_NORTHEAST    = 1010,
+    INPUT_SOUTHWEST    =  101,
+    INPUT_SOUTHEAST    =   11
+};
+
 
 /// DISPLAY AND UI
 

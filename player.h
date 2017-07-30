@@ -3,6 +3,7 @@
 #ifndef PLAYER_H_INCLUDED
 #define PLAYER_H_INCLUDED
 
+#include "control.h"
 #include "being.h"
 #include "extfile.h"
 
@@ -46,6 +47,8 @@ public:
 
     void Logic();
     void PlayerAction();
+
+    void ProcessInput();
 };
 
 extern Player *player;

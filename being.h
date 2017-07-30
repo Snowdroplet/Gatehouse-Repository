@@ -68,6 +68,8 @@ public:
     bool actionBlocked;
     float actionCost, actionPoints;
 
+
+    bool visibleToPlayer;
     bool animationComplete;
     int spriteID;
     bool freezeFrame; // If true, hold the sprite still
@@ -94,11 +96,16 @@ public:
     void BaseLogic();
     void ProgressIdleAnimation(); //All beings will progress through idle action and animation (even) when they are not queued to move.
     void ProgressWalkAnimation(); //This only deals with the apparent movement; BaseLogic() takes care of the moveframes
+    void CompleteWalkAnimation(); //Instantly completes walk animation without movement effects.
 
     void ResetPath();
 
-    void Move(int direction);
-    void Teleport(int destXCell, int destYCell);
+    void Move(int inputDirection); // See gamesystem.h for numpad direction enumerators expected as arguments
+    void MoveTo(int destXCell, int destYCell);
+    void WarpTo(int destXCell, int destYCell);
+    void SetPath(int destXCell, int destYCell);
+    void TracePath();
+
 
 };
 
