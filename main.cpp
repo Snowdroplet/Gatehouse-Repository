@@ -43,6 +43,7 @@ Current work to do:
 
 #include "extfile.h"
 
+#include "guisystem.h"
 #include "terminal.h"
 
 #include "node.h"
@@ -57,6 +58,7 @@ Current work to do:
 #include "player.h"
 #include "npc.h"
 
+GuiSystem *guiSystem = nullptr;
 Generator *generator = nullptr;
 Area *area = nullptr;
 Player *player = nullptr;
@@ -169,6 +171,7 @@ int main(int argc, char *argv[])
 
     LoadResources();
 
+    guiSystem = new GuiSystem();
 
     generator = new Generator(); // Create a generator object
 
@@ -251,6 +254,8 @@ int main(int argc, char *argv[])
     delete area;
     delete generator;
 
+    delete guiSystem;
+
     UnloadResources();
     al_destroy_timer(FPStimer);
     al_destroy_display(display);
@@ -331,6 +336,13 @@ void GameLogic()
         }
 
     }
+
+/** ### 0: Update objects that constantly need updates
+    -Such as elements of the GUI.
+**/
+    guiSystem->ProgressElements();
+
+
 
 /** ### 1: GRANT ACTION POINTS #####
     -Each being receives AP according to its effective speed.
@@ -700,7 +712,10 @@ void GameDrawing()
 
         DrawTiles();
 
-        al_draw_bitmap(gfxPlayer,SCREEN_W/2, SCREEN_H/2, 0);
+        al_draw_bitmap_region(gfxPlayer,
+                              TILESIZE*player->animationFrame, 0,
+                              TILESIZE, TILESIZE,
+                              SCREEN_W/2, SCREEN_H/2, 0);
 
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
@@ -714,11 +729,11 @@ void GameDrawing()
             }
         }
 
+        DrawGUI();
+
 #ifdef D_DRAW_DEBUG_OVERLAY
         DrawDebugOverlay();
 #endif // D_DRAW_DEBUG_OVERLAY
-
-        DrawGUI();
 
         al_flip_display();
     }
@@ -918,6 +933,8 @@ void TitleDrawing()
 
 void DrawGUI()
 {
+    guiSystem->DrawFrame();
+
     ALLEGRO_COLOR colorToDraw = NEUTRAL_WHITE;
 
     // Draw the (now unused)

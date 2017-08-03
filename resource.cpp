@@ -2,6 +2,12 @@
 
 /// Declaration
 ALLEGRO_BITMAP *debugPathTracer = nullptr;
+
+ALLEGRO_BITMAP *gfxGuiFrameHorizontal = nullptr;
+ALLEGRO_BITMAP *gfxGuiFrameVertical = nullptr;
+ALLEGRO_BITMAP *gfxGuiFrameCorner = nullptr;
+ALLEGRO_BITMAP *gfxGuiFrameRunic = nullptr;
+
 ALLEGRO_BITMAP *gfxPlayer = nullptr;
 ALLEGRO_BITMAP *gfxNPCPassive[2];
 ALLEGRO_BITMAP *gfxTerminal = nullptr;
@@ -21,9 +27,14 @@ void LoadResources()
 {
     debugPathTracer = al_load_bitmap("debugPathTracer.png");
 
+    gfxGuiFrameHorizontal = al_load_bitmap("guiFrameHorizontal.png");
+    gfxGuiFrameVertical = al_load_bitmap("guiFrameVertical.png");
+    gfxGuiFrameCorner = al_load_bitmap("guiFrameCorner.png");
+    gfxGuiFrameRunic = al_load_bitmap("guiFrameRunic.png");
+
     gfxTerminal = al_load_bitmap("placeholderTerminal.png");
 
-    gfxPlayer = al_load_bitmap("placeholderPlayer.png");
+    gfxPlayer = al_load_bitmap("placeholderPlayer2.png");
 
     gfxNPCPassive[0] = al_load_bitmap("placeholderSlime.png");
     gfxNPCPassive[1] = al_load_bitmap("placeholderQuickling.png");
@@ -39,6 +50,11 @@ void LoadResources()
 void UnloadResources()
 {
     al_destroy_bitmap(debugPathTracer);
+
+    al_destroy_bitmap(gfxGuiFrameHorizontal);
+    al_destroy_bitmap(gfxGuiFrameVertical);
+    al_destroy_bitmap(gfxGuiFrameCorner);
+    al_destroy_bitmap(gfxGuiFrameRunic);
 
     al_destroy_bitmap(gfxTerminal);
 

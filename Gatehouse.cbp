@@ -72,6 +72,12 @@
 		<Unit filename="gods.h" />
 		<Unit filename="graph.cpp" />
 		<Unit filename="graph.h" />
+		<Unit filename="guidecorations.cpp" />
+		<Unit filename="guidecorations.h" />
+		<Unit filename="guisystem.cpp" />
+		<Unit filename="guisystem.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="item.cpp" />
 		<Unit filename="item.h" />
 		<Unit filename="main.cpp" />

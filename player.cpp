@@ -18,6 +18,8 @@ void Player::InitByArchive()
 
     dXPosition = xPosition = xCell*32;
     dYPosition = yPosition = yCell*32;
+
+    animationFrameThreshold = 1;
 }
 
 Player::Player(int spawnXCell, int spawnYCell)
@@ -35,6 +37,8 @@ Player::Player(int spawnXCell, int spawnYCell)
     yCell = spawnYCell;
     dXPosition = xPosition = xCell*32;
     dYPosition = yPosition = yCell*32;
+
+    animationFrameThreshold = 1;
 
     //Testing inventory
     if(inventory.empty())

@@ -14,7 +14,7 @@ Being::Being()
     animationFrame = 0;
     animationFrameThreshold = 0;
     animationDelay = 0;
-    animationDelayThreshold = 3;
+    animationDelayThreshold = 10;
 
     currentAction = ACTION_IDLE;
     actionName = "UNKNOWN";
@@ -128,7 +128,7 @@ void Being::BaseLogic()
         if(animationDelay > animationDelayThreshold)
         {
             animationFrame ++;
-            animationDelayThreshold = 0;
+            animationDelay = 0;
         }
         if(animationFrame > animationFrameThreshold)
             animationFrame = 0;

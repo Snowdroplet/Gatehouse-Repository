@@ -84,7 +84,6 @@ enum enumInputDirections
     INPUT_SOUTHEAST    =   11
 };
 
-
 /// DISPLAY AND UI
 
 extern ALLEGRO_DISPLAY *display;
@@ -176,6 +175,24 @@ extern int turn;
 const int turnPReq = 100;
 extern int turnP;
 
+/// CONTROL/GUI CONTEXT AND MENUS
+
+enum enumControlContexts
+{
+    NORMAL_CONTEXT = 0,
+
+    TARGETTING_CONTEXT = 1,
+
+    WEAPON_SPELL_CONTEXT = 2,
+    TOOL_CONTEXT = 3,
+    SPELL_CONTEXT = 4,
+    ACTION_CONTEXT = 5,
+    FAMILIAR_CONTEXT = 6,
+    PRAYER_CONTEXT = 7
+};
+
+
+/*
 enum enumMenuOpen
 {
     CHARACTER,
@@ -196,11 +213,7 @@ enum enumMenuOpen
     EQUIP_RING,
     EQUIP_AMMO
 };
-
-enum enumSubMenuOpen
-{
-    PROPERTY
-};
+*/
 
 
 extern bool menuIsOpen;

@@ -21,7 +21,7 @@ std::string terminalExcerpt[EXCERPT_NUM_LINES];
 void WriteToTerminal(std::string toAppende, ALLEGRO_COLOR colourToAppend)
 {
     std::string toAppend;
-    toAppend.assign(toAppende);
+    toAppend.assign(toAppend);
 
     //This loop ends when toAppend is completely emptied.
     for(std::string::iterator it = toAppend.begin(); toAppend.begin() != toAppend.end(); ++it)

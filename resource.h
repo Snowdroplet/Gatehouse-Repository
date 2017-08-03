@@ -85,9 +85,16 @@ enum enumFeatureIndex
 
 extern ALLEGRO_BITMAP *debugPathTracer;
 
+extern ALLEGRO_BITMAP *gfxGuiFrameHorizontal;
+extern ALLEGRO_BITMAP *gfxGuiFrameVertical;
+extern ALLEGRO_BITMAP *gfxGuiFrameCorner;
+extern ALLEGRO_BITMAP *gfxGuiFrameRunic;
+
 extern ALLEGRO_BITMAP *gfxPlayer;
 extern ALLEGRO_BITMAP *gfxNPCPassive[2];
 extern ALLEGRO_BITMAP *gfxTerminal;
+
+
 extern ALLEGRO_BITMAP *gfxFloorTiles;
 extern ALLEGRO_BITMAP *gfxWallTiles;
 extern ALLEGRO_BITMAP *gfxFeatureTiles;
