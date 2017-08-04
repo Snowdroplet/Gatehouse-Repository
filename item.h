@@ -11,19 +11,50 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/vector.hpp>
 
+enum nonApplicableClass
+{
+    ITEM_UNDEFINED = -1
+};
 
 enum enumConsecration
 {
-    DOOMED = -2,
-    CURSED = -1,
-    UNCURSED = 0,
-    BLESSED = 1
+    ITEM_CONSECRATION_UNDETERMINED = 0, // Needs to be determined
+    ITEM_CONSECRATION_DOOMED = 1,
+    ITEM_CONSECRATION_CURSED = 2,
+    ITEM_CONSECRATION_UNCURSED = 3,
+    ITEM_CONSECRATION_BLESSED = 4
 };
 
 enum enumItemQuality
 {
-    POOR, COMMON, RARE, EPIC,
-    UNIQUE // Having one-of-a-kind properties
+    ITEM_QUALITY_UNDETERMINED = 0, // Needs to be determined
+    ITEM_QUALITY_GRAY   = 1,
+    ITEM_QUALITY_GREEN  = 2,
+    ITEM_QUALITY_BLUE   = 3,
+    ITEM_QUALITY_PURPLE = 4,
+    ITEM_QUALITY_UNIQUE = 5 // Having one-of-a-kind properties
+};
+
+enum enumEquipClass
+{
+    ITEM_EQUIP_CLASS_WEAPON = 0, // Shields count as weapons
+    ITEM_EQUIP_CLASS_HELM  = 1,
+    ITEM_EQUIP_CLASS_ARMOR = 2,
+    ITEM_EQUIP_CLASS_HANDS = 3,
+    ITEM_EQUIP_CLASS_SHOES = 4,
+
+    ITEM_EQUIP_CLASS_AMULET = 5,
+    ITEM_EQUIP_CLASS_RING   = 6,
+
+    ITEM_EQUIP_CLASS_AMMO = 7
+};
+
+enum enumReadableClass
+{
+    ITEM_READABLE_BOOK      = 0,
+    ITEM_READABLE_SCROLL    = 1,
+    ITEM_READABLE_SPELLBOOK = 2,
+    ITEM_READABLE_TABLET    = 3
 };
 
 class Item
@@ -50,7 +81,12 @@ public:
         iar & consecration;
         iar & weight;
 
-        iar & isEquip;
+        iar & isEquippable;
+        iar & isArmor;
+        iar & isWeapon;
+        iar & armorClass;
+        iar & weaponClass;
+
         iar & isContainer;
         iar & isReadable;
         iar & isEdible;
@@ -59,10 +95,13 @@ public:
 
     }
 
-    int active;
 
-    int itemID;
-    int spriteID;
+/// ###### ALL ITEMS #####
+    bool active;  // An inactive item is marked for deletion
+
+    int itemID;   // Unique identifier of this particular item
+    int baseType; // The base object used to INITALIZE (or re-initalize) this item
+    int spriteID; // The sprite to use to represent this item
 
     std::string baseName; // The base name, without modifiers or affixes like "+7 blessed lightning X of godslaying"
     std::string unidentifiedName;
@@ -70,57 +109,31 @@ public:
     std::string description; // If unIDed, this will just be "you need to identify this item to gain further information"
 
     bool consecrationKnown; // Consecration be learned without identifying the base item. Conversely, lower identification doesn't reveal consecration.
-    int identificationReq; // Level of identification needed. Lv 0 items auto-identify the base, level 2-3 items need high level identification.
+    int identificationReq;  // Level of identification needed. Lv 0 items auto-identify. Level 1 items are fully identified with regular identification, level 2-3 items need high level identification.
 
     int quality;
     int consecration;
     float weight;
 
-    bool isEquip;
-    bool isContainer;
-    bool isReadable;
-    bool isEdible;
-    bool isTool;
-    bool isRelic;
 
-    Item(/*int baseItem*/);
-    void Logic();
-};
 
-class Container: public Item
-{
-    std::vector<Item*>inventory;
+/// ##### EQUIPPABLE ITEMS #####
+    bool isEquippable;
+    bool isArmor;
+    bool isWeapon;
 
-public:
-    Container();
-};
+    int armorClass; // Whether this item is boots, gloves, helmet, etc...
+    int weaponClass; // Whether this item is sword, axe, bow, etc...
 
-enum enumEquipClass
-{
-    WEAPON, HELM, ARMOR, GARMENT, SHOE, AMULET, RING, AMMO
-};
 
-class Equip: public Item
-{
-protected:
     Property properties[20]; // An item that has more than 16 properties will be anihilated by chaos.
     std::string propertyReadout[20];
-
-    int equipClass;
 
     int refinement;
     bool refinable;
 
     int PVBase, DVBase;
 
-public:
-    Equip();
-};
-
-class Weapon: public Equip // Shields count as weapons
-{
-
-    //Standard dice system, xDy+z
     int diceX;
     int baseDiceY, effectiveDiceY;
     int baseDiceZ, effectiveDiceZ;
@@ -139,44 +152,41 @@ class Weapon: public Equip // Shields count as weapons
     int counterModifier;
     int pierceModifier;
 
-public:
-    Weapon();
-};
+/// ##### CONTAINER ITEMS #####
+    bool isContainer;
+    std::vector<Item*>inventory;
 
-enum enumLiteratureClass
-{
-    BOOK, SCROLL, SPELLBOOK, TABLET
-};
+/// ##### READABLE ITEMS #####
+    bool isReadable;
 
-class Literature: public Item
-{
-    int literatureClass;
-
+    int readableClass;
     bool hasText; // Whether the book viewer will be opened when read.
 
-    //Include stream and file reading code later.
 
-public:
-    Literature();
-};
-
-class Food: public Item // Items that are specifically food. Some non-food can be eaten, though.
-{
-    Property conference[3];
-
+/// ##### EDIBLE ITEMS #####
+    bool isEdible;
     bool isCorpse;
-    int originCreature; // If corpse, which creature it came from determines its properties.
-    int nutrition;
+    int originCreature; // If corpse, which creature it came from determines its properties
 
-public:
-    Food();
-};
+    int nutrition; // How much hunger is sated
 
-class Potion: public Item
-{
+    Property conference[3]; // These properties will be copied to the eater.
 
-public:
-    Potion();
+/// ##### TOOL ITEMS #####
+    bool isTool;
+
+/// ##### RELIC ITEMS #####
+    bool isRelic;
+
+/// #################################
+
+    Item(); // Creates an all-purpose, useless template item
+    void Initialize(int whatBaseItem); // Initalizes template item with the data of the base item.
+
+    void SetQuality(int whatQuality);
+    void SetConsecration(int whatQuality);
+
+    void Logic();
 };
 
 void UpdateItems();

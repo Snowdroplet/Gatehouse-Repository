@@ -1,18 +1,5 @@
 /***
 
-Known issues:
-
-1)If 0 main rooms are created (i.e. while debugging with a low number of generation regions), program crashes trying to determine triangulation graph
-To fix: Discard generation when < threshold main rooms are created
-
-Current work to do:
-
-3) Pathfinding test under actual play conditions
-
-4) Begin implementation of combat system
-
-10) Velocity of roomgenbox repulsion must be at least 1, plus or minus some random chaotic jiggling of velocity to prevent infinite loops.
-
 */
 
 
@@ -95,6 +82,8 @@ void DrawDebugOverlay();
 
 void UpdateVectors(); //Update elements and delete elements that have been deactivated
 void InterpretControl(); // Merge with control module once it is possible to put "player" in gamesystem
+
+void UpdateGamesystem(); // Merge with gamesystem once it is possible to put "player" in gamesystem
 
 /// MAIN
 int main(int argc, char *argv[])
@@ -276,9 +265,23 @@ void GameLogic()
 
     static std::vector<Being*>::iterator aqit; // Static action queue iterator meant to be the front element of actionQueue.
 
+/** ### 0.1: Update objects that constantly need updates ####
+    -Such as elements of the GUI.
+
+**/
+
+    UpdateGamesystem();
+    guiSystem->UpdateElements();
+
+/// ### 0.2: Receive input, interpret and process according to context ####
+
+
     if(ev.type == ALLEGRO_EVENT_TIMER)
     {
-        if(awaitingPlayerCommand)
+
+        guiSystem->ProcessInput(controlContext);
+
+        if(awaitingPlayerCommand && controlContext == NORMAL_CONTEXT)
         {
 
             player->ProcessInput();
@@ -336,11 +339,6 @@ void GameLogic()
         }
 
     }
-
-/** ### 0: Update objects that constantly need updates
-    -Such as elements of the GUI.
-**/
-    guiSystem->ProgressElements();
 
 
 
@@ -933,6 +931,9 @@ void TitleDrawing()
 
 void DrawGUI()
 {
+    if(controlContext == TARGETTING_CONTEXT)
+        guiSystem->DrawTargetContext();
+
     guiSystem->DrawFrame();
 
     ALLEGRO_COLOR colorToDraw = NEUTRAL_WHITE;
@@ -1111,3 +1112,18 @@ void UpdateVectors()
 }
 
 /// ########## ########## END CLASS AND MEMBER OBJECT MANAGMEMENT FUNCTIONS ########## ##########
+
+void UpdateGamesystem()
+{
+    if(controlContextChangeDelay > 0)
+        controlContextChangeDelay --;
+
+    playerXCell = player->xCell;
+    playerYCell = player->yCell;
+    playerXPosition = player->xPosition;
+    playerYPosition = player->yPosition;
+
+    if(targetMoveDelay > 0)
+        targetMoveDelay --;
+
+}

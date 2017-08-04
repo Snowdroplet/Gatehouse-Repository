@@ -8,6 +8,8 @@ ALLEGRO_BITMAP *gfxGuiFrameVertical = nullptr;
 ALLEGRO_BITMAP *gfxGuiFrameCorner = nullptr;
 ALLEGRO_BITMAP *gfxGuiFrameRunic = nullptr;
 
+ALLEGRO_BITMAP *gfxGuiTarget = nullptr;
+
 ALLEGRO_BITMAP *gfxPlayer = nullptr;
 ALLEGRO_BITMAP *gfxNPCPassive[2];
 ALLEGRO_BITMAP *gfxTerminal = nullptr;
@@ -32,6 +34,8 @@ void LoadResources()
     gfxGuiFrameCorner = al_load_bitmap("guiFrameCorner.png");
     gfxGuiFrameRunic = al_load_bitmap("guiFrameRunic.png");
 
+    gfxGuiTarget = al_load_bitmap("placeholderTarget.png");
+
     gfxTerminal = al_load_bitmap("placeholderTerminal.png");
 
     gfxPlayer = al_load_bitmap("placeholderPlayer2.png");
@@ -55,6 +59,8 @@ void UnloadResources()
     al_destroy_bitmap(gfxGuiFrameVertical);
     al_destroy_bitmap(gfxGuiFrameCorner);
     al_destroy_bitmap(gfxGuiFrameRunic);
+
+    al_destroy_bitmap(gfxGuiTarget);
 
     al_destroy_bitmap(gfxTerminal);
 

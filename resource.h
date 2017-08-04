@@ -90,6 +90,8 @@ extern ALLEGRO_BITMAP *gfxGuiFrameVertical;
 extern ALLEGRO_BITMAP *gfxGuiFrameCorner;
 extern ALLEGRO_BITMAP *gfxGuiFrameRunic;
 
+extern ALLEGRO_BITMAP *gfxGuiTarget;
+
 extern ALLEGRO_BITMAP *gfxPlayer;
 extern ALLEGRO_BITMAP *gfxNPCPassive[2];
 extern ALLEGRO_BITMAP *gfxTerminal;

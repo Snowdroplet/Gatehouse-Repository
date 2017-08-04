@@ -57,6 +57,49 @@ bool submittedPlayerCommand = false;
 int turn = 0;
 int turnP = 0;
 
+/// CONTROL/GUI CONTEXT AND MENUS
+
+int controlContext = NORMAL_CONTEXT;
+int controlContextChangeDelay = 0;
+
+void ChangeControlContext(int toWhatContext)
+{
+    controlContext = toWhatContext;
+    controlContextChangeDelay = 10;
+
+
+#ifdef D_CONTEXT_CHANGE
+    if(controlContext == NORMAL_CONTEXT)
+        std::cout << "Control context: NORMAL" << std::endl;
+    else if(controlContext == TARGETTING_CONTEXT)
+        std::cout << "Control context: TARGETTING" << std::endl;
+    else if(controlContext == WEAPON_SPELL_CONTEXT)
+        std::cout << "Control context: WEAPON SPELL" << std::endl;
+#endif // D_CONTEXT_CHANGE
+}
+
+int targetMoveDelay;
+int targetXCell, targetYCell;
+int targetLockXCell, targetLockYCell;
+int targetLockedBeing;
+bool hasLockedBeing;
+
+
+void MoveTargetCell(int byX, int byY)
+{
+    if(byX != 0)
+        if(targetXCell+byX < 0 || targetXCell+byX > areaCellWidth-1 || targetMoveDelay > 0)
+            return;
+
+    if(byY != 0)
+        if(targetYCell+byY < 0 || targetYCell+byY > areaCellHeight-1 || targetMoveDelay > 0)
+            return;
+
+    targetXCell += byX;
+    targetYCell += byY;
+    targetMoveDelay = 5;
+}
+
 bool menuIsOpen = false;
 int menuOpen;
 bool subMenuIsOpen = false;
@@ -76,3 +119,7 @@ int miniAreaHeight = MINI_TILESIZE*areaCellHeight;
 
 int currentMap = 0; // 0 is debug for now
 
+/// UNIT AND OBJECTIVES TRACKING
+
+int playerXCell, playerYCell;
+int playerXPosition, playerYPosition;

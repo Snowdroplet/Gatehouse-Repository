@@ -2,9 +2,19 @@
 #define GUI_H_INCLUDED
 
 #include "gamesystem.h"
+#include "control.h"
 #include "resource.h"
 
 #include "guidecorations.h"
+
+enum enumTargetLockLevels
+{
+    TARGET_NONE = 0,
+    TARGET_AUTO = 1,  // Soft-locked onto the closest being
+    TARGET_CELL = 2,  // Hard-locked onto a visible cell
+    TARGET_BEING = 3  // Hard-locked onto a visible being
+
+};
 
 class GuiSystem
 {
@@ -43,15 +53,29 @@ class GuiSystem
     int playerJournalBarButtonX;
     int playerJournalBarButtonY;
 
+    /// Target context
+
+    int targetXPosition;
+    int targetYPosition;
+
+    int targetLockLevel; // A heirarchy, from no target, to auto target, to hard targetted cells and beings
+
+
 public:
     GuiSystem();
     ~GuiSystem();
 
-    void ProgressElements();
-
-    void DrawFrame();
+    /// Logic
+    void ProcessInput(int whatContext);
 
     void SetFrameRunicString(std::string update);
+    void UpdateElements();
+
+    /// Drawing
+
+    void DrawFrame();
+    void DrawTargetContext();
+
 
 
 };

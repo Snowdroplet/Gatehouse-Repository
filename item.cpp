@@ -1,9 +1,9 @@
 #include "item.h"
 
-Item::Item(/*int baseItem*/)
+Item::Item()
 {
-    // This is all default, becomming the item's initial stats unless told otherwise by the derived classes' constructors
 
+/// ##### ALL #####
     active = true;
     consecrationKnown = false;
     identificationReq = 0;
@@ -12,58 +12,24 @@ Item::Item(/*int baseItem*/)
     unidentifiedName = "unided base";
     description = "default item";
 
-    int qualityRoll = rand()%1000+1; // 1-1000
-    if(qualityRoll <= 300) //30% base chance of poor item
-        quality = POOR;
-    if(qualityRoll > 300 && qualityRoll <= 900) // 60% base chance of regular item
-        quality = COMMON;
-    if(qualityRoll > 900 && qualityRoll <= 995) // 9.5% base chance of rare item
-        quality = RARE;
-    if((qualityRoll > 995 && qualityRoll <= 999) || qualityRoll > 1000) //0.4% base chance of epic item
-        quality = EPIC;
-    if(qualityRoll == 1000) // 0.1% base chance of a unique item
-        quality = UNIQUE; // If not applicable, this will be changed to epic in the derived classes' constructors
-
-    int consecrationRoll = rand()%100+1; // 1-100
-    if(consecrationRoll <= 1)
-        consecration = DOOMED;
-    else if(consecrationRoll > 1 && consecrationRoll <= 20)
-        consecration = CURSED;
-    else if(consecrationRoll > 20 && consecrationRoll <= 85)
-        consecration = UNCURSED;
-    else if(consecrationRoll > 85)
-        consecration = BLESSED;
+    quality = ITEM_QUALITY_UNDETERMINED;
+    consecration = ITEM_CONSECRATION_UNDETERMINED;
 
     weight = 0;
 
-    isEquip = false;
-    isContainer = false;
-    isReadable = false;
-    isEdible = false;
-    isTool = false;
-    isRelic = false;
+/// ##### EQUIP ######
+    isEquippable = false;
+    isArmor = false;
+    isWeapon = false;
 
-}
-
-void Item::Logic()
-{
-
-}
-
-
-Equip::Equip()
-{
+    armorClass = ITEM_UNDEFINED;
+    weaponClass = ITEM_UNDEFINED;
 
     refinement = 0;
     refinable = false;
 
     PVBase = 0;
     DVBase = 0;
-}
-
-Weapon::Weapon()
-{
-    equipClass = WEAPON;
 
     diceX = 2;
     effectiveDiceY = baseDiceY = 2;
@@ -80,4 +46,70 @@ Weapon::Weapon()
     blockModifier = 0;
     counterModifier = 0;
     pierceModifier = 0;
+
+/// ##### CONTAINER ######
+    isContainer = false;
+
+/// ##### READABLE #####
+    isReadable = false;
+
+/// ##### EDIBLE #####
+    isEdible = false;
+
+/// ##### TOOL #####
+    isTool = false;
+
+/// ##### RELIC #####
+    isRelic = false;
+
+}
+
+void Item::Initialize(int whatBaseItem)
+{
+
+}
+
+void Item::SetQuality(int whatQuality)
+{
+    if(whatQuality == ITEM_QUALITY_UNDETERMINED)
+    {
+        int qualityRoll = rand()%1000+1; // 1-1000
+
+        if(qualityRoll <= 300) //30% base chance of poor item
+            quality = ITEM_QUALITY_GRAY;
+        if(qualityRoll > 300 && qualityRoll <= 900) // 60% base chance of regular item
+            quality = ITEM_QUALITY_GREEN;
+        if(qualityRoll > 900 && qualityRoll <= 995) // 9.5% base chance of rare item
+            quality = ITEM_QUALITY_BLUE;
+        if((qualityRoll > 995 && qualityRoll <= 999) || qualityRoll > 1000) //0.4% base chance of epic item
+            quality = ITEM_QUALITY_PURPLE;
+        if(qualityRoll == 1000) // 0.1% base chance of a unique item
+            quality = ITEM_QUALITY_UNIQUE; // If not applicable, this will be changed to epic
+    }
+    else
+        quality = whatQuality;
+}
+
+void Item::SetConsecration(int whatConsecration)
+{
+    if(whatConsecration == ITEM_CONSECRATION_UNDETERMINED)
+    {
+        int consecrationRoll = rand()%100+1; // 1-100
+
+        if(consecrationRoll <= 1)
+            consecration = ITEM_CONSECRATION_DOOMED;
+        else if(consecrationRoll > 1 && consecrationRoll <= 20)
+            consecration = ITEM_CONSECRATION_CURSED;
+        else if(consecrationRoll > 20 && consecrationRoll <= 85)
+            consecration = ITEM_CONSECRATION_UNCURSED;
+        else if(consecrationRoll > 85)
+            consecration = ITEM_CONSECRATION_BLESSED;
+    }
+    else
+        consecration = whatConsecration;
+}
+
+void Item::Logic()
+{
+
 }

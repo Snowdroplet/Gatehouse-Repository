@@ -41,8 +41,8 @@ Player::Player(int spawnXCell, int spawnYCell)
     animationFrameThreshold = 1;
 
     //Testing inventory
-    if(inventory.empty())
-        inventory.push_back(new Weapon());
+    //if(inventory.empty())
+
 }
 
 Player::~Player()

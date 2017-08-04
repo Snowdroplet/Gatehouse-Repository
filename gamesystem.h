@@ -3,12 +3,10 @@
 #ifndef GAMESYSTEM_H_INCLUDED
 #define GAMESYSTEM_H_INCLUDED
 
+#include <iostream>
 #include <string>
 #include <algorithm>
 #include <allegro5/allegro5.h>
-
-//#include <Box2D.h>
-
 
 /// *** Debug defines. Comment out line to deactivate corresponding debug functionality. ***
 
@@ -25,8 +23,12 @@
 #define D_TEST_PATHFINDING                            // Press 'T' and 'Y' at the same time to output a test path from the PC's cell to a random destination cell.
 #define D_TEST_TRACEPATH                              // Press 'U' and 'I' at the same time to move player to last cell on path.
 
+/// Gamesystem / Gui
+
+#define D_CONTEXT_CHANGE                              // Outputs line when control context is changed
+
 /// Generator
-#define D_GEN_PHASE_CHECK                             //Output debug information to console when completing a generation phase function
+#define D_GEN_PHASE_CHECK                             // Output debug information to console when completing a generation phase function
 //#define D_GEN_SEPERATION                            // Output debug information to console regarding the use of seperation steering to distribute room objects.
 //#define D_GEN_TRIANGULATION                         // Output debug information to console regarding the use of delaunay triangulation to determine which main rooms should be connected to each other.
 //#define D_VECTOR_UNIQUE_NODE_ID                     // Output debug information to console regarding the process of listing the IDs of every unique center room cell.
@@ -191,30 +193,19 @@ enum enumControlContexts
     PRAYER_CONTEXT = 7
 };
 
+extern int controlContext;
+extern int controlContextChangeDelay;
 
-/*
-enum enumMenuOpen
-{
-    CHARACTER,
-    INVENTORY,
-    THROW,
-    QUAFF,
-    READ,
-    CAST,
-    SKILL,
-    APPLY,
-    PRAY,
-    JOURNAL,
-    EQUIP_HEAD,
-    EQUIP_ARMOR,
-    EQUIP_GARMENT,
-    EQUIP_SHOE,
-    EQUIP_AMULET,
-    EQUIP_RING,
-    EQUIP_AMMO
-};
-*/
+void ChangeControlContext(int toWhatContext);
 
+extern int targetMoveDelay;
+extern int targetXCell, targetYCell;
+extern int targetLockXCell, targetLockYCell;
+extern int targetLockedBeing;
+extern bool hasLockedBeing;
+
+
+void MoveTargetCell(int byX, int byY);
 
 extern bool menuIsOpen;
 extern int menuOpen;
@@ -263,6 +254,10 @@ enum enumFeatureTypes
     FEATURE_UPSTAIRS = 1
 };
 
+/// BEING AND OBJECTIVE TRACKING
+
+extern int playerXCell, playerYCell;
+extern int playerXPosition, playerYPosition;
 
 
 #endif // GAMESYSTEM_H_INCLUDED
