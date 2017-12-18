@@ -1,4 +1,27 @@
 /***
+To do:
+    ! Fix sporadic infinite looping in distributing generation bodies
+
+    ! Movement is not smooth, find out why and fix
+
+    !! Fire spell
+        if(key[key_f]) and target is acquired
+            Player calls Being::ReleaseSpell();
+
+
+
+*/
+
+/***
+How to operate during gen visualization:
+
+    Q = Progress generation
+    Numpad = move camera
+
+How to operate debug:
+    TY = Output test path from player to random cell
+    UI = Move player to last cell on path
+
 
 */
 
@@ -40,6 +63,7 @@
 
 #include "area.h"
 
+#include "spell.h"
 #include "item.h"
 #include "being.h"
 #include "player.h"
@@ -53,12 +77,24 @@ Player *player = nullptr;
 std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to act.
 std::vector<Being*>walkAnimQueue; // All beings queued to animate walk.
+
 Being*currentAnimatedBeing = nullptr; // Which being is being animated, if an action other than walking is being animated.
+
+std::vector<Being*>targetableBeings; // All beings which can be locked on to during targetting context.
+Being*hardTargetedBeing = nullptr;  // Which being is currently under explicit lock-on.
+Being*autoTargetedBeing = nullptr; // Which being is currently under auto-lock on. Will match hardTargetedBeing unless it is nullptr.
 
 bool CompareAPDescending(Being *lhs, Being *rhs)
 {
     return lhs->actionPoints > rhs->actionPoints;
 }
+
+bool CompareTargetableDistanceAscending(Being *lhs, Being *rhs)
+{
+    return sqrt(pow(lhs->yCell - player->yCell, 2) + pow(lhs->xCell - player->xCell, 2)) <  sqrt(pow(rhs->yCell - player->yCell, 2) + pow(rhs->xCell - player->xCell, 2));
+}
+
+std::vector<Spell*>activeSpells;
 
 std::vector<Item*>items; // All items currently in play.
 std::vector<Item*>floorItems; // All items currently on the floor.
@@ -81,9 +117,14 @@ void DrawTiles();
 void DrawDebugOverlay();
 
 void UpdateVectors(); //Update elements and delete elements that have been deactivated
-void InterpretControl(); // Merge with control module once it is possible to put "player" in gamesystem
+void PopulateTargetableBeings();
+Being* AcquireAutoTarget();
+
+void ProcessInput(int whatContext); // Merge with control module once it is possible to put "player" in gamesystem
 
 void UpdateGamesystem(); // Merge with gamesystem once it is possible to put "player" in gamesystem
+
+
 
 /// MAIN
 int main(int argc, char *argv[])
@@ -207,7 +248,7 @@ int main(int argc, char *argv[])
         al_wait_for_event(eventQueue, &ev);
         Control();
 
-        if(ev.type == ALLEGRO_EVENT_TIMER)
+        if(ev.type == ALLEGRO_EVENT_TIMER || gameExit == true)
         {
             if(mainPhase == MAIN_PHASE_GAME)
             {
@@ -236,7 +277,7 @@ int main(int argc, char *argv[])
     if(player != nullptr)
         SavePlayerState(player);
 
-
+    /// Cleanup
     if(player != nullptr)
         delete player;
 
@@ -265,10 +306,9 @@ void GameLogic()
 
     static std::vector<Being*>::iterator aqit; // Static action queue iterator meant to be the front element of actionQueue.
 
-/** ### 0.1: Update objects that constantly need updates ####
-    -Such as elements of the GUI.
-
-**/
+    /** ### 0.1: Update objects that constantly need updates ####
+        -Such as elements of the GUI.
+    **/
 
     UpdateGamesystem();
     guiSystem->UpdateElements();
@@ -276,15 +316,13 @@ void GameLogic()
 /// ### 0.2: Receive input, interpret and process according to context ####
 
 
-    if(ev.type == ALLEGRO_EVENT_TIMER)
+    if(ev.type == ALLEGRO_EVENT_TIMER) //
     {
 
-        guiSystem->ProcessInput(controlContext);
-
-        if(awaitingPlayerCommand && controlContext == NORMAL_CONTEXT)
+        if(awaitingPlayerCommand)
         {
 
-            player->ProcessInput();
+            ProcessInput(controlContext);
 
 #ifdef D_TEST_TRACEPATH
 
@@ -342,10 +380,10 @@ void GameLogic()
 
 
 
-/** ### 1: GRANT ACTION POINTS #####
-    -Each being receives AP according to its effective speed.
-    -Beings that have accumulated at least 100 AP are permitted to move. These beings are added to actionQueue.
-**/
+    /** ### 1: GRANT ACTION POINTS #####
+        -Each being receives AP according to its effective speed.
+        -Beings that have accumulated at least 100 AP are permitted to move. These beings are added to actionQueue.
+    **/
 
     if(turnLogicPhase == GRANT_ACTION_POINTS)
     {
@@ -374,9 +412,9 @@ void GameLogic()
         turnLogicPhase = SORT_ACTION_QUEUE;
     }
 
-/** ### 2: SORT ACTION QUEUE ###
-    -All Beings on the action queue (having, from the previous phase, at least 100 AP) are sorted by their AP from highest to lowest AP (descending order).
-**/
+    /** ### 2: SORT ACTION QUEUE ###
+        -All Beings on the action queue (having, from the previous phase, at least 100 AP) are sorted by their AP from highest to lowest AP (descending order).
+    **/
 
     if(turnLogicPhase == SORT_ACTION_QUEUE)
     {
@@ -385,35 +423,35 @@ void GameLogic()
         turnLogicPhase = SELECT_ACTION;
     }
 
-/** ### 3: SELECT ACTION ###
+    /** ### 3: SELECT ACTION ###
 
-    actionQueue: A vector populated during phase 1 with pointers to Beings eligible to take an action (having at least 100 AP).
-    actionOpen: Whether the system is ready to receive actions, independent of whether actionQueue is populated.
+        actionQueue: A vector populated during phase 1 with pointers to Beings eligible to take an action (having at least 100 AP).
+        actionOpen: Whether the system is ready to receive actions, independent of whether actionQueue is populated.
 
-    walkAnimQueue: A vector populated during this phase with pointers to beings who have chosen the WALK action.
-                   In order to minimize real time spent waiting for each individual Being's walk from one cell to the next to be animated at a certain speed,
-                   this queue allows for all movement animations to be displayed simultaneously.
-    walkAnimQueueReleased: A boolean. When any unit performs an action other than walking OR when actionQueue is emptied of Beings,
-                           all walking animations queued to this point are animated.
+        walkAnimQueue: A vector populated during this phase with pointers to beings who have chosen the WALK action.
+                       In order to minimize real time spent waiting for each individual Being's walk from one cell to the next to be animated at a certain speed,
+                       this queue allows for all movement animations to be displayed simultaneously.
+        walkAnimQueueReleased: A boolean. When any unit performs an action other than walking OR when actionQueue is emptied of Beings,
+                               all walking animations queued to this point are animated.
 
-    -If the action queue is NOT empty (currently containing Beings who have least 100 AP):
-        -If actionOpen is true (system is ready to receive actions)
-            * note: the "idle" action is equivalent to moving in AP usage.
-            - NPCs choose an action according to their AI. A certain amount of AP is spent corresponding to the action.
-            - Player Beings await input from the player - When input is detected corresponding to an action, a certain amount of AP is spent corresponding to the action.
-            - In either case, actionOpen becomes false (system may not receive actions) until the action has been processed during the CALCULATION phase.
-
-
-            - Any Being that has selected the WALK action will be added to the walk animation queue (walkAnimQueue).
-            - Any Being that selects an option other than WALK will release the global walk animation queue.
-
-            - Any Being who becomes ineligible to move (having less than 100 AP) will be removed from the actionQueue.
-
-            WHEN ANY ACTION HAS BEEN CONFIRMED (!actionOpen) whether by NPC or Player, go to ANIMATION phase. No further actions may be taken until any and all necessary animations have been processed.
+        -If the action queue is NOT empty (currently containing Beings who have least 100 AP):
+            -If actionOpen is true (system is ready to receive actions)
+                * note: the "idle" action is equivalent to moving in AP usage.
+                - NPCs choose an action according to their AI. A certain amount of AP is spent corresponding to the action.
+                - Player Beings await input from the player - When input is detected corresponding to an action, a certain amount of AP is spent corresponding to the action.
+                - In either case, actionOpen becomes false (system may not receive actions) until the action has been processed during the CALCULATION phase.
 
 
-    -If the action queue is empty, the cycle of phases is completed and returns to GRANT AP.
-**/
+                - Any Being that has selected the WALK action will be added to the walk animation queue (walkAnimQueue).
+                - Any Being that selects an option other than WALK will release the global walk animation queue.
+
+                - Any Being who becomes ineligible to move (having less than 100 AP) will be removed from the actionQueue.
+
+                WHEN ANY ACTION HAS BEEN CONFIRMED (!actionOpen) whether by NPC or Player, go to ANIMATION phase. No further actions may be taken until any and all necessary animations have been processed.
+
+
+        -If the action queue is empty, the cycle of phases is completed and returns to GRANT AP.
+    **/
 
     if(turnLogicPhase == SELECT_ACTION)
     {
@@ -546,17 +584,17 @@ void GameLogic()
             for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
             {
                 if(abs((*it)->xCell - player->xCell) <= drawingXCellCutoff &&
-                   abs((*it)->yCell - player->yCell) <= drawingYCellCutoff &&
-                   (*it)->visibleToPlayer) // No point in animating something outside the screen boundaries or is invisible/obscured/imperceptible/off-screen.
-                   {
-                       (*it)->ProgressWalkAnimation();
-                        if((*it)->animationComplete)
-                        {
-                            walkAnimQueue.erase(it);
-                        }
-                        else
-                            ++it;
-                   }
+                        abs((*it)->yCell - player->yCell) <= drawingYCellCutoff &&
+                        (*it)->visibleToPlayer) // No point in animating something outside the screen boundaries or is invisible/obscured/imperceptible/off-screen.
+                {
+                    (*it)->ProgressWalkAnimation();
+                    if((*it)->animationComplete)
+                    {
+                        walkAnimQueue.erase(it);
+                    }
+                    else
+                        ++it;
+                }
                 else // Animation of this being is auto-completed if invisible/obscured/imperceptible/off-screen.
                 {
                     (*it)->CompleteWalkAnimation();
@@ -588,7 +626,6 @@ void GameLogic()
     }
 
     UpdateVectors();
-
 }
 
 void LoadingLogic()
@@ -662,7 +699,7 @@ void LoadingLogic()
         // Perhaps by creating and copying from a vector of initial beings?
         // Such as generator->beingSpawnpositions[blah];
 
-        player = new Player(area->downstairsXCell,area->downstairsYCell);
+        player = new Player(area->upstairsXCell,area->upstairsYCell);
         //player = new Player(true); //true to initalize saved player - Remove in end for atrium map
         //LoadPlayerState("player",player);
         //player->InitByArchive();
@@ -855,16 +892,16 @@ void LoadingDrawing()
 
                     if((*it)->designatedMainRoom)
                         al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, designated main room
-                                              (*it)->y1 - loadingCamY,
-                                              (*it)->x2 - loadingCamX,
-                                              (*it)->y2 - loadingCamY,
-                                              BRIGHT_GREEN, 2);
+                                          (*it)->y1 - loadingCamY,
+                                          (*it)->x2 - loadingCamX,
+                                          (*it)->y2 - loadingCamY,
+                                          BRIGHT_GREEN, 2);
                     else
                         al_draw_rectangle((*it)->x1 - loadingCamX,       // Asleep, not main room
-                                              (*it)->y1 - loadingCamY,
-                                              (*it)->x2 - loadingCamX,
-                                              (*it)->y2 - loadingCamY,
-                                              COLD_BLUE, 1);
+                                          (*it)->y1 - loadingCamY,
+                                          (*it)->x2 - loadingCamX,
+                                          (*it)->y2 - loadingCamY,
+                                          COLD_BLUE, 1);
 
 
                     s_al_draw_text(terminalFont, NEUTRAL_WHITE,
@@ -932,7 +969,37 @@ void TitleDrawing()
 void DrawGUI()
 {
     if(controlContext == TARGETTING_CONTEXT)
-        guiSystem->DrawTargetContext();
+    {
+        al_draw_bitmap(gfxGuiTarget,
+        targetScanXCell*TILESIZE + SCREEN_W/2 - playerXPosition,
+        targetScanYCell*TILESIZE + SCREEN_H/2 - playerYPosition,
+        0);
+
+        if(!targetableBeings.empty())
+            for(unsigned int i = 0; i < targetableBeings.size(); i++)
+            {
+                c_al_draw_centered_bitmap(gfxGuiTargetableListTag,
+                                  targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
+                                  targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
+                                   0);
+
+                char aChar = 'a' + i;
+                std::string intAlpha = std::to_string(aChar);
+                s_al_draw_centered_text(terminalFont, NEUTRAL_WHITE,
+                            targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
+                            targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
+                            ALLEGRO_ALIGN_CENTER,
+                            intAlpha);
+            }
+    }
+
+    if(targetLockLevel > TARGET_LOCK_MARKER_HARD)
+    {
+        al_draw_bitmap(gfxGuiTargetHard,
+                       targetLockXCell*TILESIZE + SCREEN_W/2 - playerXPosition,
+                       targetLockYCell*TILESIZE + SCREEN_H/2 - playerYPosition,
+                       0);
+    }
 
     guiSystem->DrawFrame();
 
@@ -1109,9 +1176,237 @@ void UpdateVectors()
             ++it;
         }
     }
+
+    for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
+    {
+        if(gameExit)
+            (*it)->active = false;
+
+        if(!(*it)->active)
+        {
+            delete *it;
+            activeSpells.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
 }
 
 /// ########## ########## END CLASS AND MEMBER OBJECT MANAGMEMENT FUNCTIONS ########## ##########
+
+void PopulateTargetableBeings()
+{
+    //Generate list of target-able NPCs and tag them a-z
+
+    for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
+    {
+        // if visible within a certain distance...
+
+        if((*it)->derivedType == BEING_TYPE_NPC)
+        {
+            if(sqrt(pow((*it)->yCell - player->yCell, 2) + pow((*it)->xCell - player->xCell, 2)) <= 10)
+            {
+                targetableBeings.push_back(*it);
+            }
+
+        }
+    }
+
+}
+
+Being* AcquireAutoTarget()
+{
+    /* Function to target closest NPC by default. If no such NPC, initalize targetting at player cell by default (no lock-on)*/
+
+    targetableBeings.clear();
+    PopulateTargetableBeings();
+
+    if(!targetableBeings.empty())
+    {
+        // sort by distance to player
+            std::sort(targetableBeings.begin(), targetableBeings.end(), CompareTargetableDistanceAscending);
+
+        targetLockXCell = targetScanXCell = targetableBeings[0]->xCell;
+        targetLockYCell = targetScanYCell = targetableBeings[0]->yCell;
+        targetLockLevel = TARGET_LOCK_AUTO;
+
+        return targetableBeings[0];
+    }
+    else
+    {
+        targetLockXCell = targetScanXCell = playerXCell;
+        targetLockYCell = targetScanYCell = playerYCell;
+        targetLockLevel = TARGET_LOCK_NONE;
+
+        return nullptr;
+    }
+}
+
+void ProcessInput(int whatContext)
+{
+    int keypadDirection = 0; // ULRD 0000
+
+    switch(whatContext)
+    {
+    case NORMAL_CONTEXT:
+
+        if(player->actionBlocked)
+        {
+            player->actionCost = 100;
+            player->Move(NO_DIRECTION);
+            player->actionBlocked = false;
+
+            submittedPlayerCommand = true;
+        }
+        else // If !actionBlocked
+        {
+            if(keyInput[KEY_F])
+            {
+                if(targetLockLevel == TARGET_LOCK_NONE)
+                {
+                    targetableBeings.clear();
+                    autoTargetedBeing = AcquireAutoTarget();
+                    if(autoTargetedBeing == nullptr)
+                    {
+                         // Nothing happens. To do: terminal outputs: "No target selected, with msg spam delay"
+                    }
+                    else
+                    {
+                        player->ReleaseSpell();
+                    }
+                }
+
+                if(targetLockLevel == TARGET_LOCK_AUTO)
+                {
+                    player->ReleaseSpell();
+                }
+                else if(targetLockLevel == TARGET_LOCK_CELL)
+                {
+                    player->ReleaseSpell();
+                }
+                else if(targetLockLevel == TARGET_LOCK_BEING)
+                {
+                    player->ReleaseSpell();
+                }
+
+            }
+
+            if(keyInput[KEY_PAD_8] || keyInput[KEY_UP])    keypadDirection += 1000;
+            if(keyInput[KEY_PAD_4] || keyInput[KEY_LEFT])  keypadDirection +=  100;
+            if(keyInput[KEY_PAD_6] || keyInput[KEY_RIGHT]) keypadDirection +=   10;
+            if(keyInput[KEY_PAD_2] || keyInput[KEY_DOWN])  keypadDirection +=    1;
+
+            if(keypadDirection == 0)
+            {
+                if(keyInput[KEY_PAD_7]) keypadDirection = 1100;
+                if(keyInput[KEY_PAD_9]) keypadDirection = 1010;
+                if(keyInput[KEY_PAD_1]) keypadDirection =  101;
+                if(keyInput[KEY_PAD_3]) keypadDirection =   11;
+                if(keyInput[KEY_PAD_5]) keypadDirection = 1111;
+            }
+        }
+
+        if(keypadDirection > 0)
+        {
+            player->actionCost = 100;
+            player->currentAction = ACTION_WALK;
+            // check emptiness
+            player->Move(keypadDirection);
+            submittedPlayerCommand = true;
+        }
+
+
+        if(keyInput[KEY_L] && controlContextChangeDelay == 0)
+        {
+            ChangeControlContext(TARGETTING_CONTEXT);
+
+            if(targetLockLevel < TARGET_LOCK_MARKER_HARD)
+                autoTargetedBeing = AcquireAutoTarget();
+            else
+            {
+                targetLockXCell = targetScanXCell = playerXCell;
+                targetLockYCell = targetScanYCell = playerYCell;
+                targetLockLevel = TARGET_LOCK_NONE;
+            }
+
+        }
+        else if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
+        {
+            ChangeControlContext(WEAPON_SPELL_CONTEXT);
+        }
+
+        break;
+
+    case TARGETTING_CONTEXT:
+
+        /*
+        if no targets are available
+        */
+
+        if(!targetableBeings.empty())
+        {
+            for(unsigned int i = KEY_A; i < KEY_Z; i++)
+            {
+                if(keyInput[i] && i < targetableBeings.size())
+                {
+                    hardTargetedBeing = targetableBeings[i];
+                    targetScanXCell = targetLockXCell = hardTargetedBeing->xCell;
+                    targetScanYCell = targetLockYCell = hardTargetedBeing->yCell;
+
+                    targetLockLevel = TARGET_LOCK_BEING;
+                    ChangeControlContext(NORMAL_CONTEXT);
+
+                    break;
+                }
+            }
+        }
+
+        // Pressing L: Leave targetting context, return to normal context
+        if(keyInput[KEY_L] && controlContextChangeDelay == 0)
+        {
+            ChangeControlContext(NORMAL_CONTEXT);
+        }
+        else if(keyInput[KEY_PAD_5] || keyInput[KEY_ENTER])
+        {
+            // Target cell. To target a being, use alphabetical control instead.
+
+            targetLockLevel = TARGET_LOCK_CELL;
+
+            targetLockXCell = targetScanXCell;
+            targetLockYCell = targetScanYCell;
+
+            ChangeControlContext(NORMAL_CONTEXT);
+        }
+        else if(keyInput[KEY_PAD_7])
+            MoveTargetScanCell(-1,-1);
+        else if(keyInput[KEY_PAD_8])
+            MoveTargetScanCell( 0,-1);
+        else if(keyInput[KEY_PAD_9])
+            MoveTargetScanCell( 1,-1);
+        else if(keyInput[KEY_PAD_4])
+            MoveTargetScanCell(-1,0);
+        else if(keyInput[KEY_PAD_6])
+            MoveTargetScanCell( 1,0);
+        else if(keyInput[KEY_PAD_1])
+            MoveTargetScanCell(-1, 1);
+        else if(keyInput[KEY_PAD_2])
+            MoveTargetScanCell( 0, 1);
+        else if(keyInput[KEY_PAD_3])
+            MoveTargetScanCell( 1, 1);
+
+        break;
+
+    case WEAPON_SPELL_CONTEXT:
+        if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
+        {
+            ChangeControlContext(NORMAL_CONTEXT);
+        }
+        break;
+
+    }
+}
 
 void UpdateGamesystem()
 {
@@ -1123,7 +1418,7 @@ void UpdateGamesystem()
     playerXPosition = player->xPosition;
     playerYPosition = player->yPosition;
 
-    if(targetMoveDelay > 0)
-        targetMoveDelay --;
+    if(targetScanMoveDelay > 0)
+        targetScanMoveDelay --;
 
 }

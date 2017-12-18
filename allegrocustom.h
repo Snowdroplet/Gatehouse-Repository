@@ -16,9 +16,12 @@ void c_al_draw_rotated_centered_bitmap(ALLEGRO_BITMAP *bitmap, float cx, float c
 int s_al_get_text_width(const ALLEGRO_FONT *f, std::string str);
 void s_al_draw_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, std::string text);
 
+void s_al_draw_centered_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, std::string text);
+
 int s_al_show_native_message_box(ALLEGRO_DISPLAY *display,
                                  std::string title, std::string heading, std::string text,
                                  char const *buttons, int flags);
+
 
 extern ALLEGRO_COLOR NEUTRAL_WHITE;
 extern ALLEGRO_COLOR DIM_NEUTRAL_WHITE;

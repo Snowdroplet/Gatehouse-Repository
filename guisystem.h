@@ -7,15 +7,6 @@
 
 #include "guidecorations.h"
 
-enum enumTargetLockLevels
-{
-    TARGET_NONE = 0,
-    TARGET_AUTO = 1,  // Soft-locked onto the closest being
-    TARGET_CELL = 2,  // Hard-locked onto a visible cell
-    TARGET_BEING = 3  // Hard-locked onto a visible being
-
-};
-
 class GuiSystem
 {
 
@@ -55,10 +46,8 @@ class GuiSystem
 
     /// Target context
 
-    int targetXPosition;
-    int targetYPosition;
-
-    int targetLockLevel; // A heirarchy, from no target, to auto target, to hard targetted cells and beings
+    int targetDrawXPosition;
+    int targetDrawYPosition;
 
 
 public:
@@ -66,7 +55,6 @@ public:
     ~GuiSystem();
 
     /// Logic
-    void ProcessInput(int whatContext);
 
     void SetFrameRunicString(std::string update);
     void UpdateElements();
@@ -74,7 +62,6 @@ public:
     /// Drawing
 
     void DrawFrame();
-    void DrawTargetContext();
 
 
 

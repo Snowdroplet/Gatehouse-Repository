@@ -2,11 +2,7 @@
 
 bool keyInput[] =
 {
-    false, false, false,                        //123
-    false, false, false,                        //456
-    false, false, false,                        //789
-    false,                                      //0
-    false, false, false, false,                 //ULDR
+
     false, false, false,                        //ABC
     false, false, false,                        //DEF
     false, false, false,                        //GHI
@@ -15,7 +11,14 @@ bool keyInput[] =
     false, false, false,                        //PQR
     false, false, false,                        //STU
     false, false, false,                        //VWX
-    false, false                                //YZ
+    false, false,                               //YZ
+    false,                                      //ENTER
+    false, false, false,                        //123
+    false, false, false,                        //456
+    false, false, false,                        //789
+    false,                                      //0
+    false, false, false, false                  //ULDR
+
 };
 
 void Control()
@@ -61,48 +64,6 @@ void Control()
     {
         switch(ev.keyboard.keycode)
         {
-        case ALLEGRO_KEY_PAD_1:
-            keyInput[KEY_PAD_1] = true;
-            break;
-        case ALLEGRO_KEY_PAD_2:
-            keyInput[KEY_PAD_2] = true;
-            break;
-        case ALLEGRO_KEY_PAD_3:
-            keyInput[KEY_PAD_3] = true;
-            break;
-        case ALLEGRO_KEY_PAD_4:
-            keyInput[KEY_PAD_4] = true;
-            break;
-        case ALLEGRO_KEY_PAD_5:
-            keyInput[KEY_PAD_5] = true;
-            break;
-        case ALLEGRO_KEY_PAD_6:
-            keyInput[KEY_PAD_6] = true;
-            break;
-        case ALLEGRO_KEY_PAD_7:
-            keyInput[KEY_PAD_7] = true;
-            break;
-        case ALLEGRO_KEY_PAD_8:
-            keyInput[KEY_PAD_8] = true;
-            break;
-        case ALLEGRO_KEY_PAD_9:
-            keyInput[KEY_PAD_9] = true;
-            break;
-        case ALLEGRO_KEY_PAD_0:
-            keyInput[KEY_PAD_0] = true;
-            break;
-        case ALLEGRO_KEY_UP:
-            keyInput[KEY_UP] = true;
-            break;
-        case ALLEGRO_KEY_DOWN:
-            keyInput[KEY_DOWN] = true;
-            break;
-        case ALLEGRO_KEY_LEFT:
-            keyInput[KEY_LEFT] = true;
-            break;
-        case ALLEGRO_KEY_RIGHT:
-            keyInput[KEY_RIGHT] = true;
-            break;
         case ALLEGRO_KEY_A:
             keyInput[KEY_A] = true;
             break;
@@ -180,6 +141,51 @@ void Control()
             break;
         case ALLEGRO_KEY_Z:
             keyInput[KEY_Z] = true;
+            break;
+        case ALLEGRO_KEY_ENTER:
+            keyInput[KEY_ENTER] = true;
+            break;
+        case ALLEGRO_KEY_PAD_1:
+            keyInput[KEY_PAD_1] = true;
+            break;
+        case ALLEGRO_KEY_PAD_2:
+            keyInput[KEY_PAD_2] = true;
+            break;
+        case ALLEGRO_KEY_PAD_3:
+            keyInput[KEY_PAD_3] = true;
+            break;
+        case ALLEGRO_KEY_PAD_4:
+            keyInput[KEY_PAD_4] = true;
+            break;
+        case ALLEGRO_KEY_PAD_5:
+            keyInput[KEY_PAD_5] = true;
+            break;
+        case ALLEGRO_KEY_PAD_6:
+            keyInput[KEY_PAD_6] = true;
+            break;
+        case ALLEGRO_KEY_PAD_7:
+            keyInput[KEY_PAD_7] = true;
+            break;
+        case ALLEGRO_KEY_PAD_8:
+            keyInput[KEY_PAD_8] = true;
+            break;
+        case ALLEGRO_KEY_PAD_9:
+            keyInput[KEY_PAD_9] = true;
+            break;
+        case ALLEGRO_KEY_PAD_0:
+            keyInput[KEY_PAD_0] = true;
+            break;
+        case ALLEGRO_KEY_UP:
+            keyInput[KEY_UP] = true;
+            break;
+        case ALLEGRO_KEY_DOWN:
+            keyInput[KEY_DOWN] = true;
+            break;
+        case ALLEGRO_KEY_LEFT:
+            keyInput[KEY_LEFT] = true;
+            break;
+        case ALLEGRO_KEY_RIGHT:
+            keyInput[KEY_RIGHT] = true;
             break;
         }
     }
@@ -306,6 +312,9 @@ void Control()
             break;
         case ALLEGRO_KEY_Z:
             keyInput[KEY_Z] = false;
+            break;
+        case ALLEGRO_KEY_ENTER:
+            keyInput[KEY_ENTER] = false;
             break;
 
         case ALLEGRO_KEY_ESCAPE:

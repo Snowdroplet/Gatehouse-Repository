@@ -198,14 +198,26 @@ extern int controlContextChangeDelay;
 
 void ChangeControlContext(int toWhatContext);
 
-extern int targetMoveDelay;
-extern int targetXCell, targetYCell;
+enum enumTargetLockLevels
+{
+    TARGET_LOCK_NONE = 0,
+    TARGET_LOCK_AUTO = 1,  // Soft-locked onto the closest being
+
+    TARGET_LOCK_MARKER_HARD = 2, // Above this value = hard lock-on
+
+    TARGET_LOCK_CELL = 3,  // Hard-locked onto a visible cell
+    TARGET_LOCK_BEING = 4  // Hard-locked onto a visible being
+
+};
+
+extern int targetLockLevel; // A heirarchy, from no target, to auto target, to hard targetted cells and beings
+extern int targetScanMoveDelay;
+extern int targetScanXCell, targetScanYCell;
 extern int targetLockXCell, targetLockYCell;
-extern int targetLockedBeing;
-extern bool hasLockedBeing;
+extern int targetXPos, targetYPos;
 
 
-void MoveTargetCell(int byX, int byY);
+void MoveTargetScanCell(int byX, int byY);
 
 extern bool menuIsOpen;
 extern int menuOpen;
@@ -243,7 +255,7 @@ enum enumFloorTypes
     FT_FLOOR_REGULAR = 0,   // Default floor
     FT_FLOOR_RUBBLE = 1     // Floor generated on the position of a destroyed wall.
 
-                    // Add all types of variations on floor here, like... Mossy? Puddly?
+                      // Add all types of variations on floor here, like... Mossy? Puddly?
 };
 
 enum enumFeatureTypes
@@ -258,6 +270,8 @@ enum enumFeatureTypes
 
 extern int playerXCell, playerYCell;
 extern int playerXPosition, playerYPosition;
+
+
 
 
 #endif // GAMESYSTEM_H_INCLUDED

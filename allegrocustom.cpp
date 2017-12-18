@@ -74,6 +74,12 @@ void s_al_draw_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, floa
     al_draw_text(font, color, x, y, flags, c);
 }
 
+void s_al_draw_centered_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, std::string text)
+{ // Note that this function only centers on the y dimension, neglecting the x, because too convoluted.
+    const char *c = text.c_str();
+    al_draw_text(font, color, x, y-al_get_font_line_height(font)/2, flags, c);
+}
+
 int s_al_show_native_message_box(ALLEGRO_DISPLAY *display,
                                  std::string title, std::string heading, std::string text,
                                  char const *buttons, int flags)

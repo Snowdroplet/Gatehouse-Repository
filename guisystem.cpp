@@ -27,7 +27,7 @@ GuiSystem::GuiSystem()
     /// Buttons
 
     /// Targetting
-    targetLockLevel = TARGET_NONE;
+    targetLockLevel = TARGET_LOCK_NONE;
 }
 
 GuiSystem::~GuiSystem()
@@ -36,86 +36,6 @@ GuiSystem::~GuiSystem()
     {
         delete *it;
         frameRunes.erase(it);
-    }
-}
-
-void GuiSystem::ProcessInput(int whatContext)
-{
-    switch(whatContext)
-    {
-    case NORMAL_CONTEXT:
-
-        if(keyInput[KEY_F])
-        {
-            if(targetLockLevel = TARGET_NONE)
-            {
-                // Auto-lock onto nearest enemy target and prompt spell system to create a spell.
-                // If there is no enemy target, complain there is no target.
-            }
-
-        }
-
-        if(keyInput[KEY_L] && controlContextChangeDelay == 0)
-        {
-            ChangeControlContext(TARGETTING_CONTEXT);
-
-            /* Function to target closest being by default*/
-            targetXCell = playerXCell;
-            targetYCell = playerYCell;
-
-        }
-        else if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
-        {
-            ChangeControlContext(WEAPON_SPELL_CONTEXT);
-        }
-
-    break;
-
-    case TARGETTING_CONTEXT:
-
-        if(hasLockedBeing)
-        {
-            /* If locked being is not visible to player, use default lock */
-        }
-
-
-
-        if(keyInput[KEY_L] && controlContextChangeDelay == 0)
-        {
-            ChangeControlContext(NORMAL_CONTEXT);
-        }
-        else if(keyInput[KEY_PAD_5])
-        {
-            targetLockXCell = targetXCell;
-            targetLockYCell = targetYCell;
-            /* If there is a being present, then lock onto the being rather than the position. */
-        }
-        else if(keyInput[KEY_PAD_7])
-            MoveTargetCell(-1,-1);
-        else if(keyInput[KEY_PAD_8])
-            MoveTargetCell( 0,-1);
-        else if(keyInput[KEY_PAD_9])
-            MoveTargetCell( 1,-1);
-        else if(keyInput[KEY_PAD_4])
-            MoveTargetCell(-1,0);
-        else if(keyInput[KEY_PAD_6])
-            MoveTargetCell( 1,0);
-        else if(keyInput[KEY_PAD_1])
-            MoveTargetCell(-1, 1);
-        else if(keyInput[KEY_PAD_2])
-            MoveTargetCell( 0, 1);
-        else if(keyInput[KEY_PAD_3])
-            MoveTargetCell( 1, 1);
-
-    break;
-
-    case WEAPON_SPELL_CONTEXT:
-        if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
-        {
-            ChangeControlContext(NORMAL_CONTEXT);
-        }
-    break;
-
     }
 }
 
@@ -131,8 +51,8 @@ void GuiSystem::UpdateElements()
 
     if(controlContext == TARGETTING_CONTEXT)
     {
-        targetXPosition = targetXCell * TILESIZE;
-        targetYPosition = targetYCell * TILESIZE;
+        targetDrawXPosition = targetScanXCell * TILESIZE;
+        targetDrawYPosition = targetScanYCell * TILESIZE;
     }
 }
 
@@ -162,27 +82,19 @@ void GuiSystem::DrawFrame()
             int charToInt = frameRunicString[i];
             al_draw_bitmap_region(gfxGuiFrameRunic,
                                   (charToInt-97)*frameIndividualRunicWidth, 0,
-                                   frameIndividualRunicWidth, frameIndividualRunicWidth,
-                                   frameRunicLead - frameIndividualRunicWidth*i,0,
-                                   0);
+                                  frameIndividualRunicWidth, frameIndividualRunicWidth,
+                                  frameRunicLead - frameIndividualRunicWidth*i,0,
+                                  0);
 
             al_draw_bitmap_region(gfxGuiFrameRunic,
                                   (charToInt-97)*frameIndividualRunicWidth, 0,
-                                   frameIndividualRunicWidth, frameIndividualRunicWidth,
-                                   frameRunicLead - frameIndividualRunicWidth*i,0,
-                                   0);
+                                  frameIndividualRunicWidth, frameIndividualRunicWidth,
+                                  frameRunicLead - frameIndividualRunicWidth*i,0,
+                                  0);
 
         }
     }
 
-}
-
-void GuiSystem::DrawTargetContext()
-{
-    al_draw_bitmap(gfxGuiTarget,
-                   targetXCell*TILESIZE + SCREEN_W/2 - playerXPosition,
-                   targetYCell*TILESIZE + SCREEN_H/2 - playerYPosition,
-                   0);
 }
 
 void GuiSystem::SetFrameRunicString(std::string update)

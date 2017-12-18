@@ -22,8 +22,8 @@ class Player: public Being
 
         par & name;
 
-        par & intrinsics;
-        par & properties; // array of Property
+        par & intrinsics; // vector of Property*
+        par & effects;
 
         par & inventory; // vector of Item*
 
@@ -47,8 +47,6 @@ public:
 
     void Logic();
     void PlayerAction();
-
-    void ProcessInput();
 };
 
 extern Player *player;

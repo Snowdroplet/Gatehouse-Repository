@@ -20,11 +20,29 @@ Being::Being()
     actionName = "UNKNOWN";
     actionBlocked = false;
     actionPoints = 0;
+
+    for(int i = 0; i < ITEM_EQUIP_CLASS_TOTAL-1; i++)
+    {
+        equippedItem[i] = nullptr;
+    }
 }
 
 Being::~Being()
 {
     delete graph;
+
+    for(std::vector<Property*>::iterator it = intrinsics.begin(); it != intrinsics.end();)
+    {
+        delete *it;
+        intrinsics.erase(it);
+    }
+
+    for(std::vector<Property*>::iterator it = effects.begin(); it != effects.end();)
+    {
+        delete *it;
+        effects.erase(it);
+    }
+
 }
 
 void Being::Move(int inputDirection)
@@ -181,5 +199,48 @@ void Being::ProgressIdleAnimation()
 void Being::ResetPath()
 {
     currentPath.clear();
+}
+
+void Being::RecalculateEffectiveStats()
+{
+    weaponPhysicalDamage = 0;
+
+    for(int i = 0; i < ITEM_EQUIP_CLASS_TOTAL-1; i++)
+    {
+        for(std::vector<Property*>::iterator it = equippedItem[i]->properties.begin(); it != equippedItem[i]->properties.end(); ++it)
+        {
+            switch((*it)->identity)
+            {
+            case PROP_PHYSICAL_DAMAGE:
+                weaponPhysicalDamage += (*it)->magnitude;
+                break;
+
+            case PROP_FIRE_DAMAGE:
+                weaponFireDamage += (*it)->magnitude;
+                break;
+            }
+        }
+    }
+
+}
+
+void Being::UpdateDefaultSpell()
+{
+    defaultSpell.minRange = equippedItem[ITEM_EQUIP_CLASS_WEAPON]->minRange;
+    defaultSpell.maxRange = equippedItem[ITEM_EQUIP_CLASS_WEAPON]->maxRange;
+
+
+}
+
+void Being::ReleaseSpell()
+{
+    currentSpell.cellsCovered.push_back(targetLockYCell*areaCellWidth+targetLockXCell);
+    castSpell = currentSpell;
+    currentSpell = defaultSpell;
+}
+
+void Being::WearEquipment()
+{
+
 }
 

@@ -8,10 +8,16 @@
 #include <vector>
 
 #include "gamesystem.h"
+
 #include "terminal.h"
 #include "allegrocustom.h"
+
 #include "graph.h"
+
 #include "property.h"
+
+#include "spell.h"
+
 #include "item.h"
 
 
@@ -83,13 +89,22 @@ public:
     int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase
 
     /// Unit game stats
-    float baseSpeed, effectiveSpeed;
+    float baseSpeed, speedModifier, effectiveSpeed;
 
-    Property intrinsics[60];
-    Property properties[60]; // A being with more than 40 active properties will be anihilated by chaos.
+    float weaponPhysicalDamage;
+    float weaponFireDamage;
+    float baseDefense, defenseModifier, effectiveDefense;
+
+    Spell defaultSpell; // The "unmodified" attack option, usually depending on current weapon.
+    Spell currentSpell; // Spell to
+    Spell castSpell;    // Spell to be picked up by global spell queue.
+
+    std::vector<Property*>intrinsics; // "default" magical effects
+    std::vector<Property*>effects; // A being with more than 40 active properties will be anihilated by chaos.
 
     /// Inventory
     std::vector<Item*>inventory;
+    Item* equippedItem[ITEM_EQUIP_CLASS_TOTAL];
 
     Being();
     ~Being();
@@ -105,6 +120,13 @@ public:
     void WarpTo(int destXCell, int destYCell);
     void SetPath(int destXCell, int destYCell);
     void TracePath();
+
+    void RecalculateEffectiveStats();
+    void UpdateDefaultSpell();
+    void ReleaseSpell();
+
+    void WearEquipment();
+    void RemoveEquipment();
 
 
 };

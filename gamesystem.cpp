@@ -78,26 +78,38 @@ void ChangeControlContext(int toWhatContext)
 #endif // D_CONTEXT_CHANGE
 }
 
-int targetMoveDelay;
-int targetXCell, targetYCell;
+int targetLockLevel = TARGET_LOCK_NONE;
+int targetScanMoveDelay;
+int targetScanXCell, targetScanYCell;
 int targetLockXCell, targetLockYCell;
-int targetLockedBeing;
-bool hasLockedBeing;
 
 
-void MoveTargetCell(int byX, int byY)
+void MoveTargetScanCell(int byX, int byY)
 {
     if(byX != 0)
-        if(targetXCell+byX < 0 || targetXCell+byX > areaCellWidth-1 || targetMoveDelay > 0)
+        if(targetScanXCell+byX < 0 || targetScanXCell+byX > areaCellWidth-1 || targetScanMoveDelay > 0)
             return;
 
     if(byY != 0)
-        if(targetYCell+byY < 0 || targetYCell+byY > areaCellHeight-1 || targetMoveDelay > 0)
+        if(targetScanYCell+byY < 0 || targetScanYCell+byY > areaCellHeight-1 || targetScanMoveDelay > 0)
             return;
 
-    targetXCell += byX;
-    targetYCell += byY;
-    targetMoveDelay = 5;
+    targetScanXCell += byX;
+    targetScanYCell += byY;
+    targetScanMoveDelay = 5;
+
+    /*
+    if(targetLockLevel == TARGET_LOCK_NONE)
+        std::cout << "T_NONE: ";
+    else if(targetLockLevel == TARGET_LOCK_AUTO)
+        std::cout << "T_AUTO: ";
+    else if(targetLockLevel == TARGET_LOCK_CELL)
+        std::cout << "T_CELL: ";
+    else if(targetLockLevel == TARGET_LOCK_BEING)
+        std::cout << "T_BEING: ";
+
+    std::cout << targetScanXCell << ", " << targetScanYCell << std::endl;
+    */
 }
 
 bool menuIsOpen = false;
