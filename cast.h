@@ -1,6 +1,0 @@
-#ifndef CAST_H_INCLUDED
-#define CAST_H_INCLUDED
-
-
-
-#endif // CAST_H_INCLUDED
