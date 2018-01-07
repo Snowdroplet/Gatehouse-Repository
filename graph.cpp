@@ -99,26 +99,26 @@ std::vector<Node*> Graph::RequestPath(int startX, int startY, int destX, int des
         //G (Move cost)
         switch(area->wallmap[(*it)->id])
         {
-        case WALL_EMPTY:
+        case WT_WALL_EMPTY:
             (*it)->moveCost += 10;
             break;
-        case WALL_IMPASSABLE:
+        case WT_WALL_IMPASSABLE:
             (*it)->moveCost += 100;
             //Consider closing the node at this point.
             break;
-        case WALL_BREAKABLE:
+        case WT_WALL_BREAKABLE:
             //More nuanced formula based on being's ability to break walls needed
             (*it)->moveCost += 100;
             break;
-        case WALL_HOLE:
+        case WT_WALL_HOLE:
             (*it)->moveCost += 100;
             //Close node at this point if being can't fly.
             break;
-        case WALL_MOAT:
+        case WT_WALL_MOAT:
             (*it)->moveCost += 100;
             //Close node at this point if being can't swim.
             break;
-        case WALL_DOOR:
+        case WT_WALL_DOOR:
             (*it)->moveCost += 20;
             //Close node at this point if being can't open doors.
             break;

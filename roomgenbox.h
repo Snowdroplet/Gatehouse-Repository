@@ -28,10 +28,12 @@ struct RoomGenBox
     int xVelocity, yVelocity;
 
 
-
     /// Misc information of this roombox
     bool designatedMainRoom; // If true, this room's dimensions have met the required thresholds to be a main room and has been designated as such.
     bool designatedHallRoom;
+
+    bool designatedStartRoom;
+    bool designatedEndRoom;
 
     RoomGenBox(int id, int x, int y, int w, int h);
     ~RoomGenBox();
