@@ -7,9 +7,9 @@
 #include <vector>
 #include <string>
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/vector.hpp>
+//#include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/text_iarchive.hpp>
+//#include <boost/serialization/vector.hpp>
 
 enum nonApplicableClass
 {
@@ -37,16 +37,20 @@ enum enumItemQuality
 
 enum enumEquipClass
 {
-    ITEM_EQUIP_CLASS_WEAPON = 0, // Shields count as weapons
-    ITEM_EQUIP_CLASS_HELM  = 1,
-    ITEM_EQUIP_CLASS_ARMOR = 2,
-    ITEM_EQUIP_CLASS_HANDS = 3,
-    ITEM_EQUIP_CLASS_SHOES = 4,
+    ITEM_EQUIP_CLASS_MAINHAND = 0, // Shields count as weapons
+    ITEM_EQUIP_CLASS_OFFHAND = 1,
+    ITEM_EQUIP_CLASS_HELM  = 2,
+    ITEM_EQUIP_CLASS_ARMOR = 3,
+    ITEM_EQUIP_CLASS_ARMS = 4,
+    ITEM_EQUIP_CLASS_LEGS = 5,
 
-    ITEM_EQUIP_CLASS_AMULET = 5,
-    ITEM_EQUIP_CLASS_RING   = 6,
+    ITEM_EQUIP_CLASS_ACCESSORY1 = 5,
+    ITEM_EQUIP_CLASS_ACCESSORY2 = 6,
 
-    ITEM_EQUIP_CLASS_AMMO = 7
+    ITEM_EQUIP_CLASS_RANGED = 7,
+    ITEM_EQUIP_CLASS_AMMO = 8,
+
+    ITEM_EQUIP_CLASS_TOTAL = 9
 };
 
 enum enumReadableClass
@@ -60,7 +64,7 @@ enum enumReadableClass
 class Item
 {
 public:
-
+/*
     friend class boost::serialization::access;
     template<class ItemArchive>
     void serialize(ItemArchive & iar, const unsigned int version)
@@ -94,7 +98,7 @@ public:
         iar & isRelic;
 
     }
-
+*/
 
 /// ###### ALL ITEMS #####
     bool active;  // An inactive item is marked for deletion
@@ -111,6 +115,8 @@ public:
     bool consecrationKnown; // Consecration be learned without identifying the base item. Conversely, lower identification doesn't reveal consecration.
     int identificationReq;  // Level of identification needed. Lv 0 items auto-identify. Level 1 items are fully identified with regular identification, level 2-3 items need high level identification.
 
+    bool stackable;
+
     int quality;
     int consecration;
     float weight;
@@ -126,13 +132,14 @@ public:
     int weaponClass; // Whether this item is sword, axe, bow, etc...
 
 
-    Property properties[20]; // An item that has more than 16 properties will be anihilated by chaos.
+    std::vector<Property*>properties; // An item that has more than 16 properties will be anihilated by chaos.
     std::string propertyReadout[20];
 
     int refinement;
     bool refinable;
 
-    int PVBase, DVBase;
+    int minRange, maxRange;
+    int optimalRange;
 
     int diceX;
     int baseDiceY, effectiveDiceY;
@@ -142,15 +149,15 @@ public:
 
     // All modifiers are local to the weapon, though there can be external properties, materials, etc have modifiers (kept track of by being)
 
-    int smallModifier;
-    int mediumModifer;
-    int largeModifier;
+    int baseVSSmall, effectiveVSSmall;
+    int baseVSMedium, effectiveVSMedium;
+    int baseVSLarge, effectiveVSLarge;
 
-    int hitModifier;
-    int criticalModifier;
-    int blockModifier;
-    int counterModifier;
-    int pierceModifier;
+    int baseAccuracyBonus, effectiveAccuracyBonus;
+    int baseCriticalBonus, effectiveCriticalBonus;
+    int baseBlockBonus, effectiveBlockBonus;
+    int baseCounterBonus, effectiveCounterBonus;
+    int baseIgnoreDefenseBonus, effectiveIgnoreDefenseBonus;
 
 /// ##### CONTAINER ITEMS #####
     bool isContainer;
@@ -170,7 +177,7 @@ public:
 
     int nutrition; // How much hunger is sated
 
-    Property conference[3]; // These properties will be copied to the eater.
+    std::vector<Property*>conferredToEater; // These properties will be copied to the eater.
 
 /// ##### TOOL ITEMS #####
     bool isTool;
@@ -181,7 +188,10 @@ public:
 /// #################################
 
     Item(); // Creates an all-purpose, useless template item
+    ~Item();
+
     void Initialize(int whatBaseItem); // Initalizes template item with the data of the base item.
+    void ProducePropertyReadout();
 
     void SetQuality(int whatQuality);
     void SetConsecration(int whatQuality);

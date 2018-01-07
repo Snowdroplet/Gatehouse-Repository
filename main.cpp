@@ -1,19 +1,35 @@
 /***
+Error:
+    NPC sprite drawing position updates too slow. (Probably has other cause.)
+
 To do:
+    !! Fire spell
+        if(keyInput[key_f]) and target is acquired
+            Player calls Being::ReleaseSpell();
+
+        Check UpdateObjects function for spell coverage functionality
+
+    !! Equipment system must be implemented before fire spell.
+        Change current equipment with 'w'. Add context: equipment.
+
+    !! Inventory system must be implemented before equipment system.
+        Add context: inventory.
+
+    ! Select active spell with 'z'.
+
+To optimize later:
+    ! Restructure so that UpdateObjects' non-animation functions
+        (esp. iterating through all vectors) is only called upon when "stuff" happens
+        checking every logic cycle seems a waste of CPU
+
     ! Fix sporadic infinite looping in distributing generation bodies
 
     ! Movement is not smooth, find out why and fix
 
-    !! Fire spell
-        if(key[key_f]) and target is acquired
-            Player calls Being::ReleaseSpell();
-
-
-
 */
 
 /***
-How to operate during gen visualization:
+How to operate during generator debug visualization:
 
     Q = Progress generation
     Numpad = move camera
@@ -35,7 +51,7 @@ How to operate debug:
 #include <cmath>
 #include <vector>
 
-#include <boost/filesystem.hpp>
+//#include <boost/filesystem.hpp>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -51,7 +67,7 @@ How to operate debug:
 #include "control.h"
 #include "resource.h"
 
-#include "extfile.h"
+//#include "extfile.h"
 
 #include "guisystem.h"
 #include "terminal.h"
@@ -69,18 +85,29 @@ How to operate debug:
 #include "player.h"
 #include "npc.h"
 
+/// Single-object classes ###########
 GuiSystem *guiSystem = nullptr;
 Generator *generator = nullptr;
 Area *area = nullptr;
 Player *player = nullptr;
 
+/// Item containers and functions ##################
+std::vector<Item*>items; // All items currently in play in the current area.
+std::vector<int>baseIDsKnown; // A list of all previously identified itemIDs. These will auto-identify when encountered again.
+
+void PopulateItems(); // List all items currently held by all beings,
+
+/// Spell containers and functions #################
+std::vector<Spell*>activeSpells;
+
+/// Being containers and functions #################
 std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to act.
 std::vector<Being*>walkAnimQueue; // All beings queued to animate walk.
 
 Being*currentAnimatedBeing = nullptr; // Which being is being animated, if an action other than walking is being animated.
 
-std::vector<Being*>targetableBeings; // All beings which can be locked on to during targetting context.
+std::vector<Being*>targetableBeings; // All beings which can be locked on to during targeting context.
 Being*hardTargetedBeing = nullptr;  // Which being is currently under explicit lock-on.
 Being*autoTargetedBeing = nullptr; // Which being is currently under auto-lock on. Will match hardTargetedBeing unless it is nullptr.
 
@@ -94,39 +121,28 @@ bool CompareTargetableDistanceAscending(Being *lhs, Being *rhs)
     return sqrt(pow(lhs->yCell - player->yCell, 2) + pow(lhs->xCell - player->xCell, 2)) <  sqrt(pow(rhs->yCell - player->yCell, 2) + pow(rhs->xCell - player->xCell, 2));
 }
 
-std::vector<Spell*>activeSpells;
+void PopulateTargetableBeings();
+Being* AcquireAutoTarget();
 
-std::vector<Item*>items; // All items currently in play.
-std::vector<Item*>floorItems; // All items currently on the floor.
-
-std::vector<int>baseIDsKnown; // A list of all previously identified itemIDs. These will auto-identify when encountered again.
-
-
+/// Main loop functions ##############################
 void GameLogic();
 void LoadingLogic();
 void TitleLogic();
-
 
 void GameDrawing();
 void LoadingDrawing();
 void TitleDrawing();
 
-
 void DrawGUI();
 void DrawTiles();
 void DrawDebugOverlay();
 
-void UpdateVectors(); //Update elements and delete elements that have been deactivated
-void PopulateTargetableBeings();
-Being* AcquireAutoTarget();
-
+void UpdateObjects(); //Update elements and delete elements that have been deactivated
 void ProcessInput(int whatContext); // Merge with control module once it is possible to put "player" in gamesystem
-
 void UpdateGamesystem(); // Merge with gamesystem once it is possible to put "player" in gamesystem
 
 
-
-/// MAIN
+/// MAIN() ############################################
 int main(int argc, char *argv[])
 {
     srand(time(nullptr));
@@ -135,46 +151,46 @@ int main(int argc, char *argv[])
     if(!al_init())
     {
         fprintf(stderr, "failed to initialize allegro!\n");
-        return -1;
+        return false;
     }
     if(!al_install_keyboard())
     {
         fprintf(stderr, "failed to install keyboard!\n");
-        return -1;
+        return false;
     }
     if(!al_install_mouse())
     {
         fprintf(stderr, "failed to install mouse!\n");
-        return -1;
+        return false;
     }
     if(!al_init_image_addon())
-        return -1;
+        return false;
     if(!al_init_primitives_addon())
-        return -1;
+        return false;
 
     al_init_font_addon();
 
     if(!al_init_ttf_addon())
-        return -1;
+        return false;
 
     if(!PHYSFS_init(argv[0]))
-        return -1;
+        return false;
 
     if(!PHYSFS_mount("./gamedata.zip", "/", 1))
     {
         fprintf(stderr, "gamedata not found!\n");
-        return -1;
+        return false;
     }
 
     al_set_physfs_file_interface();
 
-    AllegroCustomInit();
+    AllegroCustomColours();
 
     FPStimer = al_create_timer(1.0/FPS);
     if(!FPStimer)
     {
         fprintf(stderr, "failed to create fpstimer!\n");
-        return -1;
+        return false;
     }
 
     display = al_create_display(SCREEN_W, SCREEN_H);
@@ -182,7 +198,7 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "failed to create display!\n");
         al_destroy_timer(FPStimer);
-        return -1;
+        return false;
     }
 
     eventQueue = al_create_event_queue();
@@ -191,7 +207,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "failed to create event queue!\n");
         al_destroy_display(display);
         al_destroy_timer(FPStimer);
-        return -1;
+        return false;
     }
 
     al_register_event_source(eventQueue, al_get_display_event_source(display));
@@ -271,11 +287,15 @@ int main(int argc, char *argv[])
     }
 
     /// Save data
+
+    /*
     if(area != nullptr)
         SaveAreaState(area);
 
     if(player != nullptr)
         SavePlayerState(player);
+
+    */
 
     /// Cleanup
     if(player != nullptr)
@@ -287,6 +307,7 @@ int main(int argc, char *argv[])
     delete guiSystem;
 
     UnloadResources();
+
     al_destroy_timer(FPStimer);
     al_destroy_display(display);
     al_destroy_event_queue(eventQueue);
@@ -625,7 +646,7 @@ void GameLogic()
         turnLogicPhase = SELECT_ACTION;
     }
 
-    UpdateVectors();
+    UpdateObjects();
 }
 
 void LoadingLogic()
@@ -679,7 +700,6 @@ void LoadingLogic()
     {
         // What is produced by the generator becomes the area.
 
-        area->occupied = generator->occupied;
         area->floormap = generator->floormap;
         area->wallmap  = generator->wallmap;
         area->featuremap = generator->featuremap;
@@ -968,28 +988,29 @@ void TitleDrawing()
 
 void DrawGUI()
 {
-    if(controlContext == TARGETTING_CONTEXT)
+    if(controlContext == TARGETING_CONTEXT)
     {
         al_draw_bitmap(gfxGuiTarget,
-        targetScanXCell*TILESIZE + SCREEN_W/2 - playerXPosition,
-        targetScanYCell*TILESIZE + SCREEN_H/2 - playerYPosition,
-        0);
+                       targetScanXCell*TILESIZE + SCREEN_W/2 - playerXPosition,
+                       targetScanYCell*TILESIZE + SCREEN_H/2 - playerYPosition,
+                       0);
 
         if(!targetableBeings.empty())
             for(unsigned int i = 0; i < targetableBeings.size(); i++)
             {
                 c_al_draw_centered_bitmap(gfxGuiTargetableListTag,
-                                  targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
-                                  targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
-                                   0);
+                                          targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
+                                          targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
+                                          0);
 
-                char aChar = 'a' + i;
-                std::string intAlpha = std::to_string(aChar);
+                std::string intAlpha;
+                intAlpha = (char)97+i;
+
                 s_al_draw_centered_text(terminalFont, NEUTRAL_WHITE,
-                            targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
-                            targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
-                            ALLEGRO_ALIGN_CENTER,
-                            intAlpha);
+                                        targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
+                                        targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
+                                        ALLEGRO_ALIGN_CENTER,
+                                        intAlpha);
             }
     }
 
@@ -1144,10 +1165,58 @@ void DrawDebugOverlay()
 
 /// ########## ########## BEGIN CLASS AND MEMBER OBJECT MANAGEMENT FUNCTIONS ########## ##########
 
-void UpdateVectors()
+void UpdateObjects()
 {
+    for(std::vector<Item*>::iterator it = items.begin(); it != items.end();)
+    {
+        if(gameExit)
+            (*it)->active = false;
+
+        if(!(*it)->active)
+        {
+            delete *it;
+            items.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+
+    for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
+    {
+        for(std::vector<int>::iterator ccit = (*it)->cellsCovered.begin(); ccit != (*it)->cellsCovered.end(); ++ccit)
+        {
+            if(area->beingmap[*ccit] != nullptr)
+            {
+                // Combine target being's active effects vector with spell's effects vector.
+                Being*bpointer = area->beingmap[*ccit];
+                bpointer->effects.insert(bpointer->effects.end(),(*it)->effects.begin(), (*it)->effects.end());
+            }
+        }
+
+        (*it)->Logic();
+
+
+        if(gameExit)
+            (*it)->active = false;
+
+        if(!(*it)->active)
+        {
+            delete *it;
+            activeSpells.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
     for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end();)
     {
+        area->beingmap[(*it)->yCell * areaCellWidth + (*it)->xCell] = nullptr; // "Uproot" being from map to fiddle with it
+
         //Check the derived type and call the logic function specific to its class.
         //GameLogic() just handles data that needs to be constantly updated.
 
@@ -1173,28 +1242,26 @@ void UpdateVectors()
         }
         else
         {
-            ++it;
-        }
-    }
-
-    for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
-    {
-        if(gameExit)
-            (*it)->active = false;
-
-        if(!(*it)->active)
-        {
-            delete *it;
-            activeSpells.erase(it);
-        }
-        else
-        {
+            area->beingmap[(*it)->yCell * areaCellWidth + (*it)->xCell] = (*it); // "Plant" being back into map
             ++it;
         }
     }
 }
 
 /// ########## ########## END CLASS AND MEMBER OBJECT MANAGMEMENT FUNCTIONS ########## ##########
+
+void PopulateItems()
+{
+    items.clear();
+
+    /*
+
+    for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
+    {
+
+    }
+    */
+}
 
 void PopulateTargetableBeings()
 {
@@ -1218,7 +1285,7 @@ void PopulateTargetableBeings()
 
 Being* AcquireAutoTarget()
 {
-    /* Function to target closest NPC by default. If no such NPC, initalize targetting at player cell by default (no lock-on)*/
+    /* Function to target closest NPC by default. If no such NPC, initalize targeting at player cell by default (no lock-on)*/
 
     targetableBeings.clear();
     PopulateTargetableBeings();
@@ -1226,7 +1293,7 @@ Being* AcquireAutoTarget()
     if(!targetableBeings.empty())
     {
         // sort by distance to player
-            std::sort(targetableBeings.begin(), targetableBeings.end(), CompareTargetableDistanceAscending);
+        std::sort(targetableBeings.begin(), targetableBeings.end(), CompareTargetableDistanceAscending);
 
         targetLockXCell = targetScanXCell = targetableBeings[0]->xCell;
         targetLockYCell = targetScanYCell = targetableBeings[0]->yCell;
@@ -1262,6 +1329,8 @@ void ProcessInput(int whatContext)
         }
         else // If !actionBlocked
         {
+/// Normal control context (interpret alphanumeric [non-keypad])////////////////////////////////////////////////////////////////////////
+
             if(keyInput[KEY_F])
             {
                 if(targetLockLevel == TARGET_LOCK_NONE)
@@ -1270,28 +1339,66 @@ void ProcessInput(int whatContext)
                     autoTargetedBeing = AcquireAutoTarget();
                     if(autoTargetedBeing == nullptr)
                     {
-                         // Nothing happens. To do: terminal outputs: "No target selected, with msg spam delay"
+                        // Nothing happens. To do: terminal outputs: "No target selected, with msg spam delay"
                     }
                     else
                     {
-                        player->ReleaseSpell();
+                        player->ReleaseCurrentSpell();
                     }
                 }
 
                 if(targetLockLevel == TARGET_LOCK_AUTO)
                 {
-                    player->ReleaseSpell();
+                    player->ReleaseCurrentSpell();
+                    //player->actionCost = 100;
+                    //submittedPlayerCommand = true;
                 }
                 else if(targetLockLevel == TARGET_LOCK_CELL)
                 {
-                    player->ReleaseSpell();
+                    player->ReleaseCurrentSpell();
+                    //player->actionCost = 100;
+                    //submittedPlayerCommand = true;
                 }
                 else if(targetLockLevel == TARGET_LOCK_BEING)
                 {
-                    player->ReleaseSpell();
+                    player->ReleaseCurrentSpell();
+                    //player->actionCost = 100;
+                    //submittedPlayerCommand = true;
                 }
 
             }
+
+            else if(keyInput[KEY_G])
+            {
+                // List pickup-able items.
+            }
+
+            else if(keyInput[KEY_I] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,INVENTORY_CONTEXT);
+            }
+
+            else if(keyInput[KEY_L] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,TARGETING_CONTEXT);
+
+                if(targetLockLevel < TARGET_LOCK_MARKER_HARD)
+                    autoTargetedBeing = AcquireAutoTarget();
+                else
+                {
+                    targetLockXCell = targetScanXCell = playerXCell;
+                    targetLockYCell = targetScanYCell = playerYCell;
+                    targetLockLevel = TARGET_LOCK_NONE;
+                }
+
+            }
+
+            else if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT, WEAPON_SPELL_CONTEXT);
+            }
+
+/// Normal control context (interpret keypad) ////////////////////////////////////////////////////////////////////////
 
             if(keyInput[KEY_PAD_8] || keyInput[KEY_UP])    keypadDirection += 1000;
             if(keyInput[KEY_PAD_4] || keyInput[KEY_LEFT])  keypadDirection +=  100;
@@ -1306,41 +1413,20 @@ void ProcessInput(int whatContext)
                 if(keyInput[KEY_PAD_3]) keypadDirection =   11;
                 if(keyInput[KEY_PAD_5]) keypadDirection = 1111;
             }
-        }
 
-        if(keypadDirection > 0)
-        {
-            player->actionCost = 100;
-            player->currentAction = ACTION_WALK;
-            // check emptiness
-            player->Move(keypadDirection);
-            submittedPlayerCommand = true;
-        }
-
-
-        if(keyInput[KEY_L] && controlContextChangeDelay == 0)
-        {
-            ChangeControlContext(TARGETTING_CONTEXT);
-
-            if(targetLockLevel < TARGET_LOCK_MARKER_HARD)
-                autoTargetedBeing = AcquireAutoTarget();
-            else
+            if(keypadDirection > 0)
             {
-                targetLockXCell = targetScanXCell = playerXCell;
-                targetLockYCell = targetScanYCell = playerYCell;
-                targetLockLevel = TARGET_LOCK_NONE;
+                player->actionCost = 100;
+                player->currentAction = ACTION_WALK;
+                // check emptiness
+                player->Move(keypadDirection);
+                submittedPlayerCommand = true;
             }
-
         }
-        else if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
-        {
-            ChangeControlContext(WEAPON_SPELL_CONTEXT);
-        }
-
         break;
+/// Targeting control context ///////////////////////////////////////////////////////////////////////////////
 
-    case TARGETTING_CONTEXT:
-
+    case TARGETING_CONTEXT:
         /*
         if no targets are available
         */
@@ -1356,17 +1442,17 @@ void ProcessInput(int whatContext)
                     targetScanYCell = targetLockYCell = hardTargetedBeing->yCell;
 
                     targetLockLevel = TARGET_LOCK_BEING;
-                    ChangeControlContext(NORMAL_CONTEXT);
+                    ChangeControlContext(TARGETING_CONTEXT,NORMAL_CONTEXT);
 
                     break;
                 }
             }
         }
 
-        // Pressing L: Leave targetting context, return to normal context
+        // Pressing L: Leave targeting context, return to normal context
         if(keyInput[KEY_L] && controlContextChangeDelay == 0)
         {
-            ChangeControlContext(NORMAL_CONTEXT);
+            ChangeControlContext(TARGETING_CONTEXT, NORMAL_CONTEXT);
         }
         else if(keyInput[KEY_PAD_5] || keyInput[KEY_ENTER])
         {
@@ -1377,7 +1463,7 @@ void ProcessInput(int whatContext)
             targetLockXCell = targetScanXCell;
             targetLockYCell = targetScanYCell;
 
-            ChangeControlContext(NORMAL_CONTEXT);
+            ChangeControlContext(TARGETING_CONTEXT, NORMAL_CONTEXT);
         }
         else if(keyInput[KEY_PAD_7])
             MoveTargetScanCell(-1,-1);
@@ -1398,10 +1484,28 @@ void ProcessInput(int whatContext)
 
         break;
 
+/// Inventory context //////////////////////////////////////////////////////////////////////////////////////
+
+    case INVENTORY_CONTEXT:
+        if(keyInput[KEY_I]) // Should later change this to ESC
+            ChangeControlContext(INVENTORY_CONTEXT, NORMAL_CONTEXT);
+
+        for(unsigned int i = KEY_A; i < KEY_Z; i++)
+        {
+            if(keyInput[i])
+            {
+
+            }
+        }
+
+        break;
+
+/// Weapon spell context ///////////////////////////////////////////////////////////////////////////////////
+
     case WEAPON_SPELL_CONTEXT:
         if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
         {
-            ChangeControlContext(NORMAL_CONTEXT);
+            ChangeControlContext(WEAPON_SPELL_CONTEXT, NORMAL_CONTEXT);
         }
         break;
 

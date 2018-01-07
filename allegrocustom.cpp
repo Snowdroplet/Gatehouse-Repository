@@ -1,5 +1,10 @@
 #include "allegrocustom.h"
 
+ALLEGRO_DISPLAY *display;
+ALLEGRO_EVENT_QUEUE *eventQueue;
+ALLEGRO_TIMER *FPStimer;
+ALLEGRO_EVENT ev;
+ALLEGRO_MOUSE_STATE mouseState;
 
 ALLEGRO_COLOR NEUTRAL_WHITE;
 ALLEGRO_COLOR DIM_NEUTRAL_WHITE;
@@ -22,7 +27,7 @@ ALLEGRO_COLOR POISON_GREEN;
 ALLEGRO_COLOR BRIGHT_GREEN;
 ALLEGRO_COLOR BLOOD_RED;
 
-void AllegroCustomInit()
+void AllegroCustomColours()
 {
     NEUTRAL_WHITE = al_map_rgb(255,255,255);
     DIM_NEUTRAL_WHITE = al_map_rgb(200,200,200);
@@ -74,8 +79,15 @@ void s_al_draw_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, floa
     al_draw_text(font, color, x, y, flags, c);
 }
 
+void al_draw_centered_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, char const* text)
+{
+    // Note that this function only centers on the y dimension, neglecting the x, because too convoluted.
+    al_draw_text(font, color, x, y-al_get_font_line_height(font)/2, flags, text);
+}
+
 void s_al_draw_centered_text(const ALLEGRO_FONT *font, ALLEGRO_COLOR color, float x, float y, int flags, std::string text)
-{ // Note that this function only centers on the y dimension, neglecting the x, because too convoluted.
+{
+    // Note that this function only centers on the y dimension, neglecting the x, because too convoluted.
     const char *c = text.c_str();
     al_draw_text(font, color, x, y-al_get_font_line_height(font)/2, flags, c);
 }

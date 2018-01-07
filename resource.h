@@ -94,6 +94,8 @@ extern ALLEGRO_BITMAP *gfxGuiTarget;
 extern ALLEGRO_BITMAP *gfxGuiTargetHard;
 extern ALLEGRO_BITMAP *gfxGuiTargetableListTag;
 
+extern ALLEGRO_BITMAP *gfxGuiInventoryWindow;
+
 extern ALLEGRO_BITMAP *gfxPlayer;
 extern ALLEGRO_BITMAP *gfxNPCPassive[2];
 extern ALLEGRO_BITMAP *gfxTerminal;

@@ -16,9 +16,9 @@ public:
     FrameRune();
     ~FrameRune();
     void Set(char whichRune,
-                    float iXPosition, float iYPosition,
-                    float iScroll, float iTermination, // Repeats at initial position when distance scrolled meets or exceeds termination distance.
-                    float iXVeloc, float iYVeloc);
+             float iXPosition, float iYPosition,
+             float iScroll, float iTermination, // Repeats at initial position when distance scrolled meets or exceeds termination distance.
+             float iXVeloc, float iYVeloc);
     void Scroll();
 };
 

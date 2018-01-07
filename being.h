@@ -21,9 +21,9 @@
 #include "item.h"
 
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/base_object.hpp>
+//#include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/text_iarchive.hpp>
+//#include <boost/serialization/base_object.hpp>
 
 enum enumBeingAnimationStates
 {
@@ -44,12 +44,14 @@ enum enumBeingPossibleActions
 
 class Being // Make this class abstract later
 {
+    /*
     friend class boost::serialization::access;
     template<class BeingArchive>
     void serialize(BeingArchive & par, const unsigned int version)
     {
 
     }
+    */
 
 public:
 
@@ -89,6 +91,10 @@ public:
     int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase
 
     /// Unit game stats
+    float baseStrength, strengthModifier, effectiveStrength;
+    float baseDexterity, dexterityModifier, effectiveDexterity;
+    float baseConstitution, constitutionModifier, effectiveConstitution;
+
     float baseSpeed, speedModifier, effectiveSpeed;
 
     float weaponPhysicalDamage;
@@ -103,8 +109,8 @@ public:
     std::vector<Property*>effects; // A being with more than 40 active properties will be anihilated by chaos.
 
     /// Inventory
-    std::vector<Item*>inventory;
-    Item* equippedItem[ITEM_EQUIP_CLASS_TOTAL];
+    Item* inventory[30]; // Currently capping inventory at 30 items.
+    Item* equipped[ITEM_EQUIP_CLASS_TOTAL];
 
     Being();
     ~Being();
@@ -123,7 +129,7 @@ public:
 
     void RecalculateEffectiveStats();
     void UpdateDefaultSpell();
-    void ReleaseSpell();
+    void ReleaseCurrentSpell();
 
     void WearEquipment();
     void RemoveEquipment();

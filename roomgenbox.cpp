@@ -13,6 +13,9 @@ RoomGenBox::RoomGenBox(int id, int x, int  y, int w, int h)
     designatedMainRoom = false;
     designatedHallRoom = false;
 
+    designatedStartRoom = false;
+    designatedEndRoom = false;
+
     mtRng.seed(static_cast<unsigned int>(std::time(0)));
 
     cellWidth = width/MINI_TILESIZE;
@@ -29,7 +32,7 @@ bool RoomGenBox::CheckOverlap(RoomGenBox* other)
     if(other != this)
     {
         if(other->x1 < x2 && other->x2 > x1 &&
-           other->y1 < y2 && other->y2 > y1)
+                other->y1 < y2 && other->y2 > y1)
             return true;
         else
             return false;

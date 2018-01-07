@@ -16,13 +16,16 @@ Area::Area(bool savedArea)
 
 }
 
+/*
 void Area::InitByArchive()
 {
 }
+*/
 
 void Area::InitialContainers()
 {
-    occupied = std::vector<bool>(areaCellWidth*areaCellHeight,false); // All cells are unoccupied by default.
+    beingmap = std::vector<Being*>(areaCellWidth*areaCellHeight,nullptr); // All cells are unoccupied by default.
+
     floormap = std::vector<int>(areaCellWidth*areaCellHeight, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default.
     wallmap = std::vector<int>(areaCellWidth*areaCellHeight, WT_WALL_EMPTY); // All wall spaces are nonexistent by default.
     featuremap = std::vector<int>(areaCellWidth*areaCellHeight, FEATURE_EMPTY); // All cells unfurnished by default.
@@ -37,7 +40,7 @@ void Area::InitialContainers()
 
 void Area::ReleaseContainers()
 {
-    std::vector<bool>().swap(occupied);
+    std::vector<Being*>().swap(beingmap);
     std::vector<int>().swap(floormap);
     std::vector<int>().swap(wallmap);
     std::vector<int>().swap(featuremap);
@@ -56,6 +59,7 @@ Area::~Area()
 
 }
 
+/*
 bool SaveAreaState(Area *target)
 {
     std::string fileName = (target->name) + ".areafile";
@@ -105,5 +109,5 @@ bool LoadAreaState(std::string areaName, Area *target, bool baseState)
     return true;
 }
 
-
+*/
 

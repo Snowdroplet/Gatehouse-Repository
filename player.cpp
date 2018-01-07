@@ -9,6 +9,7 @@ Player::Player(bool savedPlayer)
 
 }
 
+/*
 void Player::InitByArchive()
 {
     derivedType = BEING_TYPE_PLAYER;
@@ -21,6 +22,7 @@ void Player::InitByArchive()
 
     animationFrameThreshold = 1;
 }
+*/
 
 Player::Player(int spawnXCell, int spawnYCell)
 {
@@ -59,6 +61,7 @@ void Player::PlayerAction()
 
 }
 
+/*
 bool SavePlayerState(Player *target)
 {
     std::string fileName = (target->name) + ".playerfile";
@@ -96,3 +99,4 @@ bool LoadPlayerState(std::string playerName, Player *target)
 
     return true;
 }
+*/

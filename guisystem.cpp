@@ -49,7 +49,7 @@ void GuiSystem::UpdateElements()
         }
     }
 
-    if(controlContext == TARGETTING_CONTEXT)
+    if(controlContext == TARGETING_CONTEXT)
     {
         targetDrawXPosition = targetScanXCell * TILESIZE;
         targetDrawYPosition = targetScanYCell * TILESIZE;

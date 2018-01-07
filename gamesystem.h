@@ -8,6 +8,12 @@
 #include <algorithm>
 #include <allegro5/allegro5.h>
 
+/// Forward Declarations
+
+class Being;
+class Node;
+class Graph;
+
 /// *** Debug defines. Comment out line to deactivate corresponding debug functionality. ***
 
 /// Main
@@ -87,12 +93,6 @@ enum enumInputDirections
 };
 
 /// DISPLAY AND UI
-
-extern ALLEGRO_DISPLAY *display;
-extern ALLEGRO_EVENT_QUEUE *eventQueue;
-extern ALLEGRO_TIMER *FPStimer;
-extern ALLEGRO_EVENT ev;
-extern ALLEGRO_MOUSE_STATE mouseState;
 
 const float FPS = 60;
 
@@ -183,20 +183,22 @@ enum enumControlContexts
 {
     NORMAL_CONTEXT = 0,
 
-    TARGETTING_CONTEXT = 1,
+    TARGETING_CONTEXT = 1,
 
     WEAPON_SPELL_CONTEXT = 2,
-    TOOL_CONTEXT = 3,
+    INVENTORY_CONTEXT = 3,
     SPELL_CONTEXT = 4,
     ACTION_CONTEXT = 5,
-    FAMILIAR_CONTEXT = 6,
-    PRAYER_CONTEXT = 7
+    FOLLOWER_CONTEXT = 6,
+
+    ITEM_USAGE_CONTEXT = 7
 };
 
-extern int controlContext;
+extern int controlContext, previousControlContext;
 extern int controlContextChangeDelay;
 
-void ChangeControlContext(int toWhatContext);
+void ChangeControlContext(int currentContext, int toWhatContext);
+void ReturnPreviousContext();
 
 enum enumTargetLockLevels
 {

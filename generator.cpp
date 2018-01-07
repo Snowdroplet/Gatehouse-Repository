@@ -134,7 +134,7 @@ void Generator::Separation()
 
         generationPhaseComplete = true;
 #ifdef D_GEN_PHASE_CHECK
-    std::cout << "Room generation boxes separated..." << std::endl;
+        std::cout << "Room generation boxes separated..." << std::endl;
 #endif // D_GEN_PHASE_CHECK
     }
 }
@@ -906,32 +906,24 @@ void Generator::Furnish()
     // Naively choose the first and last room (by element) to be start and end rooms.
     // Later, record the two furthest rooms ids apart (by MST node distance before re-addition of edges).
     mainRooms[0]->designatedStartRoom = true;
-
-    int downstairsCell = rand()%(mainRooms[0]->cellWidth*mainRooms[0]->cellHeight); // Choose a cell from the number of cells in the room (its area)
-
-    downstairsXCell = downstairsCell%areaCellHeight;
-    downstairsXCell += mainRooms[0]->x1/MINI_TILESIZE;
-
-    downstairsYCell = downstairsCell/areaCellHeight; // Int rounding drops decimal
-    downstairsYCell += mainRooms[0]->y1/MINI_TILESIZE;
-
+    int rsx = rand()%(mainRooms[0]->cellWidth);
+    int rsy = rand()%(mainRooms[0]->cellHeight);
+    downstairsXCell = (mainRooms[0]->x1)/MINI_TILESIZE +rsx;
+    downstairsYCell = (mainRooms[0]->y1)/MINI_TILESIZE +rsy;
 
     mainRooms[mainRooms.size()-1]->designatedEndRoom = true;
-
-    int upstairsCell = rand()%(mainRooms[mainRooms.size()-1]->cellWidth*mainRooms[mainRooms.size()-1]->cellHeight);
-
-    upstairsXCell = upstairsCell%mainRooms[mainRooms.size()-1]->cellWidth;
-    upstairsXCell += mainRooms[mainRooms.size()-1]->x1/MINI_TILESIZE;
-
-    upstairsYCell = upstairsCell/mainRooms[mainRooms.size()-1]->cellHeight;
-    upstairsYCell += mainRooms[mainRooms.size()-1]->y1/MINI_TILESIZE;
-
+    int rex = rand()%(mainRooms[mainRooms.size()-1]->cellWidth);
+    int rey = rand()%(mainRooms[mainRooms.size()-1]->cellHeight);
+    upstairsXCell = (mainRooms[mainRooms.size()-1]->x1)/MINI_TILESIZE + rex;
+    upstairsYCell = (mainRooms[mainRooms.size()-1]->y1)/MINI_TILESIZE + rey;
 
     featuremap[downstairsYCell*areaCellWidth+downstairsXCell] = FEATURE_DOWNSTAIRS;
     featuremap[upstairsYCell*areaCellWidth+upstairsXCell] = FEATURE_UPSTAIRS;
 
     std::cout << "Room ID " << mainRooms[0]->boxNumber << " designated start room." << std::endl;
     std::cout << "Downstairs located at " << downstairsXCell << ", " << downstairsYCell << std::endl;
+    std::cout << "Room ID " << mainRooms[mainRooms.size()-1]->boxNumber << " designated end room." << std::endl;
+    std::cout << "Downstairs located at " << upstairsXCell << ", " << upstairsYCell << std::endl;
 
     for(int i = 0; i < areaCellWidth*areaCellHeight; i++)
     {
@@ -1055,7 +1047,7 @@ void Generator::InitialState()
     mainRoomWidthThreshold = MINI_TILESIZE*7;
     mainRoomHeightThreshold = MINI_TILESIZE*7;
 
-    SetRemovedEdgeReturnPercentage( (float)(rand()%60) / 100 ); // 0-60%
+    SetRemovedEdgeReturnPercentage( (float)(rand()%75) / 100 ); // 0-60%
 
     preferedHallwayLayout = PREFER_CONVEX;
 
@@ -1081,7 +1073,6 @@ void Generator::InitialState()
 void Generator::InitialOutputContainers()
 {
     genLayout = std::vector<int>(areaCellWidth*areaCellHeight, GEN_CELL_EMPTY); // Generation layout is empty by default
-    occupied = std::vector<bool>(areaCellWidth*areaCellHeight,false); // All cells are unoccupied by default
     floormap = std::vector<int>(areaCellWidth*areaCellHeight, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default
     wallmap = std::vector<int>(areaCellWidth*areaCellHeight, WT_WALL_EMPTY); // All wall spaces are nonexistent by default
     featuremap = std::vector<int>(areaCellWidth*areaCellHeight, FEATURE_EMPTY);
@@ -1095,7 +1086,6 @@ void Generator::InitialOutputContainers()
 
 void Generator::ReleaseOutputContainers()
 {
-    std::vector<bool>().swap(occupied);
     std::vector<int>().swap(floormap);
     std::vector<int>().swap(wallmap);
     std::vector<int>().swap(featuremap);

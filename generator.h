@@ -163,15 +163,14 @@ public:
 
     void Generate();                // Generates an area.
     /// Output vectors corresponding to vectors in Area.
-    std::vector<bool>occupied;               // a
-    std::vector<int>floormap;                // b
-    std::vector<int>wallmap;                 // c
-    std::vector<int>featuremap;              // d
+    std::vector<int>floormap;                // a
+    std::vector<int>wallmap;                 // b
+    std::vector<int>featuremap;              // c
 
-    std::vector<int>floormapImageCategory;   // e
-    std::vector<int>floormapImageIndex;      // f
-    std::vector<int>wallmapImageCategory;    // g
-    std::vector<int>wallmapImageIndex;       // h
+    std::vector<int>floormapImageCategory;   // d
+    std::vector<int>floormapImageIndex;      // e
+    std::vector<int>wallmapImageCategory;    // f
+    std::vector<int>wallmapImageIndex;       // g
     std::vector<int>featuremapImageCategory;
     std::vector<int>featuremapImageIndex;
 

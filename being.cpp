@@ -23,7 +23,7 @@ Being::Being()
 
     for(int i = 0; i < ITEM_EQUIP_CLASS_TOTAL-1; i++)
     {
-        equippedItem[i] = nullptr;
+        equipped[i] = nullptr;
     }
 }
 
@@ -207,7 +207,7 @@ void Being::RecalculateEffectiveStats()
 
     for(int i = 0; i < ITEM_EQUIP_CLASS_TOTAL-1; i++)
     {
-        for(std::vector<Property*>::iterator it = equippedItem[i]->properties.begin(); it != equippedItem[i]->properties.end(); ++it)
+        for(std::vector<Property*>::iterator it = equipped[i]->properties.begin(); it != equipped[i]->properties.end(); ++it)
         {
             switch((*it)->identity)
             {
@@ -226,13 +226,32 @@ void Being::RecalculateEffectiveStats()
 
 void Being::UpdateDefaultSpell()
 {
-    defaultSpell.minRange = equippedItem[ITEM_EQUIP_CLASS_WEAPON]->minRange;
-    defaultSpell.maxRange = equippedItem[ITEM_EQUIP_CLASS_WEAPON]->maxRange;
+    // Later change to "stances" - default, twohanded... dual-weapon is the same as default, although being gains dual-attack spell.
+
+    // Bare handed
+    if(equipped[ITEM_EQUIP_CLASS_MAINHAND] == nullptr && equipped[ITEM_EQUIP_CLASS_OFFHAND] == nullptr)
+    {
+        defaultSpell.minRange = effectiveStrength;
+    }
+
+    // Twohanded
+    else if(equipped[ITEM_EQUIP_CLASS_MAINHAND] != nullptr && equipped[ITEM_EQUIP_CLASS_OFFHAND] == nullptr )
+    {
+        defaultSpell.minRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->minRange;
+        defaultSpell.maxRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->maxRange;
+    }
+
+    // Dual weapon
+    else if(equipped[ITEM_EQUIP_CLASS_MAINHAND] != nullptr && equipped[ITEM_EQUIP_CLASS_OFFHAND] != nullptr )
+    {
+        defaultSpell.minRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->minRange;
+        defaultSpell.maxRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->maxRange;
+    }
 
 
 }
 
-void Being::ReleaseSpell()
+void Being::ReleaseCurrentSpell()
 {
     currentSpell.cellsCovered.push_back(targetLockYCell*areaCellWidth+targetLockXCell);
     castSpell = currentSpell;

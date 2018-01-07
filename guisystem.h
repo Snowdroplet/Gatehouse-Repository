@@ -1,6 +1,9 @@
 #ifndef GUI_H_INCLUDED
 #define GUI_H_INCLUDED
 
+#include <vector>
+#include <cmath>
+
 #include "gamesystem.h"
 #include "control.h"
 #include "resource.h"

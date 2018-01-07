@@ -10,6 +10,7 @@ The Area object contains the layout of the current level - Walls and tiles, fiel
 #include "allegrocustom.h"
 #include "resource.h"
 #include "generator.h"
+#include "being.h"
 
 #include <cstdlib>
 #include <cmath>
@@ -19,14 +20,16 @@ The Area object contains the layout of the current level - Walls and tiles, fiel
 
 #include <boost/random.hpp>
 
-#include <boost/serialization/vector.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
+//#include <boost/serialization/vector.hpp>
+//#include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/text_iarchive.hpp>
 
 #include <allegro5/allegro_native_dialog.h>
 
+
 class Area
 {
+    /*
     /// Concerning the serialization of an Area
     friend class boost::serialization::access;
     template<class AreaArchive>
@@ -36,13 +39,12 @@ class Area
         aar & floor;
         aar & dLevel;
 
-        aar & occupied;
+        aar & beingmap;
         aar & floormap;
         aar & wallmap;
         aar & featuremap;
     }
-
-private:
+    */
 
 
 public:
@@ -54,10 +56,17 @@ public:
     int dLevel;        // The dungeon level or difficulty level of the floor determines what monsters and treasure will be created. Roughly corresponds to floor.
 
     /// Concerning the layout of the level, as well as the features present.
-    std::vector<bool>occupied; // Impassable cells, walls, holes, and cells with monsters or NPCs considered occupied.
+
+    int upstairsXCell, upstairsYCell;
+    int downstairsXCell, downstairsYCell;
+
+    std::vector<Being*>beingmap; // Does a being occupy this cell?
+
     std::vector<int>floormap;
     std::vector<int>wallmap;
     std::vector<int>featuremap;
+
+
 
     /* std::vector<bool>cellDiscoveredByPlayer */
     /* std::vector<bool>cellSeenByPlayer;      */
@@ -74,7 +83,7 @@ public:
 
     Area();                  // Default constructor which creates random square test area. Data normally read in the serialized "areafile" is initialized here.
     Area(bool savedArea);
-    void InitByArchive();
+    //void InitByArchive();
     ~Area();
 
     void InitialContainers();
@@ -86,7 +95,9 @@ public:
 };
 extern Area *area;
 
+/*
 bool SaveAreaState(Area *target);
 bool LoadAreaState(std::string areaName, Area *target, bool baseState);
+*/
 
 #endif // AREA_H_INCLUDED

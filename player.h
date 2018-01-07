@@ -7,13 +7,14 @@
 #include "being.h"
 #include "extfile.h"
 
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/vector.hpp>
+//#include <boost/archive/text_oarchive.hpp>
+//#include <boost/archive/text_iarchive.hpp>
+//#include <boost/serialization/base_object.hpp>
+//#include <boost/serialization/vector.hpp>
 
 class Player: public Being
 {
+    /*
     friend class boost::serialization::access;
     template<class PlayerArchive>
     void serialize(PlayerArchive & par, const unsigned int version)
@@ -37,11 +38,12 @@ class Player: public Being
         par & actionCost;
 
     }
+    */
 
 public:
     Player();
     Player(bool savedPlayer);
-    void InitByArchive();
+    //void InitByArchive();
     Player(int spawnXCell, int spawnYCell);
     virtual ~Player();
 
@@ -51,7 +53,9 @@ public:
 
 extern Player *player;
 
+/*
 bool SavePlayerState(Player *target);
 bool LoadPlayerState(std::string playerName, Player *target);
+*/
 
 #endif // PLAYER_H_INCLUDED

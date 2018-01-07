@@ -12,6 +12,8 @@ Item::Item()
     unidentifiedName = "unided base";
     description = "default item";
 
+    stackable = false;
+
     quality = ITEM_QUALITY_UNDETERMINED;
     consecration = ITEM_CONSECRATION_UNDETERMINED;
 
@@ -28,8 +30,9 @@ Item::Item()
     refinement = 0;
     refinable = false;
 
-    PVBase = 0;
-    DVBase = 0;
+    minRange = 1;
+    maxRange = 1;
+    optimalRange = 1;
 
     diceX = 2;
     effectiveDiceY = baseDiceY = 2;
@@ -37,15 +40,16 @@ Item::Item()
 
     canBlock = false;
 
-    smallModifier = 100;
-    mediumModifer = 100;
-    largeModifier = 100;
+    baseVSSmall = 100;
+    baseVSMedium = 100;
+    baseVSLarge = 100;
 
-    hitModifier = 0;
-    criticalModifier = 0;
-    blockModifier = 0;
-    counterModifier = 0;
-    pierceModifier = 0;
+
+    baseAccuracyBonus = 0;
+    baseCriticalBonus = 0;
+    baseBlockBonus = 0;
+    baseCounterBonus = 0;
+    baseIgnoreDefenseBonus = 0;
 
 /// ##### CONTAINER ######
     isContainer = false;
@@ -64,7 +68,28 @@ Item::Item()
 
 }
 
+Item::~Item()
+{
+    for(std::vector<Property*>::iterator it = properties.begin(); it != properties.end();)
+    {
+        delete *it;
+        properties.erase(it);
+    }
+
+    for(std::vector<Property*>::iterator it = conferredToEater.begin(); it != conferredToEater.end();)
+    {
+        delete *it;
+        conferredToEater.erase(it);
+    }
+}
+
+
 void Item::Initialize(int whatBaseItem)
+{
+
+}
+
+void Item::ProducePropertyReadout()
 {
 
 }

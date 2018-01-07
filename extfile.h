@@ -1,6 +1,8 @@
 #ifndef EXTFILE_H_INCLUDED
 #define EXTFILE_H_INCLUDED
 
+/*
+
 #include <string>
 #include <fstream>
 
@@ -24,5 +26,7 @@ bool WriteSavefile(std::string characterName);
 
 //void SavePlayerState(Player* target);
 //void LoadPlayerState(std::string playerName, Player *target);
+
+*/
 
 #endif // EXTFILE_H_INCLUDED

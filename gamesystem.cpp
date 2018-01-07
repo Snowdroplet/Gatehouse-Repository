@@ -8,13 +8,6 @@
 
 /// DISPLAY AND UI
 
-ALLEGRO_DISPLAY *display;
-ALLEGRO_EVENT_QUEUE *eventQueue;
-ALLEGRO_TIMER *FPStimer;
-ALLEGRO_EVENT ev;
-ALLEGRO_MOUSE_STATE mouseState;
-
-
 int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;  //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
 int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
 
@@ -60,10 +53,13 @@ int turnP = 0;
 /// CONTROL/GUI CONTEXT AND MENUS
 
 int controlContext = NORMAL_CONTEXT;
+int previousControlContext = controlContext;
 int controlContextChangeDelay = 0;
 
-void ChangeControlContext(int toWhatContext)
+void ChangeControlContext(int currentContext, int toWhatContext)
 {
+    previousControlContext = currentContext;
+
     controlContext = toWhatContext;
     controlContextChangeDelay = 10;
 
@@ -71,11 +67,17 @@ void ChangeControlContext(int toWhatContext)
 #ifdef D_CONTEXT_CHANGE
     if(controlContext == NORMAL_CONTEXT)
         std::cout << "Control context: NORMAL" << std::endl;
-    else if(controlContext == TARGETTING_CONTEXT)
+    else if(controlContext == TARGETING_CONTEXT)
         std::cout << "Control context: TARGETTING" << std::endl;
     else if(controlContext == WEAPON_SPELL_CONTEXT)
         std::cout << "Control context: WEAPON SPELL" << std::endl;
 #endif // D_CONTEXT_CHANGE
+}
+
+void ReturnPreviousContext()
+{
+    controlContext = previousControlContext;
+    controlContextChangeDelay = 10;
 }
 
 int targetLockLevel = TARGET_LOCK_NONE;

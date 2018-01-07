@@ -12,6 +12,8 @@ ALLEGRO_BITMAP *gfxGuiTarget = nullptr;
 ALLEGRO_BITMAP *gfxGuiTargetHard = nullptr;
 ALLEGRO_BITMAP *gfxGuiTargetableListTag = nullptr;
 
+ALLEGRO_BITMAP *gfxGuiInventoryWindow = nullptr;
+
 ALLEGRO_BITMAP *gfxPlayer = nullptr;
 ALLEGRO_BITMAP *gfxNPCPassive[2];
 ALLEGRO_BITMAP *gfxTerminal = nullptr;
@@ -40,6 +42,8 @@ void LoadResources()
     gfxGuiTargetHard = al_load_bitmap("placeholderTarget2.png");
     gfxGuiTargetableListTag = al_load_bitmap("targetableListTag.png");
 
+    gfxGuiInventoryWindow = al_load_bitmap("placeholderInventory.png");
+
     gfxTerminal = al_load_bitmap("placeholderTerminal.png");
 
     gfxPlayer = al_load_bitmap("placeholderPlayer2.png");
@@ -67,6 +71,8 @@ void UnloadResources()
     al_destroy_bitmap(gfxGuiTarget);
     al_destroy_bitmap(gfxGuiTargetHard);
     al_destroy_bitmap(gfxGuiTargetableListTag);
+
+    al_destroy_bitmap(gfxGuiInventoryWindow);
 
     al_destroy_bitmap(gfxTerminal);
 

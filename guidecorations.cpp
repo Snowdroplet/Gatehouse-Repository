@@ -2,8 +2,8 @@
 
 FrameRune::FrameRune()
 {
-   xPosition = 0;
-   yPosition = 0;
+    xPosition = 0;
+    yPosition = 0;
 }
 
 FrameRune::~FrameRune()

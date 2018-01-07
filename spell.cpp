@@ -2,6 +2,8 @@
 
 Spell::Spell()
 {
+    duration = 100; // Equivalent to the baseline AP required for a Being to move
+
     school = SCHOOL_NONE;
     shape = SHAPE_SHAPELESS;
 
@@ -15,11 +17,19 @@ Spell::~Spell()
 {
     cellsCovered.clear();
 
-    for(std::vector<Property*>::iterator it = properties.begin(); it != properties.end();)
+    for(std::vector<Property*>::iterator it = effects.begin(); it != effects.end();)
     {
         delete *it;
-        properties.erase(it);
+        effects.erase(it);
     }
+}
+
+void Spell::Logic()
+{
+    duration -= 100;
+
+    if(duration <= 0)
+        active = false;
 }
 
 void Spell::Modify(int whatProperty, int magnitudeChange, int durationChange)

@@ -1,4 +1,5 @@
 #include "control.h"
+#include "allegrocustom.h"
 
 bool keyInput[] =
 {

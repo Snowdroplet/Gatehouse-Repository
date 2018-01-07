@@ -5,66 +5,66 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/base_object.hpp>
 
+#include <string>
 
-enum Properties
+enum enumAllPropertyIdentities
 {
-    FIRE_RES, COLD_RES, SHOCK_RES,
-    HOLY_RES, DARK_RES,
-    POISON_RES, BLEED_RES,
-    NEUTRAL_RES,
-    SLEEP_RES, STUN_RES, BLIND_RES,
-    CURSE_RES,
+    PROP_NOTHING,
 
-    FIRE_DMG, COLD_DMG, SHOCK_DMG,
-    HOLY_DMG, DARK_DMG,
+    PROP_MODIFY_FIRE_RESISTANCE,
+    PROP_MODIFY_COLD_RESISTANCE,
+    PROP_MODIFY_LIGHTNING_RESISTANCE,
+    PROP_MODIFY_HOLY_RESISTANCE,
+    PROP_MODIFY_DARK_RESISTANCE,
+    PROP_MODIFY_POISON_RESISTANCE,
 
-    AUTO_SEARCH,
-    INVISIBLE,
-    SEE_INVISIBLE, INFRAVISION,
+    PROP_MODIFY_PHYSICAL_RESISTANCE,
+    PROP_MODIFY_MAGIC_RESISTANCE,
 
-    ACID_RESISTANCE,
+    PROP_SLEEP_RESISTANCE,
+    PROP_STUN_RESISTANCE,
+    PROP_BLIND_RESISTANCE,
+    PROP_CURSE_RESISTANCE,
 
-    AUTO_TELEPORT, TELEPORT_CONTROL,
+    PROP_FIRE_DAMAGE,
+    PROP_COLD_DAMAGE,
+    PROP_SHOCK_DAMAGE,
+    PROP_HOLY_DAMAGE,
+    PROP_DARK_DAMAGE,
 
-    AUTO_CURSE,
+    PROP_PHYSICAL_DAMAGE,
+    PROP_MAGIC_DAMAGE
 
-    REFLECTION,
 
-    SAVE_LIFE,
-
-    LEVITATION,
-
-    WATER_BREATHING, WATER_WALKING,
-
-    MODIFY_HP, MODIFY_HP_REGEN, MODIFY_STAM, MODIFY_SP,
-    MODIFY_SP_REGEN, MODIFY_STAM_REGEN,
-    MODIFY_CON, MODIFY_INT, MODIFY_WIL, MODIFY_DEX, MODIFY_STR, MODIFY_ATU, MODIFY_SPD,
-
-    MAINTAIN_BODY, MAINTAIN_MIND, MAINTAIN_SPIRIT,
-
-    MODIFY_HUNGER_RATE,
-
-    MODIFY_LOAD,
-
-    MODIFY_STEALTH,
-
-    MODIFY_SPELL_POWER,
-
-    VS_MACHINE, VS_UNDEAD, VS_BEAST, VS_DEMIHUMAN, VS_GOD,
 };
 
 struct Property
 {
+    /*
     friend class boost::serialization::access;
     template<class PropertyArchive>
     void serialize(PropertyArchive & par, const unsigned int version)
     {
-        par & propertyID;
+        par & identity;
         par & magnitude;
+        par & duration;
     }
+    */
 
-    int propertyID;
+    std::string name;
+    std::string description;
+
+    bool active;
+
+    int identity;
     int magnitude;
+    int duration;
+
+    Property();
+    Property(int whatIdentity, int whatMagnitude, int whatDuration);
+    ~Property();
+
+    void Logic();
 };
 
 #endif // PROPERTY_H_INCLUDED

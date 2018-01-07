@@ -12,13 +12,6 @@ enum godIndex
     SULWON = 4,
     RAINDAUGHTER = 5,
 
-    DESIRE = 6,
-    HUNT = 7,
-    AGONY = 8,
-    LOVE = 9,
-    HEALING = 10,
-    MACHINE = 11,
-    ELEMENT = 12
 };
 
 #endif // GODS_H_INCLUDED
