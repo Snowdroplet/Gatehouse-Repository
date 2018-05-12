@@ -31,6 +31,11 @@ int D_PROGRESSPAUSEDVISUALIZATIONTIMER = 0;
 
 /// MAIN STRUCTURE
 
+int mainPhase = MAIN_PHASE_TITLE;
+
+int turnLogicPhase = GRANT_ACTION_POINTS;
+
+
 #ifdef D_TERMINATE_LOADING_SIGNAL
 bool D_TERMINATELOADINGPHASESIGNAL = false;
 #endif //D_TERMINATE_LOADING_SIGNAL
@@ -38,14 +43,10 @@ bool D_TERMINATELOADINGPHASESIGNAL = false;
 bool gameExit = false;
 bool redraw = false;
 
-int mainPhase = MAIN_PHASE_TITLE;
-
 bool needGeneration = true;
 
-int turnLogicPhase = GRANT_ACTION_POINTS;
-
-bool awaitingPlayerCommand = false;
-bool submittedPlayerCommand = false;
+bool awaitingPlayerActionCommand = false;
+bool submittedPlayerActionCommand = false;
 
 int turn = 0;
 int turnP = 0;

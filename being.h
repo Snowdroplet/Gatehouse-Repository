@@ -86,8 +86,8 @@ public:
     int animationDelay, animationDelayThreshold; // Governs delay between frame transition
 
     /// Position
-    float xPosition, yPosition; // position used for animation
-    float dXPosition, dYPosition;
+    float xPosition, yPosition; // coordinates used for animation
+    float dXPosition, dYPosition; // destination coordinates
     int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase
 
     /// Unit game stats
@@ -117,7 +117,7 @@ public:
     void BaseLogic();
     void ProgressIdleAnimation(); //All beings will progress through idle action and animation (even) when they are not queued to move.
     void ProgressWalkAnimation(); //This only deals with the apparent movement; BaseLogic() takes care of the moveframes
-    void CompleteWalkAnimation(); //Instantly completes walk animation without movement effects.
+    void InstantCompleteWalkAnimation(); //Instantly completes walk animation without movement effects.
 
     void ResetPath();
 

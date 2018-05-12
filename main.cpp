@@ -1,6 +1,6 @@
 /***
 Error:
-    NPC sprite drawing position updates too slow. (Probably has other cause.)
+    NPC sprite drawing position updates too slow.
 
 To do:
     !! Fire spell
@@ -64,12 +64,14 @@ How to operate debug:
 #include "allegrocustom.h"
 
 #include "gamesystem.h"
+
+#include "guisystem.h"
+
 #include "control.h"
 #include "resource.h"
 
 //#include "extfile.h"
 
-#include "guisystem.h"
 #include "terminal.h"
 
 #include "node.h"
@@ -105,7 +107,7 @@ std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to act.
 std::vector<Being*>walkAnimQueue; // All beings queued to animate walk.
 
-Being*currentAnimatedBeing = nullptr; // Which being is being animated, if an action other than walking is being animated.
+Being*currentAnimatedBeing = nullptr; // If an action other than walking/idling is being animated, only one such action can be animated at a time.
 
 std::vector<Being*>targetableBeings; // All beings which can be locked on to during targeting context.
 Being*hardTargetedBeing = nullptr;  // Which being is currently under explicit lock-on.
@@ -325,7 +327,7 @@ void GameLogic()
     static bool walkAnimQueueReleased = false;
     static bool checkAnimationPhaseComplete = true;
 
-    static std::vector<Being*>::iterator aqit; // Static action queue iterator meant to be the front element of actionQueue.
+    static std::vector<Being*>::iterator actionQueueFront; // Doesn't actually interate. Merely indexes the front element of actionQueue.
 
     /** ### 0.1: Update objects that constantly need updates ####
         -Such as elements of the GUI.
@@ -337,12 +339,11 @@ void GameLogic()
 /// ### 0.2: Receive input, interpret and process according to context ####
 
 
-    if(ev.type == ALLEGRO_EVENT_TIMER) //
+    if(ev.type == ALLEGRO_EVENT_TIMER)
     {
 
-        if(awaitingPlayerCommand)
+        if(awaitingPlayerActionCommand)
         {
-
             ProcessInput(controlContext);
 
 #ifdef D_TEST_TRACEPATH
@@ -354,7 +355,7 @@ void GameLogic()
                     player->actionCost = 100;
                     player->currentAction = ACTION_WALK;
                     player->TracePath();
-                    submittedPlayerCommand = true;
+                    submittedPlayerActionCommand = true;
                 }
             }
 #endif // D_TEST_TRACEPATH
@@ -408,7 +409,7 @@ void GameLogic()
 
     if(turnLogicPhase == GRANT_ACTION_POINTS)
     {
-        turn ++;
+        turn ++; // Increment (currently cosmetic) global turn counter
 #ifdef D_TURN_LOGIC
         std::cout << "### TURN " << turn << " ###" << std::endl;
         std::cout << "Granting AP:" << std::endl;
@@ -416,12 +417,12 @@ void GameLogic()
 
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
-            (*it)->actionPoints += (*it)->effectiveSpeed;
+            (*it)->actionPoints += (*it)->effectiveSpeed; // Each being receives AP according to its effective speed.
 #ifdef D_TURN_LOGIC
             std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->effectiveSpeed << " AP." << std::endl;
 #endif
 
-            if((*it)->actionPoints >= 100)
+            if((*it)->actionPoints >= 100) // If a being has at least 100 AP, add it to actionQueue.
             {
 #ifdef D_TURN_LOGIC
                 std::cout << "(Added to action queue)" << std::endl;
@@ -439,8 +440,8 @@ void GameLogic()
 
     if(turnLogicPhase == SORT_ACTION_QUEUE)
     {
-        std::sort(actionQueue.begin(), actionQueue.end(), CompareAPDescending);
-        aqit = actionQueue.begin();
+        std::sort(actionQueue.begin(), actionQueue.end(), CompareAPDescending); // Sort by descending order of AP.
+        actionQueueFront = actionQueue.begin();
         turnLogicPhase = SELECT_ACTION;
     }
 
@@ -450,81 +451,84 @@ void GameLogic()
         actionOpen: Whether the system is ready to receive actions, independent of whether actionQueue is populated.
 
         walkAnimQueue: A vector populated during this phase with pointers to beings who have chosen the WALK action.
-                       In order to minimize real time spent waiting for each individual Being's walk from one cell to the next to be animated at a certain speed,
-                       this queue allows for all movement animations to be displayed simultaneously.
+                       In order to minimize real time spent waiting for each individual Being's walk from one cell to the next to be animated,
+                       this queue allows for all WALK animations to be displayed simultaneously.
         walkAnimQueueReleased: A boolean. When any unit performs an action other than walking OR when actionQueue is emptied of Beings,
-                               all walking animations queued to this point are animated.
+                               all walking animations queued to this point are animated (to the user, simultaneously).
 
         -If the action queue is NOT empty (currently containing Beings who have least 100 AP):
             -If actionOpen is true (system is ready to receive actions)
-                * note: the "idle" action is equivalent to moving in AP usage.
-                - NPCs choose an action according to their AI. A certain amount of AP is spent corresponding to the action.
-                - Player Beings await input from the player - When input is detected corresponding to an action, a certain amount of AP is spent corresponding to the action.
-                - In either case, actionOpen becomes false (system may not receive actions) until the action has been processed during the CALCULATION phase.
+                - NPC beings choose an action according to their AI. A certain amount of AP is spent corresponding to the action. (note that the "idle" action costs AP equivalent to moving)
+                - PLAYER Beings await input from the player - When input is detected corresponding to an action, a certain amount of AP is spent corresponding to the action.
+                - In either case, actionOpen becomes false (system may not receive actions) until the action has been processed during the PROCESSING phase.
 
 
                 - Any Being that has selected the WALK action will be added to the walk animation queue (walkAnimQueue).
                 - Any Being that selects an option other than WALK will release the global walk animation queue.
-
                 - Any Being who becomes ineligible to move (having less than 100 AP) will be removed from the actionQueue.
 
-                WHEN ANY ACTION HAS BEEN CONFIRMED (!actionOpen) whether by NPC or Player, go to ANIMATION phase. No further actions may be taken until any and all necessary animations have been processed.
 
+        IF  A) an action is taken which releases walkAnimQueue
+            B) actionQueue is emptied (which releases walkAnimQueue)
+            C) actionOpen = false. (Note that actionOpen refers to both player and NPC actions).
+
+        Then go to ANIMATION phase. Actions must not be allowed (actionOpen = false) until any and all necessary animations have been completed.
 
         -If the action queue is empty, the cycle of phases is completed and returns to GRANT AP.
     **/
 
     if(turnLogicPhase == SELECT_ACTION)
     {
-
-
-        //ActionOpen should be true if the being in queue to move has not yet chosen a player action or AI option yet.
-        if(!actionQueue.empty())
+        if(!actionQueue.empty()) // There are Beings (with >= 100 AP) queued to move.
         {
-            if(actionOpen && !awaitingPlayerCommand)
+            if(actionOpen && !awaitingPlayerActionCommand) //ActionOpen should be true if the player/NPC in queue to move has not yet chosen a player action or AI option yet. (AI should be processed instantaneously though).
             {
-
-                if((*aqit)->derivedType == BEING_TYPE_NPC)
+/// ** Two versions of the similar logic below: One for NPC and one for player. ///////////////////////
+                if((*actionQueueFront)->derivedType == BEING_TYPE_NPC) // If being is an NPC (non-player), use the NPC version of the logic.
                 {
-                    //It is possible for a being to have its AP reduced below the minimum to move even while queued to move.
-                    if((*aqit)->actionPoints < 100)
-                        (*aqit)->actionBlocked = true; // And if blocked, the being in question may only choose to wait.
+                    //It is possible for a being to have its AP reduced below the minimum to move even while queued to move, e.g. through spells with certain crowd control effects.
+                    if((*actionQueueFront)->actionPoints < 100)
+                        (*actionQueueFront)->actionBlocked = true; // And if blocked, the being in question may only choose to wait.
 
 #ifdef D_TURN_LOGIC
-                    std::cout << (*aqit)->name << " executes its AI: ";
+                    std::cout << (*actionQueueFront)->name << " executes its AI: ";
 #endif
 
-                    ((NPC*)(*aqit))->AI();
+                    ((NPC*)(*actionQueueFront))->AI();
 
 #ifdef D_TURN_LOGIC
-                    std::cout << (*aqit)->actionName << std::endl;
+                    std::cout << (*actionQueueFront)->actionName << std::endl;
 #endif
-                    (*aqit)->actionPoints -= (*aqit)->actionCost;
+                    (*actionQueueFront)->actionPoints -= (*actionQueueFront)->actionCost; // Spend AP cost of action. It is very possible for moves to put beings into negative AP (e.g. power-attacks)
 
 #ifdef D_TURN_LOGIC
-                    std::cout << (*aqit)->name << " now has " << (*aqit)->actionPoints << "/" << (*aqit)->effectiveSpeed << "AP" << std::endl;
+                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->effectiveSpeed << "AP" << std::endl;
 #endif
 
-                    if((*aqit)->currentAction == ACTION_WALK)
-                        walkAnimQueue.push_back(*aqit);
-                    else if((*aqit)->currentAction != ACTION_IDLE)
+                    if((*actionQueueFront)->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
+                        walkAnimQueue.push_back(*actionQueueFront);
+                    else if((*actionQueueFront)->currentAction != ACTION_IDLE) // If the selected action is OTHER THAN walk, but NOT idle, release animation queue.
                     {
                         walkAnimQueueReleased = true;
-                        currentAnimatedBeing = *aqit;
+                        currentAnimatedBeing = *actionQueueFront;
                         actionOpen = false;
                     }
                 }
-                else if((*aqit)->derivedType == BEING_TYPE_PLAYER)
+                else if((*actionQueueFront)->derivedType == BEING_TYPE_PLAYER) // If being is a player (not NPC), use the player version of this logic.
                 {
-                    //It is possible that the player's AP is reduced below the minimum to move even while queued to move.
-                    if((*aqit)->actionPoints < 100)
-                        (*aqit)->actionBlocked = true; // If blocked, may only wait.
+                    //It is possible that the player's AP is reduced below the minimum to move even while queued to move, e.g. through spells with crowd control effects.
+                    if((*actionQueueFront)->actionPoints < 100)
+                        (*actionQueueFront)->actionBlocked = true; // If blocked in such a way, the player may only wait.
 
-                    awaitingPlayerCommand = true;
+                    awaitingPlayerActionCommand = true;
                 }
+/// ** ///////////////////////////////////////////////////////////////////////////////////////////
             }
 
-            if(awaitingPlayerCommand && submittedPlayerCommand)
+/// **  The following code concerns dealing with submitted user commands ///////////////////
+            if(awaitingPlayerActionCommand)
+                walkAnimQueueReleased = true;
+            else if(awaitingPlayerActionCommand && submittedPlayerActionCommand)
             {
 #ifdef D_TURN_LOGIC
                 std::cout << player->name << " executes your command" << std::endl;
@@ -533,115 +537,126 @@ void GameLogic()
 #ifdef D_TURN_LOGIC
                 std::cout << player->name << " now has " << player->actionPoints << "/" << player->effectiveSpeed << "AP" << std::endl;
 #endif
-                awaitingPlayerCommand = false;
-                submittedPlayerCommand = false;
+
+                // Reset flags to default, false.
+                awaitingPlayerActionCommand = false;
+                submittedPlayerActionCommand = false;
                 actionOpen = false;
 
-                if(player->currentAction == ACTION_WALK)
-                {
+                if(player->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
                     walkAnimQueue.push_back(player);
-                    //walkAnimQueueReleased = true;
-                    /// Shouldn't walkanimqueue be released whenever the player moves,
-                    /// in case a player with AP greatly outnumbering the next highest being fails to see an npc's updated position?
-                }
-                else if(player->currentAction != ACTION_IDLE)
+                else if(player->currentAction != ACTION_IDLE) // If the selected action is OTHER THAN WALK, but NOT idle...
                 {
-                    walkAnimQueueReleased = true;
                     currentAnimatedBeing = player;
+                    walkAnimQueueReleased = true;
                 }
+
 
                 ShiftTerminal(); // This might have to be moved to be triggered by different conditions later on.
             }
+/// ** ////////////////////////////////////////////////////////////////////////////////////
 
-            //It is possible for a being to have its AP reduced (i.e. crowd control slow) while in the actionQueue and thus become ineligible to move.
-            //Remove front element from action queue if it does not have enough AP (100).
-            if((*aqit)->actionPoints < 100)
+            //Remove front element from action queue if it does not have enough AP (100) to continue moving.
+            if((*actionQueueFront)->actionPoints < 100)
             {
 #ifdef D_TURN_LOGIC
-                std::cout << "Erased " << (*aqit)->name << " from movequeue" << std::endl;
+                std::cout << "Erased " << (*actionQueueFront)->name << " from movequeue" << std::endl;
 #endif
-                actionQueue.erase(aqit);
+                actionQueue.erase(actionQueueFront);
             }
         }
-        else
+        else // if actionQueue.empty() returned true
         {
             turnLogicPhase = GRANT_ACTION_POINTS;
         }
 
         if(actionQueue.empty())
-        {
-            walkAnimQueueReleased = true;
-        }
+            walkAnimQueueReleased = true; // If there are no beings to queue actions for, might as well release walk animation queue.
 
         //If a player action/AI option has been confirmed, no further actions may be processed until its animation is complete.
         if(!actionOpen)
             turnLogicPhase = ANIMATION;
     }
 
+    /** ### 4: ANIMATION  ###
+        -Progress the idle animation of all beings.
+        -Update the drawing position of all beings that performed the walk action.
+
+        -If the walkAnimQueue is NOT EMPTY, progress relevant beings' walk animations.
+        -If the walkAnimQueue IS EMPTY...
+            1) The spotlighted currentAnimatedBeing is animated (not necessarily the being at the front of the actionQueue, e.g. free auto-retaliate skill).
+            2) If there is no currently spotlighted being performing a non-walk action, phase completes.
+    **/
     if(turnLogicPhase == ANIMATION)
     {
-        checkAnimationPhaseComplete = false;
+        checkAnimationPhaseComplete = false; // Reset flag.
 
         //Progress the IDLE animation of all beings by one step.
         //Note that all beings will go through this (possibly hidden to the player) progression in idle animation (even) when they are not queued to act or animate.
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
             (*it)->ProgressIdleAnimation();
 
-
-        if(currentAnimatedBeing != nullptr)
+        if(currentAnimatedBeing != nullptr) // There IS a being being spotlighted.
         {
-            if(currentAnimatedBeing->animationComplete)
+            if(currentAnimatedBeing->animationComplete) // The spotlighted being has completed its animation
             {
-                checkAnimationPhaseComplete = true;
-                currentAnimatedBeing = nullptr;
+                //checkAnimationPhaseComplete = true; /// *** ???????????????
+                currentAnimatedBeing = nullptr; // Reset pointer.
             }
-            else
+            else // Animation of currentAnimatedBeing is incomplete.
             {
-                // **Progress the animation of being in question here**
+                /// **Progress the animation of being in question here**
             }
         }
-        else if(walkAnimQueueReleased)
+        else if(walkAnimQueueReleased) // Implies that there IS NOT a Being spotlighted.
         {
             for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
             {
-                if(abs((*it)->xCell - player->xCell) <= drawingXCellCutoff &&
-                        abs((*it)->yCell - player->yCell) <= drawingYCellCutoff &&
-                        (*it)->visibleToPlayer) // No point in animating something outside the screen boundaries or is invisible/obscured/imperceptible/off-screen.
+                // Being is NOT offscreen and is visible to player.
+                if(abs((*it)->xCell - player->xCell) <= drawingXCellCutoff
+                        && abs((*it)->yCell - player->yCell) <= drawingYCellCutoff
+                        && (*it)->visibleToPlayer)
                 {
+                    // Progress walk animation by one step. If this progression completes its animation, erase it from walkAnimQueue.
                     (*it)->ProgressWalkAnimation();
                     if((*it)->animationComplete)
                     {
                         walkAnimQueue.erase(it);
                     }
-                    else
-                        ++it;
+                    else // Walk animation not complete
+                        ++it; // Being stays in queue, iterate to next being in queue.
                 }
-                else // Animation of this being is auto-completed if invisible/obscured/imperceptible/off-screen.
+                else // Animation of this being is auto-completed if offscreen or invisible to player.
                 {
-                    (*it)->CompleteWalkAnimation();
+                    (*it)->InstantCompleteWalkAnimation();
                     walkAnimQueue.erase(it);
                 }
             }
 
             if(walkAnimQueue.empty())
             {
-                checkAnimationPhaseComplete = true;
-                walkAnimQueueReleased = false;
+                checkAnimationPhaseComplete = true; // Flag animation phase is complete.
+                walkAnimQueueReleased = false; // Reset flag.
             }
         }
 
-        //Move on to calculation if the phase is complete, otherwise reset the flag
+         //Move on to processing phase if the animation phase is complete.
         if(checkAnimationPhaseComplete)
         {
-            turnLogicPhase = CALCULATION;
+            turnLogicPhase = PROCESSING;
         }
     }
 
-    if(turnLogicPhase == CALCULATION)
+
+    /** ### 5: PROCESSING ###
+
+    **/
+
+    if(turnLogicPhase == PROCESSING)
     {
         // Something here.
 
-        //Calculations having been applied, the flags are reset to await new actions.
+        //Processing having been applied, turn logic flags are reset to await new actions.
         actionOpen = true;
         turnLogicPhase = SELECT_ACTION;
     }
@@ -758,6 +773,8 @@ void TitleLogic()
 /// ########## ########## END MAIN LOGIC FUNCTIONS ########## ##########
 
 /// ########## ########## BEGIN MAIN DRAWING FUNCTIONS ########## ##########
+
+
 void GameDrawing()
 {
     if(redraw && al_is_event_queue_empty(eventQueue))
@@ -777,10 +794,12 @@ void GameDrawing()
             if((*it)->derivedType == BEING_TYPE_NPC)//As opposed to player, which is drawn seperately
             {
                 if((*it)->animationState == ANIM_IDLE)
-                    al_draw_bitmap(gfxNPCPassive[(*it)->spriteID + (*it)->animationFrame],
-                                   (*it)->xPosition + SCREEN_W/2 - player->xPosition,
-                                   (*it)->yPosition + SCREEN_H/2 - player->yPosition,
-                                   0);
+                    al_draw_bitmap_region(gfxNPCPassive[(*it)->spriteID],
+                                          TILESIZE*(*it)->animationFrame, 0,
+                                          TILESIZE, TILESIZE,
+                                          (*it)->xPosition + SCREEN_W/2 - player->xPosition,
+                                          (*it)->yPosition + SCREEN_H/2 - player->yPosition,
+                                          0);
             }
         }
 
@@ -1160,6 +1179,8 @@ void DrawDebugOverlay()
 
     }
 }
+
+
 /// ########## ########## END MAIN DRAWING FUNCTIONS ########## ##########
 
 
@@ -1325,7 +1346,7 @@ void ProcessInput(int whatContext)
             player->Move(NO_DIRECTION);
             player->actionBlocked = false;
 
-            submittedPlayerCommand = true;
+            submittedPlayerActionCommand = true;
         }
         else // If !actionBlocked
         {
@@ -1351,19 +1372,19 @@ void ProcessInput(int whatContext)
                 {
                     player->ReleaseCurrentSpell();
                     //player->actionCost = 100;
-                    //submittedPlayerCommand = true;
+                    //submittedPlayerActionCommand = true;
                 }
                 else if(targetLockLevel == TARGET_LOCK_CELL)
                 {
                     player->ReleaseCurrentSpell();
                     //player->actionCost = 100;
-                    //submittedPlayerCommand = true;
+                    //submittedPlayerActionCommand = true;
                 }
                 else if(targetLockLevel == TARGET_LOCK_BEING)
                 {
                     player->ReleaseCurrentSpell();
                     //player->actionCost = 100;
-                    //submittedPlayerCommand = true;
+                    //submittedPlayerActionCommand = true;
                 }
 
             }
@@ -1420,7 +1441,7 @@ void ProcessInput(int whatContext)
                 player->currentAction = ACTION_WALK;
                 // check emptiness
                 player->Move(keypadDirection);
-                submittedPlayerCommand = true;
+                submittedPlayerActionCommand = true;
             }
         }
         break;

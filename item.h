@@ -64,41 +64,41 @@ enum enumReadableClass
 class Item
 {
 public:
-/*
-    friend class boost::serialization::access;
-    template<class ItemArchive>
-    void serialize(ItemArchive & iar, const unsigned int version)
-    {
-        iar & active;
+    /*
+        friend class boost::serialization::access;
+        template<class ItemArchive>
+        void serialize(ItemArchive & iar, const unsigned int version)
+        {
+            iar & active;
 
-        iar & itemID;
-        iar & spriteID;
+            iar & itemID;
+            iar & spriteID;
 
-        iar & baseName;
-        iar & unidentifiedName;
-        iar & description;
+            iar & baseName;
+            iar & unidentifiedName;
+            iar & description;
 
-        iar & consecrationKnown;
-        iar & identificationReq;
+            iar & consecrationKnown;
+            iar & identificationReq;
 
-        iar & quality;
-        iar & consecration;
-        iar & weight;
+            iar & quality;
+            iar & consecration;
+            iar & weight;
 
-        iar & isEquippable;
-        iar & isArmor;
-        iar & isWeapon;
-        iar & armorClass;
-        iar & weaponClass;
+            iar & isEquippable;
+            iar & isArmor;
+            iar & isWeapon;
+            iar & armorClass;
+            iar & weaponClass;
 
-        iar & isContainer;
-        iar & isReadable;
-        iar & isEdible;
-        iar & isTool;
-        iar & isRelic;
+            iar & isContainer;
+            iar & isReadable;
+            iar & isEdible;
+            iar & isTool;
+            iar & isRelic;
 
-    }
-*/
+        }
+    */
 
 /// ###### ALL ITEMS #####
     bool active;  // An inactive item is marked for deletion

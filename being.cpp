@@ -176,7 +176,7 @@ void Being::ProgressWalkAnimation()
     }
 }
 
-void Being::CompleteWalkAnimation()
+void Being::InstantCompleteWalkAnimation()
 {
     animationComplete = true;
 

@@ -10,9 +10,9 @@
 
 /// Forward Declarations
 
-class Being;
-class Node;
-class Graph;
+class Being; // Required for Area class
+class Node;  // Required for Area class
+class Graph; // Required for Area class
 
 /// *** Debug defines. Comment out line to deactivate corresponding debug functionality. ***
 
@@ -54,7 +54,6 @@ class Graph;
 //#define D_PRINTOUT_MST                              // Output the node pairs found to console when Kruskal() completes its task.
 
 /// Area
-
 
 
 /// ******************************************************************************************
@@ -126,12 +125,35 @@ extern int camY;
 extern int drawingXCellCutoff; // Determines when a being is "offscreen"
 extern int drawingYCellCutoff;
 
-
 #ifdef D_SHOW_LOADING_VISUALIZATION
 extern bool D_SHOWLOADINGVISUALIZATION; // Show the room generation visualization instead of a loading screen
 #endif //D_SHOW_LOADING_VISUALIZATION
 
 /// MAIN STRUCTURE
+
+enum enumMainPhases
+{
+    MAIN_PHASE_TITLE = 0,
+    MAIN_PHASE_LOADING = 1,
+    MAIN_PHASE_GAME = 2
+};
+
+extern int mainPhase;
+
+enum enumTurnLogicPhases
+{
+    //ACTION = 0,
+    //ANIMATION = 1,
+    //CALCULATION = 2
+
+    GRANT_ACTION_POINTS = 0,
+    SORT_ACTION_QUEUE = 1,
+    SELECT_ACTION = 2,
+    ANIMATION = 3,
+    PROCESSING = 4
+};
+
+extern int turnLogicPhase;
 
 #ifdef D_TERMINATE_LOADING_SIGNAL
 extern bool D_TERMINATELOADINGPHASESIGNAL;
@@ -144,34 +166,10 @@ extern int D_PROGRESSPAUSEDVISUALIZATIONTIMER;
 extern bool gameExit;
 extern bool redraw;
 
-enum enumMainPhases
-{
-    MAIN_PHASE_TITLE = 0,
-    MAIN_PHASE_LOADING = 1,
-    MAIN_PHASE_GAME = 2
-};
-
-extern int mainPhase;
-
 extern bool needGeneration;
 
-enum enumTurnLogicPhases
-{
-    //ACTION = 0,
-    //ANIMATION = 1,
-    //CALCULATION = 2
-
-    GRANT_ACTION_POINTS = 0,
-    SORT_ACTION_QUEUE = 1,
-    SELECT_ACTION = 2,
-    ANIMATION = 3,
-    CALCULATION = 4
-};
-
-extern int turnLogicPhase;
-
-extern bool awaitingPlayerCommand;
-extern bool submittedPlayerCommand;
+extern bool awaitingPlayerActionCommand;
+extern bool submittedPlayerActionCommand;
 
 extern int turn;
 const int turnPReq = 100;
