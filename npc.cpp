@@ -18,11 +18,13 @@ NPC::NPC(int whatNPCType, int spawnXCell, int spawnYCell)
     {
         name = "Slime";
         effectiveSpeed = baseSpeed = 50;
+        animationFrameThreshold = 1;
     }
     else if(NPCType == QUICKLING)
     {
         name = "Quickling";
         effectiveSpeed = baseSpeed = 200;
+        animationFrameThreshold = 1;
     }
 
     xCell = spawnXCell;
@@ -41,7 +43,29 @@ void NPC::AI()
 {
     actionCost = 100;
     currentAction = ACTION_WALK;
-    Move(rand()%8+1); // 1-9
+
+    int randomDirection = rand() % 9;
+    if(randomDirection == 0)
+        randomDirection = INPUT_NORTHWEST;
+    else if(randomDirection == 1)
+        randomDirection = INPUT_NORTH;
+    else if(randomDirection == 2)
+        randomDirection = INPUT_NORTHEAST;
+    else if(randomDirection == 3)
+        randomDirection = INPUT_WEST;
+    else if(randomDirection == 4)
+        randomDirection = INPUT_EAST;
+    else if(randomDirection == 5)
+        randomDirection = INPUT_SOUTHWEST;
+    else if(randomDirection == 6)
+        randomDirection = INPUT_SOUTH;
+    else if(randomDirection == 7)
+        randomDirection = INPUT_SOUTHEAST;
+    else if(randomDirection == 8)
+        randomDirection = INPUT_NO_DIRECTION;
+
+
+    Move(randomDirection); // 1-9
 
     //Test code written to terminal
     //std::string AIMsg;

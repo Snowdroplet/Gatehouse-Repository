@@ -7,6 +7,8 @@ Being::Being()
     isPlayer = false;
     active = true;
 
+    intendedWalkDirection = INPUT_NO_DIRECTION;
+
     visibleToPlayer = false;
 
     freezeFrame = false;
@@ -158,6 +160,7 @@ void Being::BaseLogic()
 
 void Being::ProgressWalkAnimation()
 {
+    //std::cout << "ProgressWalkAnimation()" << std::endl;
     animationComplete = false; // False but meant to be proven true if animation is incomplete
 
     if(xPosition < dXPosition)
@@ -178,15 +181,19 @@ void Being::ProgressWalkAnimation()
 
 void Being::InstantCompleteWalkAnimation()
 {
-    animationComplete = true;
-
+    //std::cout << "InstantCompleteWalkAnimation()" << std::endl;
     xPosition = dXPosition;
     yPosition = dYPosition;
+
+    animationComplete = true;
     currentAction = ACTION_IDLE;
 }
 
 void Being::ProgressIdleAnimation()
 {
+/// Why is this function even necessary when Being::BaseLogic() progresses all animations (including idling) anyway?
+//std::cout << "ProgressIdleAnimation" << std::endl;
+
     if(currentAction == ACTION_IDLE) // Once again, all beings go through progression of idle animation even when the currentAction is not "action_idle," per se.
     {
         /*

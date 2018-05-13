@@ -48,8 +48,8 @@ void LoadResources()
 
     gfxPlayer = al_load_bitmap("placeholderPlayer2.png");
 
-    gfxNPCPassive[0] = al_load_bitmap("placeholderSlime.png");
-    gfxNPCPassive[1] = al_load_bitmap("placeholderQuickling.png");
+    gfxNPCPassive[0] = al_load_bitmap("npcSlime.png");
+    gfxNPCPassive[1] = al_load_bitmap("npcSlime.png");
 
     gfxFloorTiles = al_load_bitmap("floorTiles.png");
     gfxWallTiles = al_load_bitmap("wallTiles.png");

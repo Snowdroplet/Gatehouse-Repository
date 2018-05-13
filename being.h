@@ -76,6 +76,7 @@ public:
     bool actionBlocked;
     float actionCost, actionPoints;
 
+    int intendedWalkDirection;
 
     bool visibleToPlayer;
     bool animationComplete;

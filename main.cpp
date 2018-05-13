@@ -107,7 +107,7 @@ std::vector<Being*>beings; // All beings currently in play.
 std::vector<Being*>actionQueue; // All beings queued to act.
 std::vector<Being*>walkAnimQueue; // All beings queued to animate walk.
 
-Being*currentAnimatedBeing = nullptr; // If an action other than walking/idling is being animated, only one such action can be animated at a time.
+Being*spotlightedBeing = nullptr; // If an action other than walking/idling is being animated, only one such action can be animated at a time.
 
 std::vector<Being*>targetableBeings; // All beings which can be locked on to during targeting context.
 Being*hardTargetedBeing = nullptr;  // Which being is currently under explicit lock-on.
@@ -120,7 +120,7 @@ bool CompareAPDescending(Being *lhs, Being *rhs)
 
 bool CompareTargetableDistanceAscending(Being *lhs, Being *rhs)
 {
-    return sqrt(pow(lhs->yCell - player->yCell, 2) + pow(lhs->xCell - player->xCell, 2)) <  sqrt(pow(rhs->yCell - player->yCell, 2) + pow(rhs->xCell - player->xCell, 2));
+    return sqrt(pow(lhs->yCell - playerYCell, 2) + pow(lhs->xCell - playerXCell, 2)) <  sqrt(pow(rhs->yCell - playerYCell, 2) + pow(rhs->xCell - playerXCell, 2));
 }
 
 void PopulateTargetableBeings();
@@ -322,12 +322,10 @@ int main(int argc, char *argv[])
 
 void GameLogic()
 {
-    static bool actionOpen = true; // Whether the system is open to new actions, whether by player or AI. When an action is taken, actionOpen becomes false.
-
     static bool walkAnimQueueReleased = false;
-    static bool checkAnimationPhaseComplete = true;
+    static bool animationPhaseComplete = false;
 
-    static std::vector<Being*>::iterator actionQueueFront; // Doesn't actually interate. Merely indexes the front element of actionQueue.
+    static std::vector<Being*>::iterator actionQueueFront; // Doesn't actually iterate. Merely indexes the front element of actionQueue.
 
     /** ### 0.1: Update objects that constantly need updates ####
         -Such as elements of the GUI.
@@ -374,7 +372,7 @@ void GameLogic()
 
                     std::cout << std::endl;
                     std::cout << "####DEBUG PATH REQUEST####" << std::endl;
-                    std::cout << "Start X: " << player->xCell << " | Start Y: " << player->yCell << std::endl;
+                    std::cout << "Start X: " << playerXCell << " | Start Y: " << playerYCell << std::endl;
                     std::cout << "Dest X: " << testDestX << " | Dest Y: " << testDestY << std::endl;
 
                     player->SetPath(testDestX,testDestY);
@@ -407,7 +405,7 @@ void GameLogic()
         -Beings that have accumulated at least 100 AP are permitted to move. These beings are added to actionQueue.
     **/
 
-    if(turnLogicPhase == GRANT_ACTION_POINTS)
+    if(turnLogicPhase == LOGIC_PHASE_GRANT_ACTION_POINTS)
     {
         turn ++; // Increment (currently cosmetic) global turn counter
 #ifdef D_TURN_LOGIC
@@ -431,24 +429,24 @@ void GameLogic()
             }
         }
 
-        turnLogicPhase = SORT_ACTION_QUEUE;
+        turnLogicPhase = LOGIC_PHASE_SORT_ACTION_QUEUE;
     }
 
     /** ### 2: SORT ACTION QUEUE ###
         -All Beings on the action queue (having, from the previous phase, at least 100 AP) are sorted by their AP from highest to lowest AP (descending order).
     **/
 
-    if(turnLogicPhase == SORT_ACTION_QUEUE)
+    if(turnLogicPhase == LOGIC_PHASE_SORT_ACTION_QUEUE)
     {
         std::sort(actionQueue.begin(), actionQueue.end(), CompareAPDescending); // Sort by descending order of AP.
         actionQueueFront = actionQueue.begin();
-        turnLogicPhase = SELECT_ACTION;
+        turnLogicPhase = LOGIC_PHASE_SELECT_ACTION;
     }
 
     /** ### 3: SELECT ACTION ###
 
         actionQueue: A vector populated during phase 1 with pointers to Beings eligible to take an action (having at least 100 AP).
-        actionOpen: Whether the system is ready to receive actions, independent of whether actionQueue is populated.
+        gameLogicActionOpen: Whether the system is ready to receive actions, independent of whether actionQueue is populated.
 
         walkAnimQueue: A vector populated during this phase with pointers to beings who have chosen the WALK action.
                        In order to minimize real time spent waiting for each individual Being's walk from one cell to the next to be animated,
@@ -457,10 +455,10 @@ void GameLogic()
                                all walking animations queued to this point are animated (to the user, simultaneously).
 
         -If the action queue is NOT empty (currently containing Beings who have least 100 AP):
-            -If actionOpen is true (system is ready to receive actions)
+            -If gameLogicActionOpen is true (system is ready to receive actions)
                 - NPC beings choose an action according to their AI. A certain amount of AP is spent corresponding to the action. (note that the "idle" action costs AP equivalent to moving)
                 - PLAYER Beings await input from the player - When input is detected corresponding to an action, a certain amount of AP is spent corresponding to the action.
-                - In either case, actionOpen becomes false (system may not receive actions) until the action has been processed during the PROCESSING phase.
+                - In either case, gameLogicActionOpen becomes false (system may not receive actions) until the action has been processed during the PROCESSING phase.
 
 
                 - Any Being that has selected the WALK action will be added to the walk animation queue (walkAnimQueue).
@@ -470,18 +468,18 @@ void GameLogic()
 
         IF  A) an action is taken which releases walkAnimQueue
             B) actionQueue is emptied (which releases walkAnimQueue)
-            C) actionOpen = false. (Note that actionOpen refers to both player and NPC actions).
+            C) gameLogicActionOpen = false. (Note that gameLogicActionOpen refers to both player and NPC actions).
 
-        Then go to ANIMATION phase. Actions must not be allowed (actionOpen = false) until any and all necessary animations have been completed.
+        Then go to ANIMATION phase. Actions must not be allowed (gameLogicActionOpen = false) until any and all necessary animations have been completed.
 
         -If the action queue is empty, the cycle of phases is completed and returns to GRANT AP.
     **/
 
-    if(turnLogicPhase == SELECT_ACTION)
+    if(turnLogicPhase == LOGIC_PHASE_SELECT_ACTION)
     {
         if(!actionQueue.empty()) // There are Beings (with >= 100 AP) queued to move.
         {
-            if(actionOpen && !awaitingPlayerActionCommand) //ActionOpen should be true if the player/NPC in queue to move has not yet chosen a player action or AI option yet. (AI should be processed instantaneously though).
+            if(gameLogicActionOpen && !awaitingPlayerActionCommand) //gameLogicActionOpen should be true if the player/NPC in queue to move has not yet chosen a player action or AI option yet. (AI should be processed instantaneously though).
             {
 /// ** Two versions of the similar logic below: One for NPC and one for player. ///////////////////////
                 if((*actionQueueFront)->derivedType == BEING_TYPE_NPC) // If being is an NPC (non-player), use the NPC version of the logic.
@@ -510,8 +508,8 @@ void GameLogic()
                     else if((*actionQueueFront)->currentAction != ACTION_IDLE) // If the selected action is OTHER THAN walk, but NOT idle, release animation queue.
                     {
                         walkAnimQueueReleased = true;
-                        currentAnimatedBeing = *actionQueueFront;
-                        actionOpen = false;
+                        spotlightedBeing = *actionQueueFront;
+                        gameLogicActionOpen = false; // System becomes closed to action because it must first process the consequences of action.
                     }
                 }
                 else if((*actionQueueFront)->derivedType == BEING_TYPE_PLAYER) // If being is a player (not NPC), use the player version of this logic.
@@ -527,32 +525,38 @@ void GameLogic()
 
 /// **  The following code concerns dealing with submitted user commands ///////////////////
             if(awaitingPlayerActionCommand)
-                walkAnimQueueReleased = true;
-            else if(awaitingPlayerActionCommand && submittedPlayerActionCommand)
             {
-#ifdef D_TURN_LOGIC
-                std::cout << player->name << " executes your command" << std::endl;
-#endif
-                player->actionPoints -= player->actionCost;
-#ifdef D_TURN_LOGIC
-                std::cout << player->name << " now has " << player->actionPoints << "/" << player->effectiveSpeed << "AP" << std::endl;
-#endif
+                walkAnimQueueReleased = true;
 
-                // Reset flags to default, false.
-                awaitingPlayerActionCommand = false;
-                submittedPlayerActionCommand = false;
-                actionOpen = false;
-
-                if(player->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
-                    walkAnimQueue.push_back(player);
-                else if(player->currentAction != ACTION_IDLE) // If the selected action is OTHER THAN WALK, but NOT idle...
+                if(submittedPlayerActionCommand)
                 {
-                    currentAnimatedBeing = player;
-                    walkAnimQueueReleased = true;
+#ifdef D_TURN_LOGIC
+                    std::cout << player->name << " executes your command" << std::endl;
+#endif
+                    player->actionPoints -= player->actionCost;
+#ifdef D_TURN_LOGIC
+                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->effectiveSpeed << "AP" << std::endl;
+#endif
+
+                    // Reset flags to default, false.
+                    awaitingPlayerActionCommand = false;
+                    submittedPlayerActionCommand = false;
+                    gameLogicActionOpen = false;
+
+                    if(player->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
+                    {
+                        player->Move(player->intendedWalkDirection);
+                        walkAnimQueue.push_back(player);
+                    }
+                    else if(player->currentAction != ACTION_IDLE) // If the selected action is OTHER THAN WALK, but NOT idle...
+                    {
+                        spotlightedBeing = player;
+                        walkAnimQueueReleased = true;
+                    }
+
+
+                    ShiftTerminal(); // This might have to be moved to be triggered by different conditions later on.
                 }
-
-
-                ShiftTerminal(); // This might have to be moved to be triggered by different conditions later on.
             }
 /// ** ////////////////////////////////////////////////////////////////////////////////////
 
@@ -567,15 +571,23 @@ void GameLogic()
         }
         else // if actionQueue.empty() returned true
         {
-            turnLogicPhase = GRANT_ACTION_POINTS;
+            //std::cout << "Error if repeats endlessly" << std::endl;
+            turnLogicPhase = LOGIC_PHASE_GRANT_ACTION_POINTS;
         }
 
         if(actionQueue.empty())
+        {
+            //std::cout << "Walk anim queue is empty" << std::endl;
             walkAnimQueueReleased = true; // If there are no beings to queue actions for, might as well release walk animation queue.
+        }
 
         //If a player action/AI option has been confirmed, no further actions may be processed until its animation is complete.
-        if(!actionOpen)
-            turnLogicPhase = ANIMATION;
+        if(!gameLogicActionOpen)
+        {
+            turnLogicPhase = LOGIC_PHASE_ANIMATION;
+
+        }
+
     }
 
     /** ### 4: ANIMATION  ###
@@ -584,66 +596,73 @@ void GameLogic()
 
         -If the walkAnimQueue is NOT EMPTY, progress relevant beings' walk animations.
         -If the walkAnimQueue IS EMPTY...
-            1) The spotlighted currentAnimatedBeing is animated (not necessarily the being at the front of the actionQueue, e.g. free auto-retaliate skill).
+            1) spotlightedBeing is animated (not necessarily the being at the front of the actionQueue, e.g. free auto-retaliate skill).
             2) If there is no currently spotlighted being performing a non-walk action, phase completes.
     **/
-    if(turnLogicPhase == ANIMATION)
+    if(turnLogicPhase == LOGIC_PHASE_ANIMATION)
     {
-        checkAnimationPhaseComplete = false; // Reset flag.
+        animationPhaseComplete = false; // Reset flag.
 
         //Progress the IDLE animation of all beings by one step.
         //Note that all beings will go through this (possibly hidden to the player) progression in idle animation (even) when they are not queued to act or animate.
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
-            (*it)->ProgressIdleAnimation();
-
-        if(currentAnimatedBeing != nullptr) // There IS a being being spotlighted.
         {
-            if(currentAnimatedBeing->animationComplete) // The spotlighted being has completed its animation
+            (*it)->ProgressIdleAnimation();
+        }
+        if(spotlightedBeing != nullptr) // There IS a being being spotlighted.
+        {
+//std::cout << "Being spotlighted." << std::endl;
+            if(spotlightedBeing->animationComplete) // The spotlighted being has completed its animation
             {
-                //checkAnimationPhaseComplete = true; /// *** ???????????????
-                currentAnimatedBeing = nullptr; // Reset pointer.
+                animationPhaseComplete = true; // Move on to Processing phase.
+                spotlightedBeing = nullptr; // Reset pointer.
             }
-            else // Animation of currentAnimatedBeing is incomplete.
+            else // Animation of spotlightedBeing is incomplete.
             {
                 /// **Progress the animation of being in question here**
             }
         }
-        else if(walkAnimQueueReleased) // Implies that there IS NOT a Being spotlighted.
+        else // if(spotlightedBeing == nullptr) // There IS NOT a being being spotlighted.
         {
-            for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
+//std::cout << "No being spotlighted." << std::endl;
+            if(walkAnimQueueReleased)
             {
-                // Being is NOT offscreen and is visible to player.
-                if(abs((*it)->xCell - player->xCell) <= drawingXCellCutoff
-                        && abs((*it)->yCell - player->yCell) <= drawingYCellCutoff
-                        && (*it)->visibleToPlayer)
+                for(std::vector<Being*>::iterator it = walkAnimQueue.begin(); it != walkAnimQueue.end();)
                 {
-                    // Progress walk animation by one step. If this progression completes its animation, erase it from walkAnimQueue.
-                    (*it)->ProgressWalkAnimation();
-                    if((*it)->animationComplete)
+                    // Being is NOT offscreen and is visible to player.
+                    if(abs((*it)->xCell - playerXCell) <= drawingXCellCutoff
+                            && abs((*it)->yCell - playerYCell) <= drawingYCellCutoff
+                            && (*it)->visibleToPlayer)
                     {
+                        // Progress walk animation by one step. If this progression completes its animation, erase it from walkAnimQueue.
+                        (*it)->ProgressWalkAnimation();
+                        if((*it)->animationComplete)
+                        {
+                            walkAnimQueue.erase(it);
+                        }
+                        else // Walk animation not complete
+                            ++it; // Being stays in queue, iterate to next being in queue.
+                    }
+                    else // Animation of this being is auto-completed if offscreen or invisible to player.
+                    {
+                        (*it)->InstantCompleteWalkAnimation();
                         walkAnimQueue.erase(it);
                     }
-                    else // Walk animation not complete
-                        ++it; // Being stays in queue, iterate to next being in queue.
                 }
-                else // Animation of this being is auto-completed if offscreen or invisible to player.
+
+                if(walkAnimQueue.empty())
                 {
-                    (*it)->InstantCompleteWalkAnimation();
-                    walkAnimQueue.erase(it);
+                    animationPhaseComplete = true; // Flag animation phase is complete.
+                    walkAnimQueueReleased = false; // Reset flag.
                 }
             }
 
-            if(walkAnimQueue.empty())
-            {
-                checkAnimationPhaseComplete = true; // Flag animation phase is complete.
-                walkAnimQueueReleased = false; // Reset flag.
-            }
         }
 
-         //Move on to processing phase if the animation phase is complete.
-        if(checkAnimationPhaseComplete)
+        //Move on to processing phase if the animation phase is complete.
+        if(animationPhaseComplete)
         {
-            turnLogicPhase = PROCESSING;
+            turnLogicPhase = LOGIC_PHASE_PROCESSING;
         }
     }
 
@@ -652,13 +671,13 @@ void GameLogic()
 
     **/
 
-    if(turnLogicPhase == PROCESSING)
+    if(turnLogicPhase == LOGIC_PHASE_PROCESSING)
     {
         // Something here.
 
         //Processing having been applied, turn logic flags are reset to await new actions.
-        actionOpen = true;
-        turnLogicPhase = SELECT_ACTION;
+        gameLogicActionOpen = true;
+        turnLogicPhase = LOGIC_PHASE_SELECT_ACTION;
     }
 
     UpdateObjects();
@@ -685,7 +704,7 @@ void LoadingLogic()
         if(keyInput[KEY_Q] && D_PROGRESSPAUSEDVISUALIZATIONTIMER == 0)
         {
             generator->D_UNPAUSE_VISUALIZATION();
-            D_PROGRESSPAUSEDVISUALIZATIONTIMER = 50;
+            D_PROGRESSPAUSEDVISUALIZATIONTIMER = 20;
         }
 
 #endif // D_GEN_VISUALIZATION_PHASE_PAUSE
@@ -784,11 +803,13 @@ void GameDrawing()
 
         DrawTiles();
 
+        // The player Being is drawn in the center.
         al_draw_bitmap_region(gfxPlayer,
                               TILESIZE*player->animationFrame, 0,
                               TILESIZE, TILESIZE,
                               SCREEN_W/2, SCREEN_H/2, 0);
 
+        // The drawing positions of NPCs are relative to that of the player Being.
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
             if((*it)->derivedType == BEING_TYPE_NPC)//As opposed to player, which is drawn seperately
@@ -797,8 +818,8 @@ void GameDrawing()
                     al_draw_bitmap_region(gfxNPCPassive[(*it)->spriteID],
                                           TILESIZE*(*it)->animationFrame, 0,
                                           TILESIZE, TILESIZE,
-                                          (*it)->xPosition + SCREEN_W/2 - player->xPosition,
-                                          (*it)->yPosition + SCREEN_H/2 - player->yPosition,
+                                          (*it)->xPosition + SCREEN_W/2 - playerXPosition,
+                                          (*it)->yPosition + SCREEN_H/2 - playerYPosition,
                                           0);
             }
         }
@@ -1067,21 +1088,20 @@ void DrawGUI()
 
 void DrawTiles()
 {
-    //Assumes 800x600 window and 120 height terminal
-
-    int startCellX = player->xCell-drawingXCellCutoff;
+    //Assumes 800x600 window
+    int startCellX = playerXCell-drawingXCellCutoff;
     if(startCellX < 0)
         startCellX = 0;
 
-    int startCellY = player->yCell-drawingYCellCutoff;
+    int startCellY = playerYCell-drawingYCellCutoff;
     if(startCellY < 0)
         startCellY = 0;
 
-    int endCellX = player->xCell+drawingXCellCutoff;
+    int endCellX = playerXCell+drawingXCellCutoff;
     if(endCellX > areaCellWidth)
         endCellX = areaCellHeight;
 
-    int endCellY = player->yCell+drawingYCellCutoff;
+    int endCellY = playerYCell+drawingYCellCutoff;
     if(endCellY > areaCellHeight)
         endCellY = areaCellHeight;
 
@@ -1106,8 +1126,8 @@ void DrawTiles()
                                       floorRegionDrawY,
                                       TILESIZE,
                                       TILESIZE,
-                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                      y*TILESIZE + SCREEN_H/2 - player->yPosition,
+                                      x*TILESIZE + SCREEN_W/2 - playerXPosition,
+                                      y*TILESIZE + SCREEN_H/2 - playerYPosition,
                                       0);
             }
 
@@ -1124,8 +1144,8 @@ void DrawTiles()
                                       wallRegionDrawY,
                                       TILESIZE,
                                       TILESIZE,
-                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                      y*TILESIZE + SCREEN_H/2 - player->yPosition,
+                                      x*TILESIZE + SCREEN_W/2 - playerXPosition,
+                                      y*TILESIZE + SCREEN_H/2 - playerYPosition,
                                       0);
             }
 
@@ -1144,8 +1164,8 @@ void DrawTiles()
                                       featureRegionDrawY,
                                       TILESIZE,
                                       TILESIZE,
-                                      x*TILESIZE + SCREEN_W/2 - player->xPosition,
-                                      y*TILESIZE + SCREEN_H/2 - player->yPosition,
+                                      x*TILESIZE + SCREEN_W/2 - playerXPosition,
+                                      y*TILESIZE + SCREEN_H/2 - playerYPosition,
                                       0);
 
 
@@ -1160,7 +1180,7 @@ void DrawDebugOverlay()
     if(mainPhase == MAIN_PHASE_GAME)
     {
         //Draw player's cell coordinates
-        std::string posStr = "(" + std::to_string(player->xCell) + ", " + std::to_string(player->yCell) + ")";
+        std::string posStr = "(" + std::to_string(playerXCell) + ", " + std::to_string(playerYCell) + ")";
         s_al_draw_text(terminalFont,al_map_rgb(255,255,255),0,0,ALLEGRO_ALIGN_LEFT,posStr);
     }
     if(mainPhase == MAIN_PHASE_LOADING)
@@ -1294,7 +1314,7 @@ void PopulateTargetableBeings()
 
         if((*it)->derivedType == BEING_TYPE_NPC)
         {
-            if(sqrt(pow((*it)->yCell - player->yCell, 2) + pow((*it)->xCell - player->xCell, 2)) <= 10)
+            if(sqrt(pow((*it)->yCell - playerYCell, 2) + pow((*it)->xCell - playerXCell, 2)) <= 10)
             {
                 targetableBeings.push_back(*it);
             }
@@ -1421,27 +1441,33 @@ void ProcessInput(int whatContext)
 
 /// Normal control context (interpret keypad) ////////////////////////////////////////////////////////////////////////
 
-            if(keyInput[KEY_PAD_8] || keyInput[KEY_UP])    keypadDirection += 1000;
-            if(keyInput[KEY_PAD_4] || keyInput[KEY_LEFT])  keypadDirection +=  100;
-            if(keyInput[KEY_PAD_6] || keyInput[KEY_RIGHT]) keypadDirection +=   10;
-            if(keyInput[KEY_PAD_2] || keyInput[KEY_DOWN])  keypadDirection +=    1;
-
-            if(keypadDirection == 0)
+            if(gameLogicActionOpen)
             {
-                if(keyInput[KEY_PAD_7]) keypadDirection = 1100;
-                if(keyInput[KEY_PAD_9]) keypadDirection = 1010;
-                if(keyInput[KEY_PAD_1]) keypadDirection =  101;
-                if(keyInput[KEY_PAD_3]) keypadDirection =   11;
-                if(keyInput[KEY_PAD_5]) keypadDirection = 1111;
-            }
+                if(keyInput[KEY_PAD_8] || keyInput[KEY_UP])    keypadDirection += 1000;
+                if(keyInput[KEY_PAD_4] || keyInput[KEY_LEFT])  keypadDirection +=  100;
+                if(keyInput[KEY_PAD_6] || keyInput[KEY_RIGHT]) keypadDirection +=   10;
+                if(keyInput[KEY_PAD_2] || keyInput[KEY_DOWN])  keypadDirection +=    1;
 
-            if(keypadDirection > 0)
-            {
-                player->actionCost = 100;
-                player->currentAction = ACTION_WALK;
-                // check emptiness
-                player->Move(keypadDirection);
-                submittedPlayerActionCommand = true;
+                if(keypadDirection == 0)
+                {
+                    if(keyInput[KEY_PAD_7]) keypadDirection = 1100;
+                    if(keyInput[KEY_PAD_9]) keypadDirection = 1010;
+                    if(keyInput[KEY_PAD_1]) keypadDirection =  101;
+                    if(keyInput[KEY_PAD_3]) keypadDirection =   11;
+                    if(keyInput[KEY_PAD_5]) keypadDirection = 1111;
+                }
+
+                if(keypadDirection > 0)
+                {
+                    player->actionCost = 100;
+                    player->currentAction = ACTION_WALK;
+                    // ********* check emptiness of destination here **************************
+                    player->intendedWalkDirection = keypadDirection;
+
+// std::cout << playerXPosition << ", " << playerYPosition << " | " << playerXCell << ", " << playerYCell << std::endl;
+
+                    submittedPlayerActionCommand = true;
+                }
             }
         }
         break;

@@ -23,7 +23,7 @@ class Graph; // Required for Area class
 
 #define D_DRAW_DEBUG_OVERLAY                          // Draws additional debug information on screen, such as the camera's X/Y position
 
-//#define D_TURN_LOGIC                                  // Output debug information to console regarding in-game movement, turns, AP...
+//z#define D_TURN_LOGIC                                  // Output debug information to console regarding in-game movement, turns, AP...
 // CURRENTLY UNUSED -- #define D_SERIALIZATION        // Output debug information to console regarding serialization.
 
 #define D_TEST_PATHFINDING                            // Press 'T' and 'Y' at the same time to output a test path from the PC's cell to a random destination cell.
@@ -95,8 +95,8 @@ enum enumInputDirections
 
 const float FPS = 60;
 
-const int SCREEN_W = 800;
-const int SCREEN_H = 600;
+const int SCREEN_W = 1600;
+const int SCREEN_H = 900;
 
 /*
 // ALLEGRO_BITMAP*scaleBuffer;
@@ -113,14 +113,14 @@ int scaleY = (windowHeight - scaleH) / 2;
 const int TILESIZE = 32;     //The size of a cell
 const int MINI_TILESIZE = TILESIZE/4; //The size of a cell in the map viewer/ room generation
 
-const int STATS_BAR_OPEN_X = 210;
-const int STATS_BAR_OPEN_Y = 580;
+const int STATS_BAR_OPEN_X = 100;
+const int STATS_BAR_OPEN_Y = 860;
 
 extern int loadingCamX; //Top left corner of loading screen camera.
 extern int loadingCamY;
 
-extern int camX; //Top left corner of the in-game camera.
-extern int camY;
+extern int camXDisplacement; // Top left corner of camera.
+extern int camYDisplacement;
 
 extern int drawingXCellCutoff; // Determines when a being is "offscreen"
 extern int drawingYCellCutoff;
@@ -140,17 +140,17 @@ enum enumMainPhases
 
 extern int mainPhase;
 
-enum enumTurnLogicPhases
+enum enumLogicPhases
 {
     //ACTION = 0,
-    //ANIMATION = 1,
+    //LOGIC_PHASE_ANIMATION = 1,
     //CALCULATION = 2
 
-    GRANT_ACTION_POINTS = 0,
-    SORT_ACTION_QUEUE = 1,
-    SELECT_ACTION = 2,
-    ANIMATION = 3,
-    PROCESSING = 4
+    LOGIC_PHASE_GRANT_ACTION_POINTS = 0,
+    LOGIC_PHASE_SORT_ACTION_QUEUE = 1,
+    LOGIC_PHASE_SELECT_ACTION = 2,
+    LOGIC_PHASE_ANIMATION = 3,
+    LOGIC_PHASE_PROCESSING = 4
 };
 
 extern int turnLogicPhase;
@@ -167,6 +167,8 @@ extern bool gameExit;
 extern bool redraw;
 
 extern bool needGeneration;
+
+extern bool gameLogicActionOpen; // Whether the system is open to new actions, whether by player or AI. When an action is taken, gameLogicActionOpen becomes false.
 
 extern bool awaitingPlayerActionCommand;
 extern bool submittedPlayerActionCommand;

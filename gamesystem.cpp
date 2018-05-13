@@ -11,11 +11,11 @@
 int loadingCamX = MINI_TILESIZE*areaCellWidth/2 - SCREEN_W/2;  //Top left corner of loading screen camera. Camera is always CENTERED on the middle of the screen, and initially physically POSITIONED at the middle of the world.
 int loadingCamY = MINI_TILESIZE*areaCellHeight/2 - SCREEN_H/2;
 
-int camX = 0;
-int camY = 0;
+int camXDisplacement = 0;
+int camYDisplacement = 0;
 
-int drawingXCellCutoff = 14; // 800/32 + 2
-int drawingYCellCutoff = 10; // 600/32 + 2 -- Make these scalable later when zooming is implemented.
+int drawingXCellCutoff = 50; // 1600/32 + 2
+int drawingYCellCutoff = 28; // 900/32 + 2 -- Make these scalable later when zooming is implemented.
 
 #ifdef D_SHOW_LOADING_VISUALIZATION
 bool D_SHOWLOADINGVISUALIZATION = true;
@@ -33,7 +33,7 @@ int D_PROGRESSPAUSEDVISUALIZATIONTIMER = 0;
 
 int mainPhase = MAIN_PHASE_TITLE;
 
-int turnLogicPhase = GRANT_ACTION_POINTS;
+int turnLogicPhase = LOGIC_PHASE_GRANT_ACTION_POINTS;
 
 
 #ifdef D_TERMINATE_LOADING_SIGNAL
@@ -44,6 +44,8 @@ bool gameExit = false;
 bool redraw = false;
 
 bool needGeneration = true;
+
+bool gameLogicActionOpen = true;
 
 bool awaitingPlayerActionCommand = false;
 bool submittedPlayerActionCommand = false;
