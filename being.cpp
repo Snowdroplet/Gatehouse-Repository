@@ -22,28 +22,11 @@ Being::Being()
     actionName = "UNKNOWN";
     actionBlocked = false;
     actionPoints = 0;
-
-    for(int i = 0; i < ITEM_EQUIP_CLASS_TOTAL-1; i++)
-    {
-        equipped[i] = nullptr;
-    }
 }
 
 Being::~Being()
 {
     delete graph;
-
-    for(std::vector<Property*>::iterator it = intrinsics.begin(); it != intrinsics.end();)
-    {
-        delete *it;
-        intrinsics.erase(it);
-    }
-
-    for(std::vector<Property*>::iterator it = effects.begin(); it != effects.end();)
-    {
-        delete *it;
-        effects.erase(it);
-    }
 
 }
 
@@ -210,59 +193,23 @@ void Being::ResetPath()
 
 void Being::RecalculateEffectiveStats()
 {
-    weaponPhysicalDamage = 0;
 
-    for(int i = 0; i < ITEM_EQUIP_CLASS_TOTAL-1; i++)
-    {
-        for(std::vector<Property*>::iterator it = equipped[i]->properties.begin(); it != equipped[i]->properties.end(); ++it)
-        {
-            switch((*it)->identity)
-            {
-            case PROP_PHYSICAL_DAMAGE:
-                weaponPhysicalDamage += (*it)->magnitude;
-                break;
-
-            case PROP_FIRE_DAMAGE:
-                weaponFireDamage += (*it)->magnitude;
-                break;
-            }
-        }
-    }
 
 }
 
 void Being::UpdateDefaultSpell()
 {
-    // Later change to "stances" - default, twohanded... dual-weapon is the same as default, although being gains dual-attack spell.
-
-    // Bare handed
-    if(equipped[ITEM_EQUIP_CLASS_MAINHAND] == nullptr && equipped[ITEM_EQUIP_CLASS_OFFHAND] == nullptr)
-    {
-        defaultSpell.minRange = effectiveStrength;
-    }
-
-    // Twohanded
-    else if(equipped[ITEM_EQUIP_CLASS_MAINHAND] != nullptr && equipped[ITEM_EQUIP_CLASS_OFFHAND] == nullptr )
-    {
-        defaultSpell.minRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->minRange;
-        defaultSpell.maxRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->maxRange;
-    }
-
-    // Dual weapon
-    else if(equipped[ITEM_EQUIP_CLASS_MAINHAND] != nullptr && equipped[ITEM_EQUIP_CLASS_OFFHAND] != nullptr )
-    {
-        defaultSpell.minRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->minRange;
-        defaultSpell.maxRange = equipped[ITEM_EQUIP_CLASS_MAINHAND]->maxRange;
-    }
 
 
 }
 
 void Being::ReleaseCurrentSpell()
 {
+    /*
     currentSpell.cellsCovered.push_back(targetLockYCell*areaCellWidth+targetLockXCell);
     castSpell = currentSpell;
     currentSpell = defaultSpell;
+    */
 }
 
 void Being::WearEquipment()

@@ -82,13 +82,17 @@ How to operate debug:
 #include "area.h"
 
 #include "spell.h"
+
 #include "item.h"
+#include "equip.h"
+#include "tool.h"
+#include "material.h"
+
 #include "being.h"
 #include "player.h"
 #include "npc.h"
 
 /// Single-object classes ###########
-GuiSystem *guiSystem = nullptr;
 Generator *generator = nullptr;
 Area *area = nullptr;
 Player *player = nullptr;
@@ -97,7 +101,9 @@ Player *player = nullptr;
 std::vector<Item*>items; // All items currently in play in the current area.
 std::vector<int>baseIDsKnown; // A list of all previously identified itemIDs. These will auto-identify when encountered again.
 
-void PopulateItems(); // List all items currently held by all beings,
+void PopulateItems(); // Fill items vector with all items currently held by all beings and in play.
+
+void DevAddTestItemsToPlayer(); // In development...
 
 /// Spell containers and functions #################
 std::vector<Spell*>activeSpells;
@@ -219,7 +225,7 @@ int main(int argc, char *argv[])
 
     LoadResources();
 
-    guiSystem = new GuiSystem();
+    GuiInit();
 
     generator = new Generator(); // Create a generator object
 
@@ -306,7 +312,7 @@ int main(int argc, char *argv[])
     delete area;
     delete generator;
 
-    delete guiSystem;
+    GuiDeinit();
 
     UnloadResources();
 
@@ -332,7 +338,8 @@ void GameLogic()
     **/
 
     UpdateGamesystem();
-    guiSystem->UpdateElements();
+
+    GuiUpdateElements();
 
 /// ### 0.2: Receive input, interpret and process according to context ####
 
@@ -1062,7 +1069,7 @@ void DrawGUI()
                        0);
     }
 
-    guiSystem->DrawFrame();
+    GuiDrawFrame();
 
     ALLEGRO_COLOR colorToDraw = NEUTRAL_WHITE;
 
@@ -1227,6 +1234,7 @@ void UpdateObjects()
 
     for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
     {
+        /*
         for(std::vector<int>::iterator ccit = (*it)->cellsCovered.begin(); ccit != (*it)->cellsCovered.end(); ++ccit)
         {
             if(area->beingmap[*ccit] != nullptr)
@@ -1236,6 +1244,7 @@ void UpdateObjects()
                 bpointer->effects.insert(bpointer->effects.end(),(*it)->effects.begin(), (*it)->effects.end());
             }
         }
+        */
 
         (*it)->Logic();
 
@@ -1293,6 +1302,7 @@ void UpdateObjects()
 
 void PopulateItems()
 {
+
     items.clear();
 
     /*
@@ -1573,3 +1583,16 @@ void UpdateGamesystem()
         targetScanMoveDelay --;
 
 }
+
+/// Development Functions ///////////////////////////
+
+void DevAddTestItemsToPlayer()
+{
+    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_DAGGER));
+    player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_POTION));
+    player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_WOOD));
+
+
+}
+
+

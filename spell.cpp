@@ -17,11 +17,6 @@ Spell::~Spell()
 {
     cellsCovered.clear();
 
-    for(std::vector<Property*>::iterator it = effects.begin(); it != effects.end();)
-    {
-        delete *it;
-        effects.erase(it);
-    }
 }
 
 void Spell::Logic()

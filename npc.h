@@ -17,6 +17,8 @@ public:
 
     int NPCType;
 
+    std::vector<Item*>NPCInventory; // Loot and retrieval of stolen items
+
     std::vector<Node*>currentPath;
 
     NPC(bool savedNPC);

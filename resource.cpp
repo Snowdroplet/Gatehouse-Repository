@@ -22,6 +22,10 @@ ALLEGRO_BITMAP *gfxFloorTiles = nullptr;
 ALLEGRO_BITMAP *gfxWallTiles = nullptr;
 ALLEGRO_BITMAP *gfxFeatureTiles = nullptr;
 
+ALLEGRO_BITMAP *gfxEquipSheet = nullptr;
+ALLEGRO_BITMAP *gfxToolSheet = nullptr;
+ALLEGRO_BITMAP *gfxMaterialSheet = nullptr;
+
 ALLEGRO_FONT   *terminalFont = nullptr;
 ALLEGRO_FONT   *titleFont = nullptr;
 
@@ -52,8 +56,12 @@ void LoadResources()
     gfxNPCPassive[1] = al_load_bitmap("npcSlime.png");
 
     gfxFloorTiles = al_load_bitmap("floorTiles.png");
-    gfxWallTiles = al_load_bitmap("wallTiles.png");
+    gfxWallTiles = al_load_bitmap("drawnWallTiles.png");
     gfxFeatureTiles = al_load_bitmap("featureTiles.png");
+
+    gfxEquipSheet = al_load_bitmap("equipSheet.png");
+    gfxToolSheet = al_load_bitmap("toolSheet.png");
+    gfxMaterialSheet = al_load_bitmap("materialSheet.png");
 
     terminalFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
     titleFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
@@ -84,6 +92,10 @@ void UnloadResources()
     al_destroy_bitmap(gfxFloorTiles);
     al_destroy_bitmap(gfxWallTiles);
     al_destroy_bitmap(gfxFeatureTiles);
+
+    al_destroy_bitmap(gfxEquipSheet);
+    al_destroy_bitmap(gfxToolSheet);
+    al_destroy_bitmap(gfxMaterialSheet);
 
     al_destroy_font(terminalFont);
     al_destroy_font(titleFont);

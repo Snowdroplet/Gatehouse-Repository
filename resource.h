@@ -83,6 +83,21 @@ enum enumFeatureIndex
     /*0*/  FI_EMPTY = 0,  FI_ERROR = 1, FI_UPSTAIRS = 2,  FI_DOWNSTAIRS = 3
 };
 
+enum enumEquipSheetIndex
+{
+    EQSI_DAGGER = 0
+};
+
+enum enumToolSheetIndex
+{
+    TLSI_POTION = 0
+};
+
+enum enumMaterialSheetIndex
+{
+    MASI_WOOD = 0
+};
+
 extern ALLEGRO_BITMAP *debugPathTracer;
 
 extern ALLEGRO_BITMAP *gfxGuiFrameHorizontal;
@@ -103,6 +118,10 @@ extern ALLEGRO_BITMAP *gfxTerminal;
 extern ALLEGRO_BITMAP *gfxFloorTiles;
 extern ALLEGRO_BITMAP *gfxWallTiles;
 extern ALLEGRO_BITMAP *gfxFeatureTiles;
+
+extern ALLEGRO_BITMAP *gfxEquipSheet;
+extern ALLEGRO_BITMAP *gfxToolSheet;
+extern ALLEGRO_BITMAP *gfxMaterialSheet;
 
 extern ALLEGRO_FONT   *terminalFont;
 extern ALLEGRO_FONT   *titleFont;

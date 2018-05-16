@@ -41,6 +41,18 @@ class Player: public Being
     */
 
 public:
+
+    std::vector<Equip*>equipInventory; // Currently capping inventory at 24 items (30 limit for contingency e.g. item unequipped + inactive but memory not yet deleted)
+    std::vector<Tool*>toolInventory;
+    std::vector<Material*>materialInventory;
+
+    Item* headEquipSlot;
+    Item* bodyEquipSlot;
+    Item* handEquipSlot;
+    Item* legEquipSlot;
+    Item* relic1EquipSlot;
+    Item* relic2EquipSlot;
+
     Player();
     Player(bool savedPlayer);
     //void InitByArchive();

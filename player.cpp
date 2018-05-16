@@ -42,8 +42,14 @@ Player::Player(int spawnXCell, int spawnYCell)
 
     animationFrameThreshold = 1;
 
-    //Testing inventory
-    //if(inventory.empty())
+
+
+    headEquipSlot = nullptr;
+    bodyEquipSlot = nullptr;
+    handEquipSlot = nullptr;
+    legEquipSlot = nullptr;
+    relic1EquipSlot = nullptr;
+    relic2EquipSlot = nullptr;
 
 }
 

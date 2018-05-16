@@ -14,11 +14,12 @@
 
 #include "graph.h"
 
-#include "property.h"
-
 #include "spell.h"
 
 #include "item.h"
+#include "equip.h"
+#include "tool.h"
+#include "material.h"
 
 
 //#include <boost/archive/text_oarchive.hpp>
@@ -105,13 +106,6 @@ public:
     Spell defaultSpell; // The "unmodified" attack option, usually depending on current weapon.
     Spell currentSpell; // Spell to
     Spell castSpell;    // Spell to be picked up by global spell queue.
-
-    std::vector<Property*>intrinsics; // "default" magical effects
-    std::vector<Property*>effects; // A being with more than 40 active properties will be anihilated by chaos.
-
-    /// Inventory
-    Item* inventory[30]; // Currently capping inventory at 30 items.
-    Item* equipped[ITEM_EQUIP_CLASS_TOTAL];
 
     Being();
     ~Being();
