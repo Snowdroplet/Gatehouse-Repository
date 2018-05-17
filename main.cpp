@@ -1035,6 +1035,41 @@ void TitleDrawing()
 
 void DrawGUI()
 {
+    if(controlContext == EQUIP_INVENTORY_CONTEXT)
+    {
+        al_draw_bitmap(gfxItemUI,
+                       guiItemUIDrawXPosition,
+                       guiItemUIDrawYPosition,
+                       0);
+        al_draw_bitmap(gfxEquipUIIcon,
+                       guiItemUIActiveTabIconDrawXPosition,
+                       guiItemUIActiveTabIconDrawYPosition,
+                       0);
+    }
+    else if(controlContext == TOOL_INVENTORY_CONTEXT)
+    {
+        al_draw_bitmap(gfxItemUI,
+                       guiItemUIDrawXPosition,
+                       guiItemUIDrawYPosition,
+                       0);
+        al_draw_bitmap(gfxToolUIIcon,
+                       guiItemUIActiveTabIconDrawXPosition,
+                       guiItemUIActiveTabIconDrawYPosition,
+                       0);
+    }
+    else if(controlContext == MATERIAL_INVENTORY_CONTEXT)
+    {
+        al_draw_bitmap(gfxItemUI,
+                       guiItemUIDrawXPosition,
+                       guiItemUIDrawYPosition,
+                       0);
+        al_draw_bitmap(gfxMaterialUIIcon,
+                       guiItemUIActiveTabIconDrawXPosition,
+                       guiItemUIActiveTabIconDrawYPosition,
+                       0);
+    }
+
+
     if(controlContext == TARGETING_CONTEXT)
     {
         al_draw_bitmap(gfxGuiTarget,
@@ -1424,9 +1459,20 @@ void ProcessInput(int whatContext)
                 // List pickup-able items.
             }
 
-            else if(keyInput[KEY_I] && controlContextChangeDelay == 0)
+            else if((keyInput[KEY_Q] && controlContextChangeDelay == 0) ||
+                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
             {
-                ChangeControlContext(NORMAL_CONTEXT,INVENTORY_CONTEXT);
+                ChangeControlContext(NORMAL_CONTEXT,TOOL_INVENTORY_CONTEXT);
+            }
+
+            else if(keyInput[KEY_W] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+            }
+
+            else if(keyInput[KEY_R] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
             }
 
             else if(keyInput[KEY_L] && controlContextChangeDelay == 0)
@@ -1543,9 +1589,10 @@ void ProcessInput(int whatContext)
 
 /// Inventory context //////////////////////////////////////////////////////////////////////////////////////
 
-    case INVENTORY_CONTEXT:
-        if(keyInput[KEY_I]) // Should later change this to ESC
-            ChangeControlContext(INVENTORY_CONTEXT, NORMAL_CONTEXT);
+    case EQUIP_INVENTORY_CONTEXT:
+        if( (keyInput[KEY_W] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT, NORMAL_CONTEXT);
 
         for(unsigned int i = KEY_A; i < KEY_Z; i++)
         {
@@ -1554,13 +1601,43 @@ void ProcessInput(int whatContext)
 
             }
         }
-
         break;
 
-/// Weapon spell context ///////////////////////////////////////////////////////////////////////////////////
+
+    case TOOL_INVENTORY_CONTEXT:
+        if( (keyInput[KEY_Q] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+
+        for(unsigned int i = KEY_A; i < KEY_Z; i++)
+        {
+            if(keyInput[i])
+            {
+
+            }
+        }
+        break;
+
+    case MATERIAL_INVENTORY_CONTEXT:
+        if( (keyInput[KEY_R] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+
+        for(unsigned int i = KEY_A; i < KEY_Z; i++)
+        {
+            if(keyInput[i])
+            {
+
+            }
+        }
+        break;
+
+
+
+/// Weapon spell select context ////////////////////////////////////////////////////////////////////////////
 
     case WEAPON_SPELL_CONTEXT:
-        if(keyInput[KEY_Z] && controlContextChangeDelay == 0)
+        if(keyInput[KEY_SHIFT] && keyInput[KEY_Z] && controlContextChangeDelay == 0)
         {
             ChangeControlContext(WEAPON_SPELL_CONTEXT, NORMAL_CONTEXT);
         }

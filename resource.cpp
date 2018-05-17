@@ -3,11 +3,6 @@
 /// Declaration
 ALLEGRO_BITMAP *debugPathTracer = nullptr;
 
-ALLEGRO_BITMAP *gfxGuiFrameHorizontal = nullptr;
-ALLEGRO_BITMAP *gfxGuiFrameVertical = nullptr;
-ALLEGRO_BITMAP *gfxGuiFrameCorner = nullptr;
-ALLEGRO_BITMAP *gfxGuiFrameRunic = nullptr;
-
 ALLEGRO_BITMAP *gfxGuiTarget = nullptr;
 ALLEGRO_BITMAP *gfxGuiTargetHard = nullptr;
 ALLEGRO_BITMAP *gfxGuiTargetableListTag = nullptr;
@@ -21,6 +16,12 @@ ALLEGRO_BITMAP *gfxTerminal = nullptr;
 ALLEGRO_BITMAP *gfxFloorTiles = nullptr;
 ALLEGRO_BITMAP *gfxWallTiles = nullptr;
 ALLEGRO_BITMAP *gfxFeatureTiles = nullptr;
+
+ALLEGRO_BITMAP *gfxItemUI = nullptr;
+ALLEGRO_BITMAP *gfxItemUINameplate = nullptr;
+ALLEGRO_BITMAP *gfxEquipUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxToolUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxMaterialUIIcon = nullptr;
 
 ALLEGRO_BITMAP *gfxEquipSheet = nullptr;
 ALLEGRO_BITMAP *gfxToolSheet = nullptr;
@@ -36,11 +37,6 @@ ALLEGRO_FONT   *titleFont = nullptr;
 void LoadResources()
 {
     debugPathTracer = al_load_bitmap("debugPathTracer.png");
-
-    gfxGuiFrameHorizontal = al_load_bitmap("guiFrameHorizontal.png");
-    gfxGuiFrameVertical = al_load_bitmap("guiFrameVertical.png");
-    gfxGuiFrameCorner = al_load_bitmap("guiFrameCorner.png");
-    gfxGuiFrameRunic = al_load_bitmap("guiFrameRunic.png");
 
     gfxGuiTarget = al_load_bitmap("placeholderTarget.png");
     gfxGuiTargetHard = al_load_bitmap("placeholderTarget2.png");
@@ -59,6 +55,12 @@ void LoadResources()
     gfxWallTiles = al_load_bitmap("drawnWallTiles.png");
     gfxFeatureTiles = al_load_bitmap("featureTiles.png");
 
+    gfxItemUI = al_load_bitmap("drawnItemUI.png");
+    gfxItemUINameplate = al_load_bitmap("itemUINameplate.png");
+    gfxEquipUIIcon = al_load_bitmap("equipUIIcon.png");
+    gfxToolUIIcon = al_load_bitmap("toolUIIcon.png");
+    gfxMaterialUIIcon = al_load_bitmap("materialUIIcon.png");
+
     gfxEquipSheet = al_load_bitmap("equipSheet.png");
     gfxToolSheet = al_load_bitmap("toolSheet.png");
     gfxMaterialSheet = al_load_bitmap("materialSheet.png");
@@ -70,11 +72,6 @@ void LoadResources()
 void UnloadResources()
 {
     al_destroy_bitmap(debugPathTracer);
-
-    al_destroy_bitmap(gfxGuiFrameHorizontal);
-    al_destroy_bitmap(gfxGuiFrameVertical);
-    al_destroy_bitmap(gfxGuiFrameCorner);
-    al_destroy_bitmap(gfxGuiFrameRunic);
 
     al_destroy_bitmap(gfxGuiTarget);
     al_destroy_bitmap(gfxGuiTargetHard);
@@ -92,6 +89,12 @@ void UnloadResources()
     al_destroy_bitmap(gfxFloorTiles);
     al_destroy_bitmap(gfxWallTiles);
     al_destroy_bitmap(gfxFeatureTiles);
+
+    al_destroy_bitmap(gfxItemUI);
+    al_destroy_bitmap(gfxItemUINameplate);
+    al_destroy_bitmap(gfxEquipUIIcon);
+    al_destroy_bitmap(gfxToolUIIcon);
+    al_destroy_bitmap(gfxMaterialUIIcon);
 
     al_destroy_bitmap(gfxEquipSheet);
     al_destroy_bitmap(gfxToolSheet);

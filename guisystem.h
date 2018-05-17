@@ -1,73 +1,43 @@
-#ifndef GUI_H_INCLUDED
-#define GUI_H_INCLUDED
+#ifndef GUISYSTEM_H_INCLUDED
+#define GUISYSTEM_H_INCLUDED
 
 #include <vector>
 #include <cmath>
+#include <string>
 
 #include "gamesystem.h"
-#include "control.h"
+//#include "control.h"
 #include "resource.h"
 
 #include "guidecorations.h"
 
-class GuiSystem
-{
+/// Target contexts
+
+extern int guiTargetDrawXPosition;
+extern int guiTargetDrawYPosition;
 
 
-    /// Frame
+/// Item contexts
 
-    std::vector<FrameRune*>frameRunes;
+const int ITEM_ICONSIZE = 64; //The size of an item icon
+const int ITEM_ICON_DISPLACEMENT = 11; // Currently 75-64... Change to determine mathematically later.
+const int ITEM_UI_ORIGIN_X = 42; // Arbitrary top left corner of item ui grid.
+const int ITEM_UI_ORIGIN_Y = 44; // Arbitrary top left corner of item ui grid.
+const int ITEM_UI_ROW_WIDTH = 4; // 0 to 3
+const int ITEM_UI_COLUMN_HEIGHT = 6; // 0 to 5
 
-    bool frameActive;
+extern int guiItemUIDrawXPosition;
+extern int guiItemUIDrawYPosition;
 
-    int frameHorizontalWidth;
-    int frameHorizontalHeight;
-    int numFrameHorizontalsAcross;
-
-    int frameVerticalWidth;
-    int frameVerticalHeight;
-    int numFrameVerticalsDown;
-
-    int frameCornerWidth;
-
-    float frameRunicLead;
-    float frameRunicScrollSpeed;
-
-    int frameTotalRunicWidth;
-    int frameIndividualRunicWidth;
-
-    std::string frameRunicString;
+extern int guiItemUIActiveTabIconDrawXPosition;
+extern int guiItemUIActiveTabIconDrawYPosition;
 
 
 
-    /// Frame buttons/menus
-    int playerStatsBarButtonX;
-    int playerStatsBarButtonY;
+void GuiInit();
+void GuiDeinit();
 
-    int playerJournalBarButtonX;
-    int playerJournalBarButtonY;
+void GuiUpdateElements();
+void GuiDrawFrame();
 
-    /// Target context
-
-    int targetDrawXPosition;
-    int targetDrawYPosition;
-
-
-public:
-    GuiSystem();
-    ~GuiSystem();
-
-    /// Logic
-
-    void SetFrameRunicString(std::string update);
-    void UpdateElements();
-
-    /// Drawing
-
-    void DrawFrame();
-
-
-
-};
-
-#endif // GUI_H_INCLUDED
+#endif // GUISYSTEM_H_INCLUDED

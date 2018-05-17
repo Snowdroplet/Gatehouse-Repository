@@ -100,11 +100,6 @@ enum enumMaterialSheetIndex
 
 extern ALLEGRO_BITMAP *debugPathTracer;
 
-extern ALLEGRO_BITMAP *gfxGuiFrameHorizontal;
-extern ALLEGRO_BITMAP *gfxGuiFrameVertical;
-extern ALLEGRO_BITMAP *gfxGuiFrameCorner;
-extern ALLEGRO_BITMAP *gfxGuiFrameRunic;
-
 extern ALLEGRO_BITMAP *gfxGuiTarget;
 extern ALLEGRO_BITMAP *gfxGuiTargetHard;
 extern ALLEGRO_BITMAP *gfxGuiTargetableListTag;
@@ -118,6 +113,12 @@ extern ALLEGRO_BITMAP *gfxTerminal;
 extern ALLEGRO_BITMAP *gfxFloorTiles;
 extern ALLEGRO_BITMAP *gfxWallTiles;
 extern ALLEGRO_BITMAP *gfxFeatureTiles;
+
+extern ALLEGRO_BITMAP *gfxItemUI;
+extern ALLEGRO_BITMAP *gfxItemUINameplate;
+extern ALLEGRO_BITMAP *gfxEquipUIIcon;
+extern ALLEGRO_BITMAP *gfxToolUIIcon;
+extern ALLEGRO_BITMAP *gfxMaterialUIIcon;
 
 extern ALLEGRO_BITMAP *gfxEquipSheet;
 extern ALLEGRO_BITMAP *gfxToolSheet;

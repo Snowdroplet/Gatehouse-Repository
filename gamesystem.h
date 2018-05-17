@@ -110,7 +110,7 @@ int scaleX = (windowWidth - scaleW) / 2;
 int scaleY = (windowHeight - scaleH) / 2;
 */
 
-const int TILESIZE = 32;     //The size of a cell
+const int TILESIZE = 32;     // The size of a cell
 const int MINI_TILESIZE = TILESIZE/4; //The size of a cell in the map viewer/ room generation
 
 const int STATS_BAR_OPEN_X = 100;
@@ -181,10 +181,18 @@ extern int turnP;
 
 enum enumControlContexts
 {
-    NORMAL_CONTEXT = 0,
+    NORMAL_CONTEXT,
 
-    TARGETING_CONTEXT = 1,
+    TARGETING_CONTEXT,
 
+    EQUIP_INVENTORY_CONTEXT,
+    TOOL_INVENTORY_CONTEXT,
+    MATERIAL_INVENTORY_CONTEXT,
+
+    WEAPON_SPELL_CONTEXT,
+
+
+    /*
     WEAPON_SPELL_CONTEXT = 2,
     INVENTORY_CONTEXT = 3,
     SPELL_CONTEXT = 4,
@@ -192,6 +200,7 @@ enum enumControlContexts
     FOLLOWER_CONTEXT = 6,
 
     ITEM_USAGE_CONTEXT = 7
+    */
 };
 
 extern int controlContext, previousControlContext;
@@ -272,6 +281,8 @@ enum enumFeatureTypes
 
 extern int playerXCell, playerYCell;
 extern int playerXPosition, playerYPosition;
+
+
 
 
 

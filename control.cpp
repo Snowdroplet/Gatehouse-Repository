@@ -13,12 +13,13 @@ bool keyInput[] =
     false, false, false,                        //STU
     false, false, false,                        //VWX
     false, false,                               //YZ
-    false,                                      //ENTER
+    false,                                      //Enter
     false, false, false,                        //123
     false, false, false,                        //456
     false, false, false,                        //789
     false,                                      //0
-    false, false, false, false                  //ULDR
+    false, false, false, false,                 //ULDR
+    false                                       //Shift
 
 };
 
@@ -188,6 +189,12 @@ void Control()
         case ALLEGRO_KEY_RIGHT:
             keyInput[KEY_RIGHT] = true;
             break;
+        case ALLEGRO_KEY_LSHIFT:
+            keyInput[KEY_SHIFT] = true;
+            break;
+        case ALLEGRO_KEY_RSHIFT:
+            keyInput[KEY_SHIFT] = true;
+            break;
         }
     }
     if(ev.type == ALLEGRO_EVENT_KEY_UP)
@@ -316,6 +323,12 @@ void Control()
             break;
         case ALLEGRO_KEY_ENTER:
             keyInput[KEY_ENTER] = false;
+            break;
+        case ALLEGRO_KEY_LSHIFT:
+            keyInput[KEY_SHIFT] = false;
+            break;
+        case ALLEGRO_KEY_RSHIFT:
+            keyInput[KEY_SHIFT] = false;
             break;
 
         case ALLEGRO_KEY_ESCAPE:

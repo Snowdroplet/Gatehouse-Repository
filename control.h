@@ -22,6 +22,7 @@ enum keyInputKeys
     KEY_PAD_7, KEY_PAD_8, KEY_PAD_9,
     KEY_PAD_0,
     KEY_UP, KEY_LEFT, KEY_DOWN, KEY_RIGHT,      //movement
+    KEY_SHIFT
 
     // No KEY_ESC because escape currently sets exitgame = true
 };
