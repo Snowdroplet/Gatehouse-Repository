@@ -74,8 +74,7 @@ public:
     int spriteID; // The sprite to use to represent this item
 
     std::string baseName; // The base name, without modifiers or affixes like "+7 blessed lightning X of godslaying"
-
-    std::string description; // If unIDed, this will just be "you need to identify this item to gain further information"
+    std::string description; // Statistics and flavor text
 
     Item(); // Creates an all-purpose, useless template item
     ~Item();

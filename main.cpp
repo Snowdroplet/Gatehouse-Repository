@@ -756,7 +756,7 @@ void LoadingLogic()
         area->upstairsXCell           = generator->upstairsXCell;
         area->upstairsYCell           = generator->upstairsYCell;
 
-        /// ********Set Being initial positions here **********
+        /// ********Set Being initial testing positions here **********
         // Perhaps by creating and copying from a vector of initial beings?
         // Such as generator->beingSpawnpositions[blah];
 
@@ -768,6 +768,8 @@ void LoadingLogic()
         //End testing
 
         beings.push_back(player);
+
+        DevAddTestItemsToPlayer();
 
         beings.push_back(new NPC(SLIME,area->upstairsXCell,area->upstairsYCell));
         beings.push_back(new NPC(QUICKLING,area->upstairsXCell,area->upstairsYCell));
@@ -1045,6 +1047,19 @@ void DrawGUI()
                        guiItemUIActiveTabIconDrawXPosition,
                        guiItemUIActiveTabIconDrawYPosition,
                        0);
+
+
+        for(std::vector<Equip*>::iterator it = player->equipInventory.begin(); it != player->equipInventory.end(); ++it)
+        {
+            int elementPosition = std::distance(player->equipInventory.begin(), it);
+
+            al_draw_bitmap_region(gfxEquipSheet,
+                                  (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiItemUISlotOriginDrawXPosition + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUISlotOriginDrawYPosition + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  0);
+        }
     }
     else if(controlContext == TOOL_INVENTORY_CONTEXT)
     {
@@ -1056,6 +1071,18 @@ void DrawGUI()
                        guiItemUIActiveTabIconDrawXPosition,
                        guiItemUIActiveTabIconDrawYPosition,
                        0);
+
+        for(std::vector<Tool*>::iterator it = player->toolInventory.begin(); it != player->toolInventory.end(); ++it)
+        {
+            int elementPosition = std::distance(player->toolInventory.begin(), it);
+
+            al_draw_bitmap_region(gfxToolSheet,
+                                  (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiItemUISlotOriginDrawXPosition + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUISlotOriginDrawYPosition + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  0);
+        }
     }
     else if(controlContext == MATERIAL_INVENTORY_CONTEXT)
     {
@@ -1067,6 +1094,18 @@ void DrawGUI()
                        guiItemUIActiveTabIconDrawXPosition,
                        guiItemUIActiveTabIconDrawYPosition,
                        0);
+
+        for(std::vector<Material*>::iterator it = player->materialInventory.begin(); it != player->materialInventory.end(); ++it)
+        {
+            int elementPosition = std::distance(player->materialInventory.begin(), it);
+
+            al_draw_bitmap_region(gfxMaterialSheet,
+                                  (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiItemUISlotOriginDrawXPosition + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUISlotOriginDrawYPosition + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  0);
+        }
     }
 
 
@@ -1665,8 +1704,18 @@ void UpdateGamesystem()
 
 void DevAddTestItemsToPlayer()
 {
-    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_DAGGER));
+    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_XIPHOS));
+    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_SCYTHE));
+    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_SCYTHE));
+    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_KRIS));
+    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_KATANA));
+
     player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_POTION));
+    player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_SPEAR));
+    player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_TRICK_KNIFE));
+
+
+    player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_MATERIA));
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_WOOD));
 
 
