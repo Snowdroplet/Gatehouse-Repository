@@ -181,27 +181,26 @@ extern int turnP;
 
 enum enumControlContexts
 {
-    NORMAL_CONTEXT,
+    NORMAL_CONTEXT = 0,
 
-    TARGETING_CONTEXT,
+    TARGETING_CONTEXT = 1,
 
-    EQUIP_INVENTORY_CONTEXT,
-    TOOL_INVENTORY_CONTEXT,
-    MATERIAL_INVENTORY_CONTEXT,
+    INVENTORY_CONTEXT_MARKER_BEGIN = 2, // Between this begining and its end are control contexts related to player inventory.
 
-    WEAPON_SPELL_CONTEXT,
+    EQUIP_INVENTORY_CONTEXT = 3,
+    TOOL_INVENTORY_CONTEXT = 4,
+    MAGIC_INVENTORY_CONTEXT = 5,
+    MATERIAL_INVENTORY_CONTEXT = 6,
+    KEY_INVENTORY_CONTEXT = 7,
+    MISC_INVENTORY_CONTEXT = 8,
 
+    INVENTORY_CONTEXT_MARKER_END = 9,
 
-    /*
-    WEAPON_SPELL_CONTEXT = 2,
-    INVENTORY_CONTEXT = 3,
-    SPELL_CONTEXT = 4,
-    ACTION_CONTEXT = 5,
-    FOLLOWER_CONTEXT = 6,
+    WEAPON_SPELL_CONTEXT = 10
 
-    ITEM_USAGE_CONTEXT = 7
-    */
 };
+
+extern bool itemViewMode;
 
 extern int controlContext, previousControlContext;
 extern int controlContextChangeDelay;

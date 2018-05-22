@@ -19,7 +19,10 @@
 #include "item.h"
 #include "equip.h"
 #include "tool.h"
+#include "magic.h"
 #include "material.h"
+#include "key.h"
+#include "misc.h"
 
 
 //#include <boost/archive/text_oarchive.hpp>

@@ -20,17 +20,39 @@ extern int guiTargetDrawYPosition;
 /// Item contexts
 
 const int ITEM_ICONSIZE = 64; //The size of an item icon
-const int ITEM_ICON_DISPLACEMENT = 11; // Currently 75-64... Change to determine mathematically later.
-const int ITEM_UI_ORIGIN_X = 42; // Arbitrary top left corner of item ui grid.
-const int ITEM_UI_ORIGIN_Y = 44; // Arbitrary top left corner of item ui grid.
+const int ITEM_UI_SLOT_WIDTH = 75; // Currently 75-64... Change to determine mathematically later.
+
 const int ITEM_UI_ROW_WIDTH = 4; // 0 to 3
 const int ITEM_UI_COLUMN_HEIGHT = 6; // 0 to 5
 
-extern int guiItemUIDrawXPosition;
-extern int guiItemUIDrawYPosition;
+extern int guiItemUIX;
+extern int guiItemUIY;
 
-extern int guiItemUIActiveTabIconDrawXPosition;
-extern int guiItemUIActiveTabIconDrawYPosition;
+extern int guiItemUINameplateX;
+extern int guiItemUINameplateY;
+extern int guiItemUINameplateTextX;
+extern int guiItemUINameplateTextY;
+
+extern bool guiDrawInventoryIconTab[6];
+extern int guiItemActiveTabX;
+extern int guiItemActiveTabY;
+extern int guiItemInactiveTabX;
+extern int guiItemInactiveTabY;
+extern int guiItemInactiveTabSpacing;
+
+extern int guiItemUIOriginX; // Arbitary top left corner of item ui grid.
+extern int guiItemUIOriginY; // Arbitary top left corner of item ui grid.
+
+extern int guiItemNameX;
+extern int guiItemNameY;
+
+extern int guiViewedItemX;
+extern int guiViewedItemY;
+
+extern int guiItemDescriptionOriginX; // Arbitary top left starting point of item text output.
+extern int guiItemDescriptionOriginY; // Arbitary top left starting point of item text output.
+extern int guiItemDescriptionLineSpacing; // Vertical spacing between lines of item text.
+
 
 
 

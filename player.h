@@ -44,7 +44,10 @@ public:
 
     std::vector<Equip*>equipInventory; // Currently capping inventory at 24 items (30 limit for contingency e.g. item unequipped + inactive but memory not yet deleted)
     std::vector<Tool*>toolInventory;
+    std::vector<Magic*>magicInventory;
     std::vector<Material*>materialInventory;
+    std::vector<Key*>keyInventory;
+    std::vector<Misc*>miscInventory;
 
     Item* headEquipSlot;
     Item* bodyEquipSlot;

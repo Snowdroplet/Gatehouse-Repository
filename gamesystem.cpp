@@ -55,6 +55,8 @@ int turnP = 0;
 
 /// CONTROL/GUI CONTEXT AND MENUS
 
+bool itemViewMode = false;
+
 int controlContext = NORMAL_CONTEXT;
 int previousControlContext = controlContext;
 int controlContextChangeDelay = 0;

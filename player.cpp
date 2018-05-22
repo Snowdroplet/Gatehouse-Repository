@@ -42,8 +42,6 @@ Player::Player(int spawnXCell, int spawnYCell)
 
     animationFrameThreshold = 1;
 
-
-
     headEquipSlot = nullptr;
     bodyEquipSlot = nullptr;
     handEquipSlot = nullptr;
@@ -55,7 +53,36 @@ Player::Player(int spawnXCell, int spawnYCell)
 
 Player::~Player()
 {
-
+    for(std::vector<Equip*>::iterator it = equipInventory.begin(); it != equipInventory.end();)
+    {
+            delete *it;
+            equipInventory.erase(it);
+    }
+    for(std::vector<Tool*>::iterator it = toolInventory.begin(); it != toolInventory.end();)
+    {
+            delete *it;
+            toolInventory.erase(it);
+    }
+    for(std::vector<Magic*>::iterator it = magicInventory.begin(); it != magicInventory.end();)
+    {
+            delete *it;
+            magicInventory.erase(it);
+    }
+    for(std::vector<Material*>::iterator it = materialInventory.begin(); it != materialInventory.end();)
+    {
+            delete *it;
+            materialInventory.erase(it);
+    }
+    for(std::vector<Key*>::iterator it = keyInventory.begin(); it != keyInventory.end();)
+    {
+            delete *it;
+            keyInventory.erase(it);
+    }
+    for(std::vector<Misc*>::iterator it = miscInventory.begin(); it != miscInventory.end();)
+    {
+            delete *it;
+            miscInventory.erase(it);
+    }
 }
 
 void Player::Logic()

@@ -18,10 +18,13 @@ enum enumDerivedFromItem
 {
     ITEM_TYPE_EQUIP = 0,
     ITEM_TYPE_TOOL = 1,
-    ITEM_TYPE_MATERIAL = 2,
-    ITEM_TYPE_KEY = 3,
-    ITEM_TYPE_MISC = 4
+    ITEM_TYPE_MAGIC = 2,
+    ITEM_TYPE_MATERIAL = 3,
+    ITEM_TYPE_KEY = 4,
+    ITEM_TYPE_MISC = 5
 };
+
+const int NUM_ITEM_DESCRIPTION_LINES = 8; // 0 to 7
 
 class Item
 {
@@ -74,7 +77,9 @@ public:
     int spriteID; // The sprite to use to represent this item
 
     std::string baseName; // The base name, without modifiers or affixes like "+7 blessed lightning X of godslaying"
-    std::string description; // Statistics and flavor text
+    std::string fullName; // Affixes, suffixes, and pluses included.
+
+    std::string description[NUM_ITEM_DESCRIPTION_LINES]; // Statistics and flavor text
 
     Item(); // Creates an all-purpose, useless template item
     ~Item();

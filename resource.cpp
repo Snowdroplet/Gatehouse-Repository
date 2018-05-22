@@ -20,13 +20,27 @@ ALLEGRO_BITMAP *gfxFeatureTiles = nullptr;
 ALLEGRO_BITMAP *gfxItemUI = nullptr;
 ALLEGRO_BITMAP *gfxItemUINameplate = nullptr;
 ALLEGRO_BITMAP *gfxEquipUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxEquipUIIconSmall = nullptr;
 ALLEGRO_BITMAP *gfxToolUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxToolUIIconSmall = nullptr;
+ALLEGRO_BITMAP *gfxMagicUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxMagicUIIconSmall = nullptr;
 ALLEGRO_BITMAP *gfxMaterialUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxMaterialUIIconSmall = nullptr;
+ALLEGRO_BITMAP *gfxKeyUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxKeyUIIconSmall = nullptr;
+ALLEGRO_BITMAP *gfxMiscUIIcon = nullptr;
+ALLEGRO_BITMAP *gfxMiscUIIconSmall = nullptr;
 
 ALLEGRO_BITMAP *gfxEquipSheet = nullptr;
 ALLEGRO_BITMAP *gfxToolSheet = nullptr;
+ALLEGRO_BITMAP *gfxMagicSheet = nullptr;
 ALLEGRO_BITMAP *gfxMaterialSheet = nullptr;
+ALLEGRO_BITMAP *gfxKeySheet = nullptr;
+ALLEGRO_BITMAP *gfxMiscSheet = nullptr;
 
+ALLEGRO_FONT   *penFont = nullptr;
+ALLEGRO_FONT   *penFontLarge = nullptr;
 ALLEGRO_FONT   *terminalFont = nullptr;
 ALLEGRO_FONT   *titleFont = nullptr;
 
@@ -58,13 +72,27 @@ void LoadResources()
     gfxItemUI = al_load_bitmap("drawnItemUI.png");
     gfxItemUINameplate = al_load_bitmap("itemUINameplate.png");
     gfxEquipUIIcon = al_load_bitmap("equipUIIcon.png");
+    gfxEquipUIIconSmall = al_load_bitmap("equipUIIconSmall.png");
     gfxToolUIIcon = al_load_bitmap("toolUIIcon.png");
+    gfxToolUIIconSmall = al_load_bitmap("toolUIIconSmall.png");
+    gfxMagicUIIcon = al_load_bitmap("magicUIIcon.png");
+    gfxMagicUIIconSmall = al_load_bitmap("magicUIIconSmall.png");
     gfxMaterialUIIcon = al_load_bitmap("materialUIIcon.png");
+    gfxMaterialUIIconSmall = al_load_bitmap("materialUIIconSmall.png");
+    gfxKeyUIIcon = al_load_bitmap("keyUIIcon.png");
+    gfxKeyUIIconSmall = al_load_bitmap("keyUIIconSmall.png");
+    gfxMiscUIIcon = al_load_bitmap("miscUIIcon.png");
+    gfxMiscUIIconSmall = al_load_bitmap("miscUIIconSmall.png");
 
     gfxEquipSheet = al_load_bitmap("equipSheet.png");
     gfxToolSheet = al_load_bitmap("toolSheet.png");
+    gfxMagicSheet = al_load_bitmap("magicSheet.png");
     gfxMaterialSheet = al_load_bitmap("materialSheet.png");
+    gfxKeySheet = al_load_bitmap("keySheet.png");
+    gfxMiscSheet = al_load_bitmap("miscSheet.png");
 
+    penFont = al_load_ttf_font("SnowdropletPen.ttf",28,0);
+    penFontLarge = al_load_ttf_font("SnowdropletPen.ttf",36,0);
     terminalFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
     titleFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
 }
@@ -93,13 +121,27 @@ void UnloadResources()
     al_destroy_bitmap(gfxItemUI);
     al_destroy_bitmap(gfxItemUINameplate);
     al_destroy_bitmap(gfxEquipUIIcon);
+    al_destroy_bitmap(gfxEquipUIIconSmall);
     al_destroy_bitmap(gfxToolUIIcon);
+    al_destroy_bitmap(gfxToolUIIconSmall);
+    al_destroy_bitmap(gfxMagicUIIcon);
+    al_destroy_bitmap(gfxMagicUIIconSmall);
     al_destroy_bitmap(gfxMaterialUIIcon);
+    al_destroy_bitmap(gfxMaterialUIIconSmall);
+    al_destroy_bitmap(gfxKeyUIIcon);
+    al_destroy_bitmap(gfxKeyUIIconSmall);
+    al_destroy_bitmap(gfxMiscUIIcon);
+    al_destroy_bitmap(gfxMiscUIIconSmall);
 
     al_destroy_bitmap(gfxEquipSheet);
     al_destroy_bitmap(gfxToolSheet);
+    al_destroy_bitmap(gfxMagicSheet);
     al_destroy_bitmap(gfxMaterialSheet);
+    al_destroy_bitmap(gfxKeySheet);
+    al_destroy_bitmap(gfxMiscSheet);
 
+    al_destroy_font(penFont);
+    al_destroy_font(penFontLarge);
     al_destroy_font(terminalFont);
     al_destroy_font(titleFont);
 }

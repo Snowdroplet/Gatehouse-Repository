@@ -86,7 +86,10 @@ How to operate debug:
 #include "item.h"
 #include "equip.h"
 #include "tool.h"
+#include "magic.h"
 #include "material.h"
+#include "key.h"
+#include "misc.h"
 
 #include "being.h"
 #include "player.h"
@@ -98,8 +101,8 @@ Area *area = nullptr;
 Player *player = nullptr;
 
 /// Item containers and functions ##################
-std::vector<Item*>items; // All items currently in play in the current area.
-std::vector<int>baseIDsKnown; // A list of all previously identified itemIDs. These will auto-identify when encountered again.
+std::vector<Item*>areaItems; // All items currently in play in the current area.
+Item*viewedItem = nullptr; // Item being viewed in inventory selection.
 
 void PopulateItems(); // Fill items vector with all items currently held by all beings and in play.
 
@@ -1037,16 +1040,134 @@ void TitleDrawing()
 
 void DrawGUI()
 {
+
+/// ************ Inventory Window Begin *****************
+    if(controlContext > INVENTORY_CONTEXT_MARKER_BEGIN &&
+       controlContext < INVENTORY_CONTEXT_MARKER_END)
+    {
+        // Background of all windows
+        al_draw_bitmap(gfxItemUI, guiItemUIX, guiItemUIY, 0);
+
+        // Nameplate of current window
+        al_draw_bitmap(gfxItemUINameplate, guiItemUINameplateX, guiItemUINameplateY, 0);
+
+        // Current window icon "tabs"
+
+        if(guiDrawInventoryIconTab[0]) // if == true
+            al_draw_bitmap(gfxEquipUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY, 0);
+        if(guiDrawInventoryIconTab[1])
+            al_draw_bitmap(gfxToolUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing, 0);
+        if(guiDrawInventoryIconTab[2])
+            al_draw_bitmap(gfxMagicUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0);
+        if(guiDrawInventoryIconTab[3])
+            al_draw_bitmap(gfxMaterialUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0);
+        if(guiDrawInventoryIconTab[4])
+            al_draw_bitmap(gfxKeyUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0);
+        if(guiDrawInventoryIconTab[5])
+            al_draw_bitmap(gfxMiscUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0);
+
+        if(controlContext == EQUIP_INVENTORY_CONTEXT)
+        al_draw_bitmap(gfxEquipUIIcon,
+                       guiItemActiveTabX,
+                       guiItemActiveTabY,
+                       0);
+        else if(controlContext == TOOL_INVENTORY_CONTEXT)
+        al_draw_bitmap(gfxToolUIIcon,
+                       guiItemActiveTabX,
+                       guiItemActiveTabY,
+                       0);
+        else if(controlContext == MAGIC_INVENTORY_CONTEXT)
+        al_draw_bitmap(gfxMagicUIIcon,
+                       guiItemActiveTabX,
+                       guiItemActiveTabY,
+                       0);
+        else if(controlContext == MATERIAL_INVENTORY_CONTEXT)
+        al_draw_bitmap(gfxMaterialUIIcon,
+                       guiItemActiveTabX,
+                       guiItemActiveTabY,
+                       0);
+        else if(controlContext == KEY_INVENTORY_CONTEXT)
+        al_draw_bitmap(gfxKeyUIIcon,
+                       guiItemActiveTabX,
+                       guiItemActiveTabY,
+                       0);
+        else if(controlContext == MISC_INVENTORY_CONTEXT)
+        al_draw_bitmap(gfxMiscUIIcon,
+                       guiItemActiveTabX,
+                       guiItemActiveTabY,
+                       0);
+
+
+        // Viewed item image and text
+      if(viewedItem != nullptr)
+      {
+          if(viewedItem->derivedType == ITEM_TYPE_EQUIP)
+              al_draw_bitmap_region(gfxEquipSheet,
+                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiViewedItemX,
+                                  guiViewedItemY,
+                                  0);
+          else if(viewedItem->derivedType == ITEM_TYPE_TOOL)
+              al_draw_bitmap_region(gfxToolSheet,
+                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiViewedItemX,
+                                  guiViewedItemY,
+                                  0);
+            else if(viewedItem->derivedType == ITEM_TYPE_MAGIC)
+              al_draw_bitmap_region(gfxMagicSheet,
+                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiViewedItemX,
+                                  guiViewedItemY,
+                                  0);
+          else if(viewedItem->derivedType == ITEM_TYPE_MATERIAL)
+              al_draw_bitmap_region(gfxMaterialSheet,
+                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiViewedItemX,
+                                  guiViewedItemY,
+                                  0);
+            else if(viewedItem->derivedType == ITEM_TYPE_KEY)
+              al_draw_bitmap_region(gfxKeySheet,
+                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiViewedItemX,
+                                  guiViewedItemY,
+                                  0);
+            else if(viewedItem->derivedType == ITEM_TYPE_MISC)
+              al_draw_bitmap_region(gfxMiscSheet,
+                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiViewedItemX,
+                                  guiViewedItemY,
+                                  0);
+
+
+          s_al_draw_text(penFontLarge, PEN_INK,
+                             guiItemNameX, guiItemNameY,
+                            ALLEGRO_ALIGN_CENTER, viewedItem->baseName);
+
+
+           for(int i = 0; i < NUM_ITEM_DESCRIPTION_LINES; i++)
+           {
+                s_al_draw_text(penFont, PEN_INK,
+                             guiItemDescriptionOriginX, guiItemDescriptionOriginY + (i*guiItemDescriptionLineSpacing),
+                            0, viewedItem->description[i]);
+
+            }
+        }
+    }
+/// ********** Inventory Window End *********************
+
+
     if(controlContext == EQUIP_INVENTORY_CONTEXT)
     {
-        al_draw_bitmap(gfxItemUI,
-                       guiItemUIDrawXPosition,
-                       guiItemUIDrawYPosition,
-                       0);
-        al_draw_bitmap(gfxEquipUIIcon,
-                       guiItemUIActiveTabIconDrawXPosition,
-                       guiItemUIActiveTabIconDrawYPosition,
-                       0);
+        al_draw_text(penFont, PEN_INK,
+                                guiItemUINameplateTextX,
+                                guiItemUINameplateTextY,
+                                ALLEGRO_ALIGN_CENTER, "Equipment");
 
 
         for(std::vector<Equip*>::iterator it = player->equipInventory.begin(); it != player->equipInventory.end(); ++it)
@@ -1056,21 +1177,17 @@ void DrawGUI()
             al_draw_bitmap_region(gfxEquipSheet,
                                   (*it)->spriteID * ITEM_ICONSIZE, 0,
                                   ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiItemUISlotOriginDrawXPosition + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
-                                  guiItemUISlotOriginDrawYPosition + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
                                   0);
         }
     }
     else if(controlContext == TOOL_INVENTORY_CONTEXT)
     {
-        al_draw_bitmap(gfxItemUI,
-                       guiItemUIDrawXPosition,
-                       guiItemUIDrawYPosition,
-                       0);
-        al_draw_bitmap(gfxToolUIIcon,
-                       guiItemUIActiveTabIconDrawXPosition,
-                       guiItemUIActiveTabIconDrawYPosition,
-                       0);
+        al_draw_text(penFont, PEN_INK,
+                                guiItemUINameplateTextX,
+                                guiItemUINameplateTextY,
+                                ALLEGRO_ALIGN_CENTER, "Tools");
 
         for(std::vector<Tool*>::iterator it = player->toolInventory.begin(); it != player->toolInventory.end(); ++it)
         {
@@ -1079,21 +1196,37 @@ void DrawGUI()
             al_draw_bitmap_region(gfxToolSheet,
                                   (*it)->spriteID * ITEM_ICONSIZE, 0,
                                   ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiItemUISlotOriginDrawXPosition + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
-                                  guiItemUISlotOriginDrawYPosition + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  0);
+        }
+    }
+    else if(controlContext == MAGIC_INVENTORY_CONTEXT)
+    {
+        al_draw_text(penFont, PEN_INK,
+                                guiItemUINameplateTextX,
+                                guiItemUINameplateTextY,
+                                ALLEGRO_ALIGN_CENTER, "Magic");
+
+        for(std::vector<Magic*>::iterator it = player->magicInventory.begin(); it != player->magicInventory.end(); ++it)
+        {
+            int elementPosition = std::distance(player->magicInventory.begin(), it);
+
+            al_draw_bitmap_region(gfxMagicSheet,
+                                  (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
                                   0);
         }
     }
     else if(controlContext == MATERIAL_INVENTORY_CONTEXT)
     {
-        al_draw_bitmap(gfxItemUI,
-                       guiItemUIDrawXPosition,
-                       guiItemUIDrawYPosition,
-                       0);
-        al_draw_bitmap(gfxMaterialUIIcon,
-                       guiItemUIActiveTabIconDrawXPosition,
-                       guiItemUIActiveTabIconDrawYPosition,
-                       0);
+
+        al_draw_text(penFont, PEN_INK,
+                                guiItemUINameplateTextX,
+                                guiItemUINameplateTextY,
+                                ALLEGRO_ALIGN_CENTER, "Materials");
 
         for(std::vector<Material*>::iterator it = player->materialInventory.begin(); it != player->materialInventory.end(); ++it)
         {
@@ -1102,8 +1235,46 @@ void DrawGUI()
             al_draw_bitmap_region(gfxMaterialSheet,
                                   (*it)->spriteID * ITEM_ICONSIZE, 0,
                                   ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiItemUISlotOriginDrawXPosition + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
-                                  guiItemUISlotOriginDrawYPosition + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  0);
+        }
+    }
+    else if(controlContext == KEY_INVENTORY_CONTEXT)
+    {
+        al_draw_text(penFont, PEN_INK,
+                                guiItemUINameplateTextX,
+                                guiItemUINameplateTextY,
+                                ALLEGRO_ALIGN_CENTER, "Key Items");
+
+        for(std::vector<Key*>::iterator it = player->keyInventory.begin(); it != player->keyInventory.end(); ++it)
+        {
+            int elementPosition = std::distance(player->keyInventory.begin(), it);
+
+            al_draw_bitmap_region(gfxKeySheet,
+                                  (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
+                                  0);
+        }
+    }
+    else if(controlContext == MISC_INVENTORY_CONTEXT)
+    {
+        al_draw_text(penFont, PEN_INK,
+                                guiItemUINameplateTextX,
+                                guiItemUINameplateTextY,
+                                ALLEGRO_ALIGN_CENTER, "Misc. Items");
+
+        for(std::vector<Misc*>::iterator it = player->miscInventory.begin(); it != player->miscInventory.end(); ++it)
+        {
+            int elementPosition = std::distance(player->miscInventory.begin(), it);
+
+            al_draw_bitmap_region(gfxMiscSheet,
+                                  (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                  guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (elementPosition % ITEM_UI_ROW_WIDTH),
+                                  guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (elementPosition / ITEM_UI_ROW_WIDTH),
                                   0);
         }
     }
@@ -1289,7 +1460,7 @@ void DrawDebugOverlay()
 
 void UpdateObjects()
 {
-    for(std::vector<Item*>::iterator it = items.begin(); it != items.end();)
+    for(std::vector<Item*>::iterator it = areaItems.begin(); it != areaItems.end();)
     {
         if(gameExit)
             (*it)->active = false;
@@ -1297,7 +1468,7 @@ void UpdateObjects()
         if(!(*it)->active)
         {
             delete *it;
-            items.erase(it);
+            areaItems.erase(it);
         }
         else
         {
@@ -1377,7 +1548,7 @@ void UpdateObjects()
 void PopulateItems()
 {
 
-    items.clear();
+    areaItems.clear();
 
     /*
 
@@ -1456,7 +1627,42 @@ void ProcessInput(int whatContext)
         {
 /// Normal control context (interpret alphanumeric [non-keypad])////////////////////////////////////////////////////////////////////////
 
-            if(keyInput[KEY_F])
+            if(keyInput[KEY_1] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+                guiDrawInventoryIconTab[0] = false;
+            }
+
+            else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
+                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
+            {
+                ChangeControlContext(NORMAL_CONTEXT,TOOL_INVENTORY_CONTEXT);
+                guiDrawInventoryIconTab[1] = false;
+            }
+            else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+                guiDrawInventoryIconTab[2] = false;
+            }
+
+            else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+                guiDrawInventoryIconTab[3] = false;
+            }
+            else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+
+            {
+                ChangeControlContext(NORMAL_CONTEXT,KEY_INVENTORY_CONTEXT);
+                guiDrawInventoryIconTab[4] = false;
+            }
+            else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,MISC_INVENTORY_CONTEXT);
+                guiDrawInventoryIconTab[5] = false;
+            }
+
+            else if(keyInput[KEY_F])
             {
                 if(targetLockLevel == TARGET_LOCK_NONE)
                 {
@@ -1496,22 +1702,6 @@ void ProcessInput(int whatContext)
             else if(keyInput[KEY_G])
             {
                 // List pickup-able items.
-            }
-
-            else if((keyInput[KEY_Q] && controlContextChangeDelay == 0) ||
-                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
-            {
-                ChangeControlContext(NORMAL_CONTEXT,TOOL_INVENTORY_CONTEXT);
-            }
-
-            else if(keyInput[KEY_W] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(NORMAL_CONTEXT,EQUIP_INVENTORY_CONTEXT);
-            }
-
-            else if(keyInput[KEY_R] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(NORMAL_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
             }
 
             else if(keyInput[KEY_L] && controlContextChangeDelay == 0)
@@ -1629,44 +1819,318 @@ void ProcessInput(int whatContext)
 /// Inventory context //////////////////////////////////////////////////////////////////////////////////////
 
     case EQUIP_INVENTORY_CONTEXT:
-        if( (keyInput[KEY_W] && controlContextChangeDelay == 0) ||
+        if( (keyInput[KEY_1] && controlContextChangeDelay == 0) ||
             (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            ChangeControlContext(EQUIP_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-
-        for(unsigned int i = KEY_A; i < KEY_Z; i++)
-        {
-            if(keyInput[i])
             {
+                ChangeControlContext(EQUIP_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[0] = true;
+            }
+        else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
+                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
+            {
+                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[0] = true;
+                guiDrawInventoryIconTab[1] = false;
+            }
+        else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[0] = true;
+                guiDrawInventoryIconTab[2] = false;
+            }
+        else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[0] = true;
+                guiDrawInventoryIconTab[3] = false;
+            }
+        else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[0] = true;
+                guiDrawInventoryIconTab[4] = false;
+            }
+        else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[0] = true;
+                guiDrawInventoryIconTab[5] = false;
+            }
 
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
+        {
+            if(keyInput[i] && player->equipInventory.size() >= i-KEY_A+1)
+            {
+                viewedItem = player->equipInventory[i-KEY_A];
             }
         }
         break;
 
 
     case TOOL_INVENTORY_CONTEXT:
-        if( (keyInput[KEY_Q] && controlContextChangeDelay == 0) ||
+        if( (keyInput[KEY_2] && controlContextChangeDelay == 0) ||
             (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            ChangeControlContext(TOOL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-
-        for(unsigned int i = KEY_A; i < KEY_Z; i++)
-        {
-            if(keyInput[i])
             {
+                ChangeControlContext(TOOL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[1] = true;
+            }
+        else if(keyInput[KEY_1] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(TOOL_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[1] = true;
+                guiDrawInventoryIconTab[0] = false;
+            }
+        else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(TOOL_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[1] = true;
+                guiDrawInventoryIconTab[2] = false;
+            }
+        else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(TOOL_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[1] = true;
+                guiDrawInventoryIconTab[3] = false;
+            }
+        else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(TOOL_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[1] = true;
+                guiDrawInventoryIconTab[4] = false;
+            }
+        else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(TOOL_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[1] = true;
+                guiDrawInventoryIconTab[5] = false;
+            }
 
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++)
+        {
+            if(keyInput[i] && player->toolInventory.size() >= i-KEY_A+1)
+                viewedItem = player->toolInventory[i-KEY_A];
+        }
+        break;
+
+    case MAGIC_INVENTORY_CONTEXT:
+        if( (keyInput[KEY_3] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            {
+                ChangeControlContext(MAGIC_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[2] = true;
+            }
+        else if(keyInput[KEY_1] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[2] = true;
+                guiDrawInventoryIconTab[0] = false;
+            }
+        else if(keyInput[KEY_2] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[2] = true;
+                guiDrawInventoryIconTab[1] = false;
+            }
+        else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[2] = true;
+                guiDrawInventoryIconTab[3] = false;
+            }
+        else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[2] = true;
+                guiDrawInventoryIconTab[4] = false;
+            }
+        else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[2] = true;
+                guiDrawInventoryIconTab[5] = false;
+            }
+
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++)
+        {
+            if(keyInput[i] && player->magicInventory.size() >= i-KEY_A+1)
+                viewedItem = player->magicInventory[i-KEY_A];
+        }
+            break;
+
+    case MATERIAL_INVENTORY_CONTEXT:
+        if( (keyInput[KEY_4] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            {
+                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[3] = true;
+            }
+        else if(keyInput[KEY_1] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[3] = true;
+                guiDrawInventoryIconTab[0] = false;
+            }
+        else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
+                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
+            {
+                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[3] = true;
+                guiDrawInventoryIconTab[1] = false;
+            }
+        else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[3] = true;
+                guiDrawInventoryIconTab[2] = false;
+            }
+        else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[3] = true;
+                guiDrawInventoryIconTab[4] = false;
+            }
+        else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[3] = true;
+                guiDrawInventoryIconTab[5] = false;
+            }
+
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++)
+        {
+            if(keyInput[i] && player->materialInventory.size() >= i-KEY_A+1)
+                viewedItem = player->materialInventory[i-KEY_A];
+        }
+        break;
+
+    case KEY_INVENTORY_CONTEXT:
+        if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(KEY_INVENTORY_CONTEXT,NORMAL_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[4] = true;
+            }
+        else if( (keyInput[KEY_1] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            {
+                ChangeControlContext(KEY_INVENTORY_CONTEXT, EQUIP_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[4] = true;
+                guiDrawInventoryIconTab[0] = false;
+            }
+        else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
+                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
+            {
+                ChangeControlContext(KEY_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[4] = true;
+                guiDrawInventoryIconTab[1] = false;
+            }
+        else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(KEY_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[4] = true;
+                guiDrawInventoryIconTab[2] = false;
+            }
+        else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(KEY_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[4] = true;
+                guiDrawInventoryIconTab[3] = false;
+            }
+        else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(KEY_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[4] = true;
+                guiDrawInventoryIconTab[5] = false;
+            }
+
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
+        {
+            if(keyInput[i] && player->keyInventory.size() >= i-KEY_A+1)
+            {
+                viewedItem = player->keyInventory[i-KEY_A];
             }
         }
         break;
 
-    case MATERIAL_INVENTORY_CONTEXT:
-        if( (keyInput[KEY_R] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-
-        for(unsigned int i = KEY_A; i < KEY_Z; i++)
-        {
-            if(keyInput[i])
+        case MISC_INVENTORY_CONTEXT:
+        if(keyInput[KEY_6] && controlContextChangeDelay == 0)
             {
+                ChangeControlContext(MISC_INVENTORY_CONTEXT,NORMAL_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[5] = true;
+            }
+        else if( (keyInput[KEY_1] && controlContextChangeDelay == 0) ||
+            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+            {
+                ChangeControlContext(MISC_INVENTORY_CONTEXT, EQUIP_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[5] = true;
+                guiDrawInventoryIconTab[0] = false;
+            }
+        else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
+                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
+            {
+                ChangeControlContext(MISC_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[5] = true;
+                guiDrawInventoryIconTab[1] = false;
+            }
+        else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MISC_INVENTORY_CONTEXT, MAGIC_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[5] = true;
+                guiDrawInventoryIconTab[2] = false;
+            }
+        else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MISC_INVENTORY_CONTEXT, MATERIAL_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[5] = true;
+                guiDrawInventoryIconTab[3] = false;
+            }
+        else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(MISC_INVENTORY_CONTEXT, KEY_INVENTORY_CONTEXT);
+                viewedItem = nullptr;
+                guiDrawInventoryIconTab[5] = true;
+                guiDrawInventoryIconTab[4] = false;
+            }
 
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
+        {
+            if(keyInput[i] && player->miscInventory.size() >= i-KEY_A+1)
+            {
+                viewedItem = player->miscInventory[i-KEY_A];
             }
         }
         break;
@@ -1711,12 +2175,16 @@ void DevAddTestItemsToPlayer()
     player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_KATANA));
 
     player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_POTION));
+    player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_BOMB));
+    player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_POTION));
     player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_SPEAR));
     player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_TRICK_KNIFE));
 
 
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_MATERIA));
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_WOOD));
+    player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_MAPLE_LEAF));
+
 
 
 }

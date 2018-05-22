@@ -85,17 +85,42 @@ enum enumFeatureIndex
 
 enum enumEquipSheetIndex
 {
-    EQSI_DAGGER = 0
+    EQSI_XIPHOS = 0,
+    EQSI_SAWTOOTH = 1,
+    EQSI_KATANA = 2,
+    EQSI_SHOTEL = 3,
+    EQSI_KRIS = 4,
+    EQSI_SCYTHE = 5
 };
 
 enum enumToolSheetIndex
 {
-    TLSI_POTION = 0
+    TLSI_POTION = 0,
+    TLSI_BOMB = 1,
+    TLSI_TRICK_KNIFE = 2,
+    TLSI_SPEAR = 3
+};
+
+enum enumMagicSheetIndex
+{
+
 };
 
 enum enumMaterialSheetIndex
 {
-    MASI_WOOD = 0
+    MASI_MAPLE_LEAF = 0,
+    MASI_MATERIA = 1,
+    MASI_WOOD = 2
+};
+
+enum enumKeySheetIndex
+{
+
+};
+
+enum enumMiscSheetIndex
+{
+
 };
 
 extern ALLEGRO_BITMAP *debugPathTracer;
@@ -117,13 +142,27 @@ extern ALLEGRO_BITMAP *gfxFeatureTiles;
 extern ALLEGRO_BITMAP *gfxItemUI;
 extern ALLEGRO_BITMAP *gfxItemUINameplate;
 extern ALLEGRO_BITMAP *gfxEquipUIIcon;
+extern ALLEGRO_BITMAP *gfxEquipUIIconSmall;
 extern ALLEGRO_BITMAP *gfxToolUIIcon;
+extern ALLEGRO_BITMAP *gfxToolUIIconSmall;
+extern ALLEGRO_BITMAP *gfxMagicUIIcon;
+extern ALLEGRO_BITMAP *gfxMagicUIIconSmall;
 extern ALLEGRO_BITMAP *gfxMaterialUIIcon;
+extern ALLEGRO_BITMAP *gfxMaterialUIIconSmall;
+extern ALLEGRO_BITMAP *gfxKeyUIIcon;
+extern ALLEGRO_BITMAP *gfxKeyUIIconSmall;
+extern ALLEGRO_BITMAP *gfxMiscUIIcon;
+extern ALLEGRO_BITMAP *gfxMiscUIIconSmall;
 
 extern ALLEGRO_BITMAP *gfxEquipSheet;
 extern ALLEGRO_BITMAP *gfxToolSheet;
+extern ALLEGRO_BITMAP *gfxMagicSheet;
 extern ALLEGRO_BITMAP *gfxMaterialSheet;
+extern ALLEGRO_BITMAP *gfxKeySheet;
+extern ALLEGRO_BITMAP *gfxMiscSheet;
 
+extern ALLEGRO_FONT   *penFont;
+extern ALLEGRO_FONT   *penFontLarge;
 extern ALLEGRO_FONT   *terminalFont;
 extern ALLEGRO_FONT   *titleFont;
 

@@ -14,10 +14,12 @@ bool keyInput[] =
     false, false, false,                        //VWX
     false, false,                               //YZ
     false,                                      //Enter
-    false, false, false,                        //123
-    false, false, false,                        //456
-    false, false, false,                        //789
-    false,                                      //0
+    false, false, false,                        //numpad123
+    false, false, false,                        //numpad456
+    false, false, false,                        //numpad789
+    false,                                      //numpad0
+    false, false, false, false, false,          //01234
+    false, false, false, false, false,          //56789
     false, false, false, false,                 //ULDR
     false                                       //Shift
 
@@ -177,6 +179,36 @@ void Control()
         case ALLEGRO_KEY_PAD_0:
             keyInput[KEY_PAD_0] = true;
             break;
+        case ALLEGRO_KEY_1:
+            keyInput[KEY_1] = true;
+            break;
+        case ALLEGRO_KEY_2:
+            keyInput[KEY_2] = true;
+            break;
+        case ALLEGRO_KEY_3:
+            keyInput[KEY_3] = true;
+            break;
+        case ALLEGRO_KEY_4:
+            keyInput[KEY_4] = true;
+            break;
+        case ALLEGRO_KEY_5:
+            keyInput[KEY_5] = true;
+            break;
+        case ALLEGRO_KEY_6:
+            keyInput[KEY_6] = true;
+            break;
+        case ALLEGRO_KEY_7:
+            keyInput[KEY_7] = true;
+            break;
+        case ALLEGRO_KEY_8:
+            keyInput[KEY_8] = true;
+            break;
+        case ALLEGRO_KEY_9:
+            keyInput[KEY_9] = true;
+            break;
+        case ALLEGRO_KEY_0:
+            keyInput[KEY_0] = true;
+            break;
         case ALLEGRO_KEY_UP:
             keyInput[KEY_UP] = true;
             break;
@@ -230,6 +262,36 @@ void Control()
             break;
         case ALLEGRO_KEY_PAD_0:
             keyInput[KEY_PAD_0] = false;
+            break;
+        case ALLEGRO_KEY_1:
+            keyInput[KEY_1] = false;
+            break;
+        case ALLEGRO_KEY_2:
+            keyInput[KEY_2] = false;
+            break;
+        case ALLEGRO_KEY_3:
+            keyInput[KEY_3] = false;
+            break;
+        case ALLEGRO_KEY_4:
+            keyInput[KEY_4] = false;
+            break;
+        case ALLEGRO_KEY_5:
+            keyInput[KEY_5] = false;
+            break;
+        case ALLEGRO_KEY_6:
+            keyInput[KEY_6] = false;
+            break;
+        case ALLEGRO_KEY_7:
+            keyInput[KEY_7] = false;
+            break;
+        case ALLEGRO_KEY_8:
+            keyInput[KEY_8] = false;
+            break;
+        case ALLEGRO_KEY_9:
+            keyInput[KEY_9] = false;
+            break;
+        case ALLEGRO_KEY_0:
+            keyInput[KEY_0] = false;
             break;
         case ALLEGRO_KEY_UP:
             keyInput[KEY_UP] = false;
