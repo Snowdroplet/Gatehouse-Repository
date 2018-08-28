@@ -27,13 +27,13 @@ void WriteToTerminal(std::string toAppende, ALLEGRO_COLOR colourToAppend)
     for(std::string::iterator it = toAppend.begin(); toAppend.begin() != toAppend.end(); ++it)
     {
         //Calculate remaining space
-        lineRemainingWidth = TERMINAL_MAX_WIDTH - s_al_get_text_width(terminalFont,terminalLine[0]);
+        lineRemainingWidth = TERMINAL_MAX_WIDTH - s_al_get_text_width(pirulenFont,terminalLine[0]);
 
         if(*it == ' ' || *it == '\0')
         {
             //Check width of text to append against remaining space
             //If sufficient, append to 0th row. If insufficient, shift all rows up by 1 first.
-            if(s_al_get_text_width(terminalFont,toAppend) < lineRemainingWidth)
+            if(s_al_get_text_width(pirulenFont,toAppend) < lineRemainingWidth)
             {
                 terminalLine[0].append(toAppend.begin(),it);
             }

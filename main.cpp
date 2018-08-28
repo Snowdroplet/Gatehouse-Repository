@@ -976,7 +976,7 @@ void LoadingDrawing()
                                           COLD_BLUE, 1);
 
 
-                    s_al_draw_text(terminalFont, NEUTRAL_WHITE,
+                    s_al_draw_text(pirulenFont, NEUTRAL_WHITE,
                                    (*it)->x1-loadingCamX+4,
                                    (*it)->y1-loadingCamY+4,
                                    ALLEGRO_ALIGN_LEFT,
@@ -1041,31 +1041,50 @@ void TitleDrawing()
 void DrawGUI()
 {
 
-/// ************ Inventory Window Begin *****************
+/// BEGIN INVENTORY CONTEXT /////////////////////////////////////////////////////////
+
     if(controlContext > INVENTORY_CONTEXT_MARKER_BEGIN &&
        controlContext < INVENTORY_CONTEXT_MARKER_END)
     {
-        // Background of all windows
+        // Background of all inventory windows
         al_draw_bitmap(gfxItemUI, guiItemUIX, guiItemUIY, 0);
 
-        // Nameplate of current window
-        al_draw_bitmap(gfxItemUINameplate, guiItemUINameplateX, guiItemUINameplateY, 0);
+        // Nameplate of current active inventory window
+        al_draw_bitmap(gfxUINameplate, guiItemNameplateX, guiItemNameplateY, 0);
 
-        // Current window icon "tabs"
-
+        // Inactive inventory windows' mini tabs
         if(guiDrawInventoryIconTab[0]) // if == true
+        {
             al_draw_bitmap(gfxEquipUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY, 0);
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY, 0, "1");
+        }
         if(guiDrawInventoryIconTab[1])
+        {
             al_draw_bitmap(gfxToolUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing, 0);
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing, 0, "2");
+        }
         if(guiDrawInventoryIconTab[2])
+        {
             al_draw_bitmap(gfxMagicUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0);
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0, "3");
+        }
         if(guiDrawInventoryIconTab[3])
+        {
             al_draw_bitmap(gfxMaterialUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0);
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0, "4");
+        }
         if(guiDrawInventoryIconTab[4])
+        {
             al_draw_bitmap(gfxKeyUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0);
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0, "5");
+        }
         if(guiDrawInventoryIconTab[5])
+        {
             al_draw_bitmap(gfxMiscUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0);
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0, "6");
+        }
 
+        // Active inventory window's big tab
         if(controlContext == EQUIP_INVENTORY_CONTEXT)
         al_draw_bitmap(gfxEquipUIIcon,
                        guiItemActiveTabX,
@@ -1144,12 +1163,12 @@ void DrawGUI()
                                   guiViewedItemY,
                                   0);
 
-
+            // Viewed item's name
           s_al_draw_text(penFontLarge, PEN_INK,
                              guiItemNameX, guiItemNameY,
                             ALLEGRO_ALIGN_CENTER, viewedItem->baseName);
 
-
+            // Viewed item's text
            for(int i = 0; i < NUM_ITEM_DESCRIPTION_LINES; i++)
            {
                 s_al_draw_text(penFont, PEN_INK,
@@ -1159,17 +1178,16 @@ void DrawGUI()
             }
         }
     }
-/// ********** Inventory Window End *********************
-
 
     if(controlContext == EQUIP_INVENTORY_CONTEXT)
     {
+        // Label the window "Equipment"
         al_draw_text(penFont, PEN_INK,
-                                guiItemUINameplateTextX,
-                                guiItemUINameplateTextY,
+                                guiItemNameplateTextX,
+                                guiItemNameplateTextY,
                                 ALLEGRO_ALIGN_CENTER, "Equipment");
 
-
+        // Draw icons of items in inventory
         for(std::vector<Equip*>::iterator it = player->equipInventory.begin(); it != player->equipInventory.end(); ++it)
         {
             int elementPosition = std::distance(player->equipInventory.begin(), it);
@@ -1185,8 +1203,8 @@ void DrawGUI()
     else if(controlContext == TOOL_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemUINameplateTextX,
-                                guiItemUINameplateTextY,
+                                guiItemNameplateTextX,
+                                guiItemNameplateTextY,
                                 ALLEGRO_ALIGN_CENTER, "Tools");
 
         for(std::vector<Tool*>::iterator it = player->toolInventory.begin(); it != player->toolInventory.end(); ++it)
@@ -1204,8 +1222,8 @@ void DrawGUI()
     else if(controlContext == MAGIC_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemUINameplateTextX,
-                                guiItemUINameplateTextY,
+                                guiItemNameplateTextX,
+                                guiItemNameplateTextY,
                                 ALLEGRO_ALIGN_CENTER, "Magic");
 
         for(std::vector<Magic*>::iterator it = player->magicInventory.begin(); it != player->magicInventory.end(); ++it)
@@ -1224,8 +1242,8 @@ void DrawGUI()
     {
 
         al_draw_text(penFont, PEN_INK,
-                                guiItemUINameplateTextX,
-                                guiItemUINameplateTextY,
+                                guiItemNameplateTextX,
+                                guiItemNameplateTextY,
                                 ALLEGRO_ALIGN_CENTER, "Materials");
 
         for(std::vector<Material*>::iterator it = player->materialInventory.begin(); it != player->materialInventory.end(); ++it)
@@ -1243,8 +1261,8 @@ void DrawGUI()
     else if(controlContext == KEY_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemUINameplateTextX,
-                                guiItemUINameplateTextY,
+                                guiItemNameplateTextX,
+                                guiItemNameplateTextY,
                                 ALLEGRO_ALIGN_CENTER, "Key Items");
 
         for(std::vector<Key*>::iterator it = player->keyInventory.begin(); it != player->keyInventory.end(); ++it)
@@ -1262,8 +1280,8 @@ void DrawGUI()
     else if(controlContext == MISC_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemUINameplateTextX,
-                                guiItemUINameplateTextY,
+                                guiItemNameplateTextX,
+                                guiItemNameplateTextY,
                                 ALLEGRO_ALIGN_CENTER, "Misc. Items");
 
         for(std::vector<Misc*>::iterator it = player->miscInventory.begin(); it != player->miscInventory.end(); ++it)
@@ -1279,6 +1297,46 @@ void DrawGUI()
         }
     }
 
+    if(controlContext > INVENTORY_CONTEXT_MARKER_BEGIN && controlContext < INVENTORY_CONTEXT_MARKER_END)
+    {
+        for(int i = 0; i < 24; i++)
+        {
+            //std::string s = std::to_string('a' + i);
+            //char const *pchar = s.c_str();
+
+            char c = 'a' + i;
+            const char *cc = &c;
+
+            al_draw_text(pirulenFont, BLOOD_RED,
+                         guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (i % ITEM_UI_ROW_WIDTH),
+                         guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (i / ITEM_UI_ROW_WIDTH),
+                         0,cc);
+        }
+    }
+/// END INVENTORY CONTEXT /////////////////////////////////////////////////////////
+/// BEGIN PLAYER STAT CONTEXT /////////////////////////////////////////////////////
+
+    if(controlContext == PLAYER_STAT_CONTEXT)
+    {
+        // Background of player stat window
+        al_draw_bitmap(gfxPstatUI, guiPstatUIX,guiPstatUIY,0);
+
+        // Nameplate
+        al_draw_bitmap(gfxUINameplate, guiPstatNameplateX, guiPstatNameplateY, 0);
+        al_draw_text(penFont, PEN_INK,
+                     guiPstatNameplateTextX,
+                     guiPstatNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Status");
+
+        // Player's portrait and spells
+        // Player's equipped items
+        /// See "viewed item image and text" and adapt
+            // for(std::vector<Equip*>::iterator it = player-> ...
+    }
+
+
+/// END PLAYER STAT CONTEXT ///////////////////////////////////////////////////////
+/// BEGIN TARGETTING CONTEXTS /////////////////////////////////////////////////////
 
     if(controlContext == TARGETING_CONTEXT)
     {
@@ -1298,7 +1356,7 @@ void DrawGUI()
                 std::string intAlpha;
                 intAlpha = (char)97+i;
 
-                s_al_draw_centered_text(terminalFont, NEUTRAL_WHITE,
+                s_al_draw_centered_text(pirulenFont, NEUTRAL_WHITE,
                                         targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
                                         targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
                                         ALLEGRO_ALIGN_CENTER,
@@ -1314,6 +1372,8 @@ void DrawGUI()
                        0);
     }
 
+/// END TARGETTING CONTEXTS /////////////////////////////////////////////////////
+
     GuiDrawFrame();
 
     ALLEGRO_COLOR colorToDraw = NEUTRAL_WHITE;
@@ -1324,7 +1384,7 @@ void DrawGUI()
     // Draw the text that would go in the terminal (make a better terminal later)
     for(int i = 0; i < EXCERPT_NUM_LINES; ++i)
     {
-        s_al_draw_text(terminalFont,colorToDraw,
+        s_al_draw_text(pirulenFont,colorToDraw,
                        TERMINAL_TEXT_OPEN_X,
                        TERMINAL_TEXT_OPEN_Y-(20*i),
                        ALLEGRO_ALIGN_LEFT,
@@ -1334,7 +1394,7 @@ void DrawGUI()
     // Draw turn counter (put it in an appropriate place later)
     std::string statText;
     statText = "turn" + std::to_string(turn);
-    s_al_draw_text(terminalFont,NEUTRAL_WHITE,STATS_BAR_OPEN_X,STATS_BAR_OPEN_Y,ALLEGRO_ALIGN_LEFT,statText);
+    s_al_draw_text(pirulenFont,NEUTRAL_WHITE,STATS_BAR_OPEN_X,STATS_BAR_OPEN_Y,ALLEGRO_ALIGN_LEFT,statText);
 
 }
 
@@ -1433,7 +1493,7 @@ void DrawDebugOverlay()
     {
         //Draw player's cell coordinates
         std::string posStr = "(" + std::to_string(playerXCell) + ", " + std::to_string(playerYCell) + ")";
-        s_al_draw_text(terminalFont,al_map_rgb(255,255,255),0,0,ALLEGRO_ALIGN_LEFT,posStr);
+        s_al_draw_text(pirulenFont,al_map_rgb(255,255,255),0,0,ALLEGRO_ALIGN_LEFT,posStr);
     }
     if(mainPhase == MAIN_PHASE_LOADING)
     {
@@ -1443,7 +1503,7 @@ void DrawDebugOverlay()
         int crosshairXCell = crosshairX/MINI_TILESIZE;
         int crosshairYCell = crosshairY/MINI_TILESIZE;
         std::string posStr = "(" + std::to_string(crosshairX) + ", " + std::to_string(crosshairY) + ") : (" + std::to_string(crosshairXCell) + ", " + std::to_string(crosshairYCell) + ")";
-        s_al_draw_text(terminalFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
+        s_al_draw_text(pirulenFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
 
         al_draw_line(SCREEN_W/2,0,SCREEN_W/2,SCREEN_H,HOLY_INDIGO,1);
         al_draw_line(0,SCREEN_H/2,SCREEN_W,SCREEN_H/2,HOLY_INDIGO,1);
@@ -1660,6 +1720,11 @@ void ProcessInput(int whatContext)
             {
                 ChangeControlContext(NORMAL_CONTEXT,MISC_INVENTORY_CONTEXT);
                 guiDrawInventoryIconTab[5] = false;
+            }
+
+            else if(keyInput[KEY_C] && controlContextChangeDelay == 0)
+            {
+                ChangeControlContext(NORMAL_CONTEXT,PLAYER_STAT_CONTEXT);
             }
 
             else if(keyInput[KEY_F])
@@ -2135,7 +2200,14 @@ void ProcessInput(int whatContext)
         }
         break;
 
+/// Player stats context //////////////////////////////////////////////////////////////////////////////////
 
+    case PLAYER_STAT_CONTEXT:
+        if(keyInput[KEY_SHIFT] && keyInput[KEY_C] && controlContextChangeDelay == 0)
+        {
+            ChangeControlContext(PLAYER_STAT_CONTEXT, NORMAL_CONTEXT);
+        }
+        break;
 
 /// Weapon spell select context ////////////////////////////////////////////////////////////////////////////
 

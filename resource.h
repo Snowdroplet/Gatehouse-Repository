@@ -129,8 +129,6 @@ extern ALLEGRO_BITMAP *gfxGuiTarget;
 extern ALLEGRO_BITMAP *gfxGuiTargetHard;
 extern ALLEGRO_BITMAP *gfxGuiTargetableListTag;
 
-extern ALLEGRO_BITMAP *gfxGuiInventoryWindow;
-
 extern ALLEGRO_BITMAP *gfxPlayer;
 extern ALLEGRO_BITMAP *gfxNPCPassive[2];
 extern ALLEGRO_BITMAP *gfxTerminal;
@@ -139,8 +137,9 @@ extern ALLEGRO_BITMAP *gfxFloorTiles;
 extern ALLEGRO_BITMAP *gfxWallTiles;
 extern ALLEGRO_BITMAP *gfxFeatureTiles;
 
+extern ALLEGRO_BITMAP *gfxUINameplate;
+
 extern ALLEGRO_BITMAP *gfxItemUI;
-extern ALLEGRO_BITMAP *gfxItemUINameplate;
 extern ALLEGRO_BITMAP *gfxEquipUIIcon;
 extern ALLEGRO_BITMAP *gfxEquipUIIconSmall;
 extern ALLEGRO_BITMAP *gfxToolUIIcon;
@@ -161,9 +160,11 @@ extern ALLEGRO_BITMAP *gfxMaterialSheet;
 extern ALLEGRO_BITMAP *gfxKeySheet;
 extern ALLEGRO_BITMAP *gfxMiscSheet;
 
+extern ALLEGRO_BITMAP *gfxPstatUI;
+
 extern ALLEGRO_FONT   *penFont;
 extern ALLEGRO_FONT   *penFontLarge;
-extern ALLEGRO_FONT   *terminalFont;
+extern ALLEGRO_FONT   *pirulenFont;
 extern ALLEGRO_FONT   *titleFont;
 
 void LoadResources();

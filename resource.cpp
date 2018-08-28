@@ -7,8 +7,6 @@ ALLEGRO_BITMAP *gfxGuiTarget = nullptr;
 ALLEGRO_BITMAP *gfxGuiTargetHard = nullptr;
 ALLEGRO_BITMAP *gfxGuiTargetableListTag = nullptr;
 
-ALLEGRO_BITMAP *gfxGuiInventoryWindow = nullptr;
-
 ALLEGRO_BITMAP *gfxPlayer = nullptr;
 ALLEGRO_BITMAP *gfxNPCPassive[2];
 ALLEGRO_BITMAP *gfxTerminal = nullptr;
@@ -18,7 +16,7 @@ ALLEGRO_BITMAP *gfxWallTiles = nullptr;
 ALLEGRO_BITMAP *gfxFeatureTiles = nullptr;
 
 ALLEGRO_BITMAP *gfxItemUI = nullptr;
-ALLEGRO_BITMAP *gfxItemUINameplate = nullptr;
+ALLEGRO_BITMAP *gfxUINameplate = nullptr;
 ALLEGRO_BITMAP *gfxEquipUIIcon = nullptr;
 ALLEGRO_BITMAP *gfxEquipUIIconSmall = nullptr;
 ALLEGRO_BITMAP *gfxToolUIIcon = nullptr;
@@ -39,9 +37,11 @@ ALLEGRO_BITMAP *gfxMaterialSheet = nullptr;
 ALLEGRO_BITMAP *gfxKeySheet = nullptr;
 ALLEGRO_BITMAP *gfxMiscSheet = nullptr;
 
+ALLEGRO_BITMAP *gfxPstatUI = nullptr;
+
 ALLEGRO_FONT   *penFont = nullptr;
 ALLEGRO_FONT   *penFontLarge = nullptr;
-ALLEGRO_FONT   *terminalFont = nullptr;
+ALLEGRO_FONT   *pirulenFont = nullptr;
 ALLEGRO_FONT   *titleFont = nullptr;
 
 /// Constants
@@ -56,8 +56,6 @@ void LoadResources()
     gfxGuiTargetHard = al_load_bitmap("placeholderTarget2.png");
     gfxGuiTargetableListTag = al_load_bitmap("targetableListTag.png");
 
-    gfxGuiInventoryWindow = al_load_bitmap("placeholderInventory.png");
-
     gfxTerminal = al_load_bitmap("placeholderTerminal.png");
 
     gfxPlayer = al_load_bitmap("placeholderPlayer2.png");
@@ -69,8 +67,9 @@ void LoadResources()
     gfxWallTiles = al_load_bitmap("drawnWallTiles.png");
     gfxFeatureTiles = al_load_bitmap("featureTiles.png");
 
+    gfxUINameplate = al_load_bitmap("UINameplate.png");
+
     gfxItemUI = al_load_bitmap("drawnItemUI.png");
-    gfxItemUINameplate = al_load_bitmap("itemUINameplate.png");
     gfxEquipUIIcon = al_load_bitmap("equipUIIcon.png");
     gfxEquipUIIconSmall = al_load_bitmap("equipUIIconSmall.png");
     gfxToolUIIcon = al_load_bitmap("toolUIIcon.png");
@@ -91,9 +90,11 @@ void LoadResources()
     gfxKeySheet = al_load_bitmap("keySheet.png");
     gfxMiscSheet = al_load_bitmap("miscSheet.png");
 
+    gfxPstatUI = al_load_bitmap("drawnStatUI.png");
+
     penFont = al_load_ttf_font("SnowdropletPen.ttf",28,0);
     penFontLarge = al_load_ttf_font("SnowdropletPen.ttf",36,0);
-    terminalFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
+    pirulenFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
     titleFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
 }
 
@@ -104,8 +105,6 @@ void UnloadResources()
     al_destroy_bitmap(gfxGuiTarget);
     al_destroy_bitmap(gfxGuiTargetHard);
     al_destroy_bitmap(gfxGuiTargetableListTag);
-
-    al_destroy_bitmap(gfxGuiInventoryWindow);
 
     al_destroy_bitmap(gfxTerminal);
 
@@ -118,8 +117,9 @@ void UnloadResources()
     al_destroy_bitmap(gfxWallTiles);
     al_destroy_bitmap(gfxFeatureTiles);
 
+    al_destroy_bitmap(gfxUINameplate);
+
     al_destroy_bitmap(gfxItemUI);
-    al_destroy_bitmap(gfxItemUINameplate);
     al_destroy_bitmap(gfxEquipUIIcon);
     al_destroy_bitmap(gfxEquipUIIconSmall);
     al_destroy_bitmap(gfxToolUIIcon);
@@ -140,8 +140,10 @@ void UnloadResources()
     al_destroy_bitmap(gfxKeySheet);
     al_destroy_bitmap(gfxMiscSheet);
 
+    al_destroy_bitmap(gfxPstatUI);
+
     al_destroy_font(penFont);
     al_destroy_font(penFontLarge);
-    al_destroy_font(terminalFont);
+    al_destroy_font(pirulenFont);
     al_destroy_font(titleFont);
 }
