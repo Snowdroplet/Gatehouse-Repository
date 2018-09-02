@@ -12,6 +12,20 @@
 //#include <boost/serialization/base_object.hpp>
 //#include <boost/serialization/vector.hpp>
 
+enum enumPlayerEquipSlots
+{
+    // BEING_EQUIP_SLOT_X = ... if follower implemented...
+    PLAYER_EQUIP_SLOT_MAIN_HAND = 0,
+    PLAYER_EQUIP_SLOT_OFF_HAND = 1,
+    PLAYER_EQUIP_SLOT_RELIC_1 = 2,
+    PLAYER_EQUIP_SLOT_RELIC_2 = 3,
+
+    PLAYER_EQUIP_SLOT_HEAD = 4,
+    PLAYER_EQUIP_SLOT_BODY = 5,
+    PLAYER_EQUIP_SLOT_ARMS = 6,
+    PLAYER_EQUIP_SLOT_LEGS = 7
+};
+
 class Player: public Being
 {
     /*
@@ -49,12 +63,19 @@ public:
     std::vector<Key*>keyInventory;
     std::vector<Misc*>miscInventory;
 
-    Item* headEquipSlot;
-    Item* bodyEquipSlot;
-    Item* handEquipSlot;
-    Item* legEquipSlot;
+    std::vector<Equip*>wornEquipment;
+
+    /*
+    Item* mainHandEquipSlot;
+    Item* offHandEquipSlot;
     Item* relic1EquipSlot;
     Item* relic2EquipSlot;
+
+    Item* headEquipSlot;
+    Item* bodyEquipSlot;
+    Item* armEquipSlot;
+    Item* legEquipSlot;
+    */
 
     Player();
     Player(bool savedPlayer);

@@ -4,15 +4,16 @@
 #include "item.h"
 #include "resource.h"
 
-enum enumEquipClass
+enum enumEquipType
 {
-    EQUIP_SLOT_WEAPON = 0, // (Can equip as many weapons as spiritualization allows)
-    EQUIP_SLOT_HEAD  = 1,
-    EQUIP_SLOT_BODY = 2,
-    EQUIP_SLOT_HANDS = 3,
-    EQUIP_SLOT_LEGS = 4,
-
-    EQUIP_CLASS_RELIC = 5
+    EQUIP_TYPE_MAIN_HAND = 0, // Main hand types can be off-handed
+    EQUIP_TYPE_OFF_HAND = 1, // Only weapons that are exclusively off-hand, e.g. shields and auto-generated paired weapons
+    EQUIP_TYPE_TWO_HAND = 2, // Weapons that require two hands
+    EQUIP_TYPE_RELIC = 3,
+    EQUIP_TYPE_HEAD  = 4,
+    EQUIP_TYPE_BODY = 5,
+    EQUIP_TYPE_ARMS = 6,
+    EQUIP_TYPE_LEGS = 7
 };
 
 class Equip : public Item
@@ -20,19 +21,35 @@ class Equip : public Item
 public:
 
 
-    int equipSlot; // Whether this item is intended to be used as boots, gloves, helmet, etc...
+    int equipType; // Whether this item is intended to be used as boots, gloves, helmet, etc...
 
     bool upgradable;
     int upgradeLevel;
 
+    // Primary (bonuses can be negative)
     int strBonus;
     int dexBonus;
-    int conBonus;
+    int vitBonus;
+    int agiBonus
     int wilBonus;
-    int intBonus;
     int atuBonus;
 
-    Equip(); // Produces a useless template weapon.
+    // Secondary (bonuses can be negative)
+    int atkBonus;
+    int matkBonus;
+    int hitBonus;
+    int critBonus;
+    int atkspdBonus;
+    int matkspdBonus;
+
+    int defBonus;
+    int mdefBonus;
+    int evadeBonus;
+    int healBonus;
+    int meditationBonus;
+    int speedBonus;
+
+    Equip();
     Equip(int equipTemplateID);
     ~Equip();
 
@@ -40,7 +57,12 @@ public:
 
 enum enumEquipTemplateIDs
 {
-    EQUIP_TEMPLATE_DAGGER = 0
+    EQUIP_TEMPLATE_XIPHOS = 0,
+    EQUIP_TEMPLATE_SAWTOOTH = 1,
+    EQUIP_TEMPLATE_KATANA = 2,
+    EQUIP_TEMPLATE_SHOTEL = 3,
+    EQUIP_TEMPLATE_KRIS = 4,
+    EQUIP_TEMPLATE_SCYTHE = 5
 };
 
 

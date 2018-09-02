@@ -17,9 +17,11 @@ extern int guiTargetDrawXPosition;
 extern int guiTargetDrawYPosition;
 
 
+/// All UI contexts
+const int ITEM_ICONSIZE = 64; //The size of an item icon
+
 /// Inventory contexts
 
-const int ITEM_ICONSIZE = 64; //The size of an item icon
 const int ITEM_UI_SLOT_WIDTH = 75; // Currently 75-64... Change to determine mathematically later.
 
 const int ITEM_UI_ROW_WIDTH = 4; // 0 to 3
@@ -54,6 +56,16 @@ extern int guiItemDescriptionOriginY; // Arbitary top left starting point of ite
 extern int guiItemDescriptionLineSpacing; // Vertical spacing between lines of item text.
 
 /// Player status context
+
+const int PSTAT_UI_PORTRAIT_ROW_WIDTH = 2; // 0 to 1
+
+const int PSTAT_UI_EQUIP_SLOT_WIDTH = 75;
+const int PSTAT_UI_EQUIP_ROW_WIDTH = 4; // 0 to 3
+
+const int PSTAT_UI_PRIMARY_ROW_WIDTH = 1; // 0 to 0
+
+const int PSTAT_UI_SECONDARY_ROW_WIDTH = 2; // 0 to 1
+
 extern int guiPstatUIX;
 extern int guiPstatUIY;
 

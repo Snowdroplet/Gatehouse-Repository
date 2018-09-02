@@ -19,13 +19,27 @@ Equip::Equip(int equipTemplateID)
     intBonus = 0;
     atuBonus = 0;
 
+    atkBonus = 0;
+    matkBonus = 0;
+    hitBonus = 0;
+    critBonus = 0;
+    atkspdBonus = 0;
+    matkspdBonus = 0;
+
+    defBonus = 0;
+    mdefBonus = 0;
+    evadeBonus = 0;
+    healBonus = 0;
+    meditationBonus = 0;
+    speedBonus = 0;
+
     switch(equipTemplateID)
     {
     case EQUIP_TEMPLATE_XIPHOS:
+        equipType = EQUIP_TYPE_MAIN_HAND;
 
         baseName = fullName = "Xiphos";
         spriteID = EQSI_XIPHOS;
-        equipSlot = EQUIP_SLOT_WEAPON;
         dexBonus = 1;
 
         description[0] = "The blacksmiths of ancient Celkess fired";
@@ -37,10 +51,10 @@ Equip::Equip(int equipTemplateID)
         break;
 
     case EQUIP_TEMPLATE_SAWTOOTH:
+        equipType = EQUIP_TYPE_MAIN_HAND;
 
         baseName = fullName = "Sawtooth";
         spriteID = EQSI_SAWTOOTH;
-        equipSlot = EQUIP_SLOT_WEAPON;
         dexBonus = 1;
         wilBonus = 1;
 
@@ -52,10 +66,10 @@ Equip::Equip(int equipTemplateID)
         break;
 
     case EQUIP_TEMPLATE_KATANA:
+        equipType = EQUIP_TYPE_MAIN_HAND;
 
         baseName = fullName = "Katana";
         spriteID = EQSI_KATANA;
-        equipSlot = EQUIP_SLOT_WEAPON;
         dexBonus = 1;
         atuBonus = 2;
 
@@ -69,10 +83,10 @@ Equip::Equip(int equipTemplateID)
         break;
 
     case EQUIP_TEMPLATE_SHOTEL:
+        equipType = EQUIP_TYPE_MAIN_HAND;
 
         baseName = fullName = "Shotel";
         spriteID = EQSI_SHOTEL;
-        equipSlot = EQUIP_SLOT_WEAPON;
 
         description[0] = "The shotelai of Ericennes struck where";
         description[1] = "Karune's shields were not, but were";
@@ -80,10 +94,10 @@ Equip::Equip(int equipTemplateID)
         break;
 
     case EQUIP_TEMPLATE_KRIS:
+        equipType = EQUIP_TYPE_MAIN_HAND;
 
         baseName = fullName = "Kris";
         spriteID = EQSI_KRIS;
-        equipSlot = EQUIP_SLOT_WEAPON;
         wilBonus = 1;
         atuBonus = 1;
 
@@ -93,11 +107,11 @@ Equip::Equip(int equipTemplateID)
         description[3] = "bravery upon their wielders.";
         break;
 
-    case EQUIP_TEMPLATE_SCYTHE:
+    case EQUIP_TEMPLATE_SICKLE:
+        equipType = EQUIP_TYPE_TWO_HAND;
 
         baseName = fullName = "Scythe";
         spriteID = EQSI_SCYTHE;
-        equipSlot = EQUIP_SLOT_WEAPON;
         strBonus = 2;
         dexBonus = -1;
 
@@ -107,7 +121,7 @@ Equip::Equip(int equipTemplateID)
         description[3] = "In Hathsera, the sowing of seeds is";
         description[4] = "sacreliege. Those who scorn the laws";
         description[5] = "of the forest are cut down by the";
-        description[6] = "Reaper's scythe.";
+        description[6] = "Sun's Hand.";
         break;
     }
 }

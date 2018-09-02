@@ -95,12 +95,17 @@ public:
     float dXPosition, dYPosition; // destination coordinates
     int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase
 
-    /// Unit game stats
+    /// Unit primary stats
     float baseStrength, strengthModifier, effectiveStrength;
     float baseDexterity, dexterityModifier, effectiveDexterity;
-    float baseConstitution, constitutionModifier, effectiveConstitution;
+    float baseVitality, vitalityModifier, effectiveVitality;
+    float baseAgility, agilityModifier, effectiveAgility;
+    float baseWillpower, willpowerModifier, effectiveWillpower;
+    float baseAttunement, attunementModifier, effectiveAttunement;
 
+    /// Unit secondary stats
     float baseSpeed, speedModifier, effectiveSpeed;
+
 
     float weaponPhysicalDamage;
     float weaponFireDamage;

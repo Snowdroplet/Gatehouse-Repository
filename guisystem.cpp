@@ -46,19 +46,15 @@ int guiPstatNameplateTextY;
 
 int guiPstatPortraitOriginX; // Arbitrary top left corner of item ui grid. Includes portrait backgrounded by covenant symbol, cooldown for spell 1, 2, and 3
 int guiPstatPortraitOriginY;
-int guiPstatPortraitNumColumns;
 
 int guiPstatEquipOriginX;
 int guiPstatEquipOriginY;
-int guiPstatEquipNumColumns;
 
 int guiPstatPrimaryOriginX;
 int guiPstatPrimaryOriginY;
-int guiPstatPrimaryNumColumns;
 
 int guiPstatSecondaryOriginX;
 int guiPstatSecondaryOriginY;
-int guiPstatSecondaryNumColumns;
 
 
 void GuiInit()
@@ -93,7 +89,7 @@ void GuiInit()
     guiItemDescriptionOriginX = guiItemUIOriginX + 340;
     guiItemDescriptionOriginY = guiItemUIOriginY + 70;
 
-    guiItemDescriptionLineSpacing = 36;
+    guiItemDescriptionLineSpacing = 24;
 
     /// Player stat contexts
     guiPstatUIX = (SCREEN_W - al_get_bitmap_width(gfxPstatUI))/2;
@@ -107,19 +103,15 @@ void GuiInit()
 
     guiPstatPortraitOriginX = guiPstatUIX + 42; // Arbitrary top left corner of item ui grid. Includes portrait backgrounded by covenant symbol, cooldown for spell 1, 2, and 3
     guiPstatPortraitOriginY = guiPstatUIY + 40;
-    guiPstatPortraitNumColumns = 1; // 0 to 1
 
     guiPstatEquipOriginX = guiPstatUIX + 230;
     guiPstatEquipOriginY = guiPstatUIY + 38;
-    guiPstatEquipNumColumns = 3; // 0 to 3
 
     guiPstatPrimaryOriginX = guiPstatUIX + 42;
     guiPstatPrimaryOriginY = guiPstatUIY + 226;
-    guiPstatEquipNumColumns = 0; // 0 to 0
 
     guiPstatSecondaryOriginX = guiPstatUIX + 228;
     guiPstatSecondaryOriginY = guiPstatUIY + 226;
-    guiPstatEquipNumColumns = 1; // 0 to 1
 }
 
 void GuiDeinit()

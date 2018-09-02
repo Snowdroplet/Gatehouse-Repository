@@ -42,17 +42,12 @@ Player::Player(int spawnXCell, int spawnYCell)
 
     animationFrameThreshold = 1;
 
-    headEquipSlot = nullptr;
-    bodyEquipSlot = nullptr;
-    handEquipSlot = nullptr;
-    legEquipSlot = nullptr;
-    relic1EquipSlot = nullptr;
-    relic2EquipSlot = nullptr;
-
+    wornEquipment = std::vector<Equip*>(8,nullptr);
 }
 
 Player::~Player()
 {
+    // Delete objects sotred in inventories
     for(std::vector<Equip*>::iterator it = equipInventory.begin(); it != equipInventory.end();)
     {
             delete *it;
@@ -82,6 +77,13 @@ Player::~Player()
     {
             delete *it;
             miscInventory.erase(it);
+    }
+
+    // Delete objects stored in worn equipment
+    for(std::vector<Equip*>::iterator it = wornEquipment.begin(); it != wornEquipment.end();)
+    {
+        delete *it;
+        wornEquipment.erase(it);
     }
 }
 

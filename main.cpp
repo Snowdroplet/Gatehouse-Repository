@@ -103,6 +103,7 @@ Player *player = nullptr;
 /// Item containers and functions ##################
 std::vector<Item*>areaItems; // All items currently in play in the current area.
 Item*viewedItem = nullptr; // Item being viewed in inventory selection.
+int viewedItemPosition;
 
 void PopulateItems(); // Fill items vector with all items currently held by all beings and in play.
 
@@ -1056,32 +1057,32 @@ void DrawGUI()
         if(guiDrawInventoryIconTab[0]) // if == true
         {
             al_draw_bitmap(gfxEquipUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY, 0, "1");
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY, 0, "1");
         }
         if(guiDrawInventoryIconTab[1])
         {
             al_draw_bitmap(gfxToolUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing, 0, "2");
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing, 0, "2");
         }
         if(guiDrawInventoryIconTab[2])
         {
             al_draw_bitmap(gfxMagicUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0, "3");
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0, "3");
         }
         if(guiDrawInventoryIconTab[3])
         {
             al_draw_bitmap(gfxMaterialUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0, "4");
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0, "4");
         }
         if(guiDrawInventoryIconTab[4])
         {
             al_draw_bitmap(gfxKeyUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0, "5");
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0, "5");
         }
         if(guiDrawInventoryIconTab[5])
         {
             al_draw_bitmap(gfxMiscUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX - 16, guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0, "6");
+            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0, "6");
         }
 
         // Active inventory window's big tab
@@ -1329,9 +1330,36 @@ void DrawGUI()
                      ALLEGRO_ALIGN_CENTER, "Status");
 
         // Player's portrait and spells
-        // Player's equipped items
-        /// See "viewed item image and text" and adapt
-            // for(std::vector<Equip*>::iterator it = player-> ...
+
+        // Draw icons of items equipped by player
+        for(std::vector<Equip*>::iterator it = player->wornEquipment.begin(); it != player->wornEquipment.end(); ++it)
+        {
+            if(*it != nullptr)
+            {
+                int elementPosition = std::distance(player->wornEquipment.begin(), it);
+
+                al_draw_bitmap_region(gfxEquipSheet,
+                                      (*it)->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiPstatEquipOriginX + PSTAT_UI_EQUIP_SLOT_WIDTH * (elementPosition % PSTAT_UI_EQUIP_ROW_WIDTH),
+                                      guiPstatEquipOriginY + PSTAT_UI_EQUIP_SLOT_WIDTH * (elementPosition / PSTAT_UI_EQUIP_ROW_WIDTH),
+                                      0);
+            }
+        }
+
+        for(int i = 0; i < 8; i++)
+        {
+            //std::string s = std::to_string('a' + i);
+            //char const *pchar = s.c_str();
+
+            char c = 'a' + i;
+            const char *cc = &c;
+
+            al_draw_text(pirulenFont, BLOOD_RED,
+                         guiPstatEquipOriginX + PSTAT_UI_EQUIP_SLOT_WIDTH * (i % PSTAT_UI_EQUIP_ROW_WIDTH),
+                         guiPstatEquipOriginY + PSTAT_UI_EQUIP_SLOT_WIDTH * (i / PSTAT_UI_EQUIP_ROW_WIDTH),
+                         0,cc);
+        }
     }
 
 
@@ -1928,13 +1956,218 @@ void ProcessInput(int whatContext)
                 guiDrawInventoryIconTab[5] = false;
             }
 
+        else if(keyInput[KEY_Z] && viewedItem != nullptr)
+        {
+            Equip*viewedEquip = (Equip*)viewedItem; // Type cast
+            if(viewedEquip->equipType == EQUIP_TYPE_MAIN_HAND)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr) // Player's main hand is empty.
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition); // ** Erases element but not not delete object! **
+                    viewedItem = nullptr;  // Forces user to select a new item from equipInventory, with the side effect of acquiring new viewedItemPosition.
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]->equipType == EQUIP_TYPE_MAIN_HAND) //Player's main hand holds a one-handed weapon.
+                {
+                    if(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] == nullptr) // Offhand slot is empty.
+                    {
+                        player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] = viewedEquip;
+                        player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                        viewedItem = nullptr;
+                    }
+                    else // Offhand slot is filled.
+                    {
+                        // Swap viewedEquip with mainhand slot.
+                        // Exchange one vector's pointer for the other:
+                        player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]); // Copy "unequipped" item to equipment inventory.
+                        player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                        player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                        viewedItem = nullptr;
+                    }
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]->equipType == EQUIP_TYPE_TWO_HAND) // If a two-handed weapon is current wielded, unequip it for the new weapon.
+                {
+                    // Exchange one vector's pointer for the other:
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]); // Copy "unequipped" item to equipment inventory.
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_OFF_HAND)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] == nullptr) // Player's off hand is empty.
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition); // ** Erases element but not not delete object! **
+
+                    if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]->equipType == EQUIP_TYPE_TWO_HAND) // A two-handed weapon is currently wielded (and must be un-equipped)
+                    {
+                        player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]); // Copy "unequipped" two-hander to equipment inventory.
+                        player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = nullptr; // The two-hander's pointer in wornEquipment must be nullified.
+                    }
+
+                    viewedItem = nullptr;  // Forces user to select a new item from equipInventory, with the side effect of acquiring new viewedItemPosition.
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // Player's off hand is NOT empty (which implies a two-hander is not equipped anyway).
+                {
+
+                    // Exchange one vector's pointer for the other:
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND]); // Copy "unequipped" item to equipment inventory.
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_TWO_HAND)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr
+                    && player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr) // Items are currently equipped in NEITHER main and offhand.
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] != nullptr
+                   && player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // An item is already equipped in BOTH main and offhand.
+                {
+                    if(player->equipInventory.size() < 24-1) // Player equipInventory has room for *two* items.
+                    {
+                        player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]); // Copy "unequipped" item to equipment inventory.
+                        player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND]); // Copy "unequipped" item to equipment inventory.
+                        player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                        player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                        viewedItem = nullptr;
+                    }
+                    else
+                    {
+                        // Flash error message (no room in equip inventory).
+                    }
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] != nullptr
+                        && player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] == nullptr) // An item is equipped in ONLY main hand; NOT offhand.
+                {
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr
+                        && player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // An item is equipped in ONLY offhand; NOT main hand.
+                {
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] = nullptr; // Unlike previous case, offhand slot must be nullified.
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_RELIC)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_1] == nullptr) // First relic slot is open
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_1] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_2] == nullptr) // (First relic slot is NOT open) but second relic slot is open
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_2] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else // (Both relic slots are occupied)
+                {
+                    // Just swap out relic 1 for now.
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_1]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_1] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_HEAD)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_HEAD] == nullptr)
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_HEAD] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else
+                {
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_HEAD]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_HEAD] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_BODY)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_BODY] == nullptr)
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_BODY] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else
+                {
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_BODY]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_BODY] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_ARMS)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_ARMS] == nullptr)
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_ARMS] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else
+                {
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_ARMS]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_ARMS] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+
+            else if(viewedEquip->equipType == EQUIP_TYPE_LEGS)
+            {
+                if(player->wornEquipment[PLAYER_EQUIP_SLOT_LEGS] == nullptr)
+                {
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_LEGS] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+                else
+                {
+                    player->equipInventory.push_back(player->wornEquipment[PLAYER_EQUIP_SLOT_LEGS]);
+                    player->wornEquipment[PLAYER_EQUIP_SLOT_LEGS] = viewedEquip;
+                    player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
+                    viewedItem = nullptr;
+                }
+            }
+        }
+
         for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
         {
             if(keyInput[i] && player->equipInventory.size() >= i-KEY_A+1)
             {
                 viewedItem = player->equipInventory[i-KEY_A];
+                viewedItemPosition = 0+ i-KEY_A;
             }
         }
+
         break;
 
 
@@ -2137,7 +2370,7 @@ void ProcessInput(int whatContext)
                 guiDrawInventoryIconTab[5] = false;
             }
 
-        for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
             if(keyInput[i] && player->keyInventory.size() >= i-KEY_A+1)
             {
@@ -2191,7 +2424,7 @@ void ProcessInput(int whatContext)
                 guiDrawInventoryIconTab[4] = false;
             }
 
-        for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
+        for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
             if(keyInput[i] && player->miscInventory.size() >= i-KEY_A+1)
             {
@@ -2206,6 +2439,28 @@ void ProcessInput(int whatContext)
         if(keyInput[KEY_SHIFT] && keyInput[KEY_C] && controlContextChangeDelay == 0)
         {
             ChangeControlContext(PLAYER_STAT_CONTEXT, NORMAL_CONTEXT);
+        }
+
+        for(unsigned int i = KEY_A; i < KEY_A+7; i++)
+        {
+            if(keyInput[i] && player->wornEquipment.size() >= i-KEY_A+1)
+            {
+                if(player->wornEquipment[i-KEY_A] != nullptr) // Item is equipped here.
+                {
+                    if(player->equipInventory.size() < 24) // Player equipInventory has room to un-equip.
+                    {
+                        // "Unequip"
+                        player->equipInventory.push_back(player->wornEquipment[i-KEY_A]); // 1. Add a copy of item pointer to equipinventory vector.
+                        player->wornEquipment[i-KEY_A] = nullptr; //2. Nullify item's slot in wornequip vector.
+                    }
+                    else // Player equipInventory has no room.
+                    {
+                        // error message flash + terminal log.
+                    }
+                }
+
+                // //viewedItem = player->wornEquipment[i-KEY_A];
+            }
         }
         break;
 
