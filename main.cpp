@@ -426,9 +426,9 @@ void GameLogic()
 
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
-            (*it)->actionPoints += (*it)->effectiveSpeed; // Each being receives AP according to its effective speed.
+            (*it)->actionPoints += (*it)->walkSpeed[BEING_STAT_EFFECTIVE]; // Each being receives AP according to its effective speed.
 #ifdef D_TURN_LOGIC
-            std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->effectiveSpeed << " AP." << std::endl;
+            std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->walkSpeed[BEING_STAT_EFFECTIVE] << " AP." << std::endl;
 #endif
 
             if((*it)->actionPoints >= 100) // If a being has at least 100 AP, add it to actionQueue.
@@ -511,7 +511,7 @@ void GameLogic()
                     (*actionQueueFront)->actionPoints -= (*actionQueueFront)->actionCost; // Spend AP cost of action. It is very possible for moves to put beings into negative AP (e.g. power-attacks)
 
 #ifdef D_TURN_LOGIC
-                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->effectiveSpeed << "AP" << std::endl;
+                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->walkSpeed[BEING_STAT_EFFECTIVE] << "AP" << std::endl;
 #endif
 
                     if((*actionQueueFront)->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
@@ -546,7 +546,7 @@ void GameLogic()
 #endif
                     player->actionPoints -= player->actionCost;
 #ifdef D_TURN_LOGIC
-                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->effectiveSpeed << "AP" << std::endl;
+                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->walkSpeed[BEING_STAT_EFFECTIVE] << "AP" << std::endl;
 #endif
 
                     // Reset flags to default, false.
@@ -1045,7 +1045,7 @@ void DrawGUI()
 /// BEGIN INVENTORY CONTEXT /////////////////////////////////////////////////////////
 
     if(controlContext > INVENTORY_CONTEXT_MARKER_BEGIN &&
-       controlContext < INVENTORY_CONTEXT_MARKER_END)
+            controlContext < INVENTORY_CONTEXT_MARKER_END)
     {
         // Background of all inventory windows
         al_draw_bitmap(gfxItemUI, guiItemUIX, guiItemUIY, 0);
@@ -1087,94 +1087,94 @@ void DrawGUI()
 
         // Active inventory window's big tab
         if(controlContext == EQUIP_INVENTORY_CONTEXT)
-        al_draw_bitmap(gfxEquipUIIcon,
-                       guiItemActiveTabX,
-                       guiItemActiveTabY,
-                       0);
+            al_draw_bitmap(gfxEquipUIIcon,
+                           guiItemActiveTabX,
+                           guiItemActiveTabY,
+                           0);
         else if(controlContext == TOOL_INVENTORY_CONTEXT)
-        al_draw_bitmap(gfxToolUIIcon,
-                       guiItemActiveTabX,
-                       guiItemActiveTabY,
-                       0);
+            al_draw_bitmap(gfxToolUIIcon,
+                           guiItemActiveTabX,
+                           guiItemActiveTabY,
+                           0);
         else if(controlContext == MAGIC_INVENTORY_CONTEXT)
-        al_draw_bitmap(gfxMagicUIIcon,
-                       guiItemActiveTabX,
-                       guiItemActiveTabY,
-                       0);
+            al_draw_bitmap(gfxMagicUIIcon,
+                           guiItemActiveTabX,
+                           guiItemActiveTabY,
+                           0);
         else if(controlContext == MATERIAL_INVENTORY_CONTEXT)
-        al_draw_bitmap(gfxMaterialUIIcon,
-                       guiItemActiveTabX,
-                       guiItemActiveTabY,
-                       0);
+            al_draw_bitmap(gfxMaterialUIIcon,
+                           guiItemActiveTabX,
+                           guiItemActiveTabY,
+                           0);
         else if(controlContext == KEY_INVENTORY_CONTEXT)
-        al_draw_bitmap(gfxKeyUIIcon,
-                       guiItemActiveTabX,
-                       guiItemActiveTabY,
-                       0);
+            al_draw_bitmap(gfxKeyUIIcon,
+                           guiItemActiveTabX,
+                           guiItemActiveTabY,
+                           0);
         else if(controlContext == MISC_INVENTORY_CONTEXT)
-        al_draw_bitmap(gfxMiscUIIcon,
-                       guiItemActiveTabX,
-                       guiItemActiveTabY,
-                       0);
+            al_draw_bitmap(gfxMiscUIIcon,
+                           guiItemActiveTabX,
+                           guiItemActiveTabY,
+                           0);
 
 
         // Viewed item image and text
-      if(viewedItem != nullptr)
-      {
-          if(viewedItem->derivedType == ITEM_TYPE_EQUIP)
-              al_draw_bitmap_region(gfxEquipSheet,
-                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
-                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiViewedItemX,
-                                  guiViewedItemY,
-                                  0);
-          else if(viewedItem->derivedType == ITEM_TYPE_TOOL)
-              al_draw_bitmap_region(gfxToolSheet,
-                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
-                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiViewedItemX,
-                                  guiViewedItemY,
-                                  0);
+        if(viewedItem != nullptr)
+        {
+            if(viewedItem->derivedType == ITEM_TYPE_EQUIP)
+                al_draw_bitmap_region(gfxEquipSheet,
+                                      viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiViewedItemX,
+                                      guiViewedItemY,
+                                      0);
+            else if(viewedItem->derivedType == ITEM_TYPE_TOOL)
+                al_draw_bitmap_region(gfxToolSheet,
+                                      viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiViewedItemX,
+                                      guiViewedItemY,
+                                      0);
             else if(viewedItem->derivedType == ITEM_TYPE_MAGIC)
-              al_draw_bitmap_region(gfxMagicSheet,
-                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
-                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiViewedItemX,
-                                  guiViewedItemY,
-                                  0);
-          else if(viewedItem->derivedType == ITEM_TYPE_MATERIAL)
-              al_draw_bitmap_region(gfxMaterialSheet,
-                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
-                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiViewedItemX,
-                                  guiViewedItemY,
-                                  0);
+                al_draw_bitmap_region(gfxMagicSheet,
+                                      viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiViewedItemX,
+                                      guiViewedItemY,
+                                      0);
+            else if(viewedItem->derivedType == ITEM_TYPE_MATERIAL)
+                al_draw_bitmap_region(gfxMaterialSheet,
+                                      viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiViewedItemX,
+                                      guiViewedItemY,
+                                      0);
             else if(viewedItem->derivedType == ITEM_TYPE_KEY)
-              al_draw_bitmap_region(gfxKeySheet,
-                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
-                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiViewedItemX,
-                                  guiViewedItemY,
-                                  0);
+                al_draw_bitmap_region(gfxKeySheet,
+                                      viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiViewedItemX,
+                                      guiViewedItemY,
+                                      0);
             else if(viewedItem->derivedType == ITEM_TYPE_MISC)
-              al_draw_bitmap_region(gfxMiscSheet,
-                                  viewedItem->spriteID * ITEM_ICONSIZE, 0,
-                                  ITEM_ICONSIZE, ITEM_ICONSIZE,
-                                  guiViewedItemX,
-                                  guiViewedItemY,
-                                  0);
+                al_draw_bitmap_region(gfxMiscSheet,
+                                      viewedItem->spriteID * ITEM_ICONSIZE, 0,
+                                      ITEM_ICONSIZE, ITEM_ICONSIZE,
+                                      guiViewedItemX,
+                                      guiViewedItemY,
+                                      0);
 
             // Viewed item's name
-          s_al_draw_text(penFontLarge, PEN_INK,
-                             guiItemNameX, guiItemNameY,
-                            ALLEGRO_ALIGN_CENTER, viewedItem->baseName);
+            s_al_draw_text(penFontLarge, PEN_INK,
+                           guiItemNameX, guiItemNameY,
+                           ALLEGRO_ALIGN_CENTER, viewedItem->baseName);
 
             // Viewed item's text
-           for(int i = 0; i < NUM_ITEM_DESCRIPTION_LINES; i++)
-           {
+            for(int i = 0; i < NUM_ITEM_DESCRIPTION_LINES; i++)
+            {
                 s_al_draw_text(penFont, PEN_INK,
-                             guiItemDescriptionOriginX, guiItemDescriptionOriginY + (i*guiItemDescriptionLineSpacing),
-                            0, viewedItem->description[i]);
+                               guiItemDescriptionOriginX, guiItemDescriptionOriginY + (i*guiItemDescriptionLineSpacing),
+                               0, viewedItem->description[i]);
 
             }
         }
@@ -1184,9 +1184,9 @@ void DrawGUI()
     {
         // Label the window "Equipment"
         al_draw_text(penFont, PEN_INK,
-                                guiItemNameplateTextX,
-                                guiItemNameplateTextY,
-                                ALLEGRO_ALIGN_CENTER, "Equipment");
+                     guiItemNameplateTextX,
+                     guiItemNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Equipment");
 
         // Draw icons of items in inventory
         for(std::vector<Equip*>::iterator it = player->equipInventory.begin(); it != player->equipInventory.end(); ++it)
@@ -1204,9 +1204,9 @@ void DrawGUI()
     else if(controlContext == TOOL_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemNameplateTextX,
-                                guiItemNameplateTextY,
-                                ALLEGRO_ALIGN_CENTER, "Tools");
+                     guiItemNameplateTextX,
+                     guiItemNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Tools");
 
         for(std::vector<Tool*>::iterator it = player->toolInventory.begin(); it != player->toolInventory.end(); ++it)
         {
@@ -1223,9 +1223,9 @@ void DrawGUI()
     else if(controlContext == MAGIC_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemNameplateTextX,
-                                guiItemNameplateTextY,
-                                ALLEGRO_ALIGN_CENTER, "Magic");
+                     guiItemNameplateTextX,
+                     guiItemNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Magic");
 
         for(std::vector<Magic*>::iterator it = player->magicInventory.begin(); it != player->magicInventory.end(); ++it)
         {
@@ -1243,9 +1243,9 @@ void DrawGUI()
     {
 
         al_draw_text(penFont, PEN_INK,
-                                guiItemNameplateTextX,
-                                guiItemNameplateTextY,
-                                ALLEGRO_ALIGN_CENTER, "Materials");
+                     guiItemNameplateTextX,
+                     guiItemNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Materials");
 
         for(std::vector<Material*>::iterator it = player->materialInventory.begin(); it != player->materialInventory.end(); ++it)
         {
@@ -1262,9 +1262,9 @@ void DrawGUI()
     else if(controlContext == KEY_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemNameplateTextX,
-                                guiItemNameplateTextY,
-                                ALLEGRO_ALIGN_CENTER, "Key Items");
+                     guiItemNameplateTextX,
+                     guiItemNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Key Items");
 
         for(std::vector<Key*>::iterator it = player->keyInventory.begin(); it != player->keyInventory.end(); ++it)
         {
@@ -1281,9 +1281,9 @@ void DrawGUI()
     else if(controlContext == MISC_INVENTORY_CONTEXT)
     {
         al_draw_text(penFont, PEN_INK,
-                                guiItemNameplateTextX,
-                                guiItemNameplateTextY,
-                                ALLEGRO_ALIGN_CENTER, "Misc. Items");
+                     guiItemNameplateTextX,
+                     guiItemNameplateTextY,
+                     ALLEGRO_ALIGN_CENTER, "Misc. Items");
 
         for(std::vector<Misc*>::iterator it = player->miscInventory.begin(); it != player->miscInventory.end(); ++it)
         {
@@ -1360,6 +1360,39 @@ void DrawGUI()
                          guiPstatEquipOriginY + PSTAT_UI_EQUIP_SLOT_WIDTH * (i / PSTAT_UI_EQUIP_ROW_WIDTH),
                          0,cc);
         }
+
+        // Draw player primary stats
+        std::string statString;
+
+        statString = "STR       " + std::to_string((int)player->strength[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->strength[BEING_STAT_BASE]);
+        s_al_draw_text(pirulenFont,PEN_INK,
+                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*0,
+                       ALLEGRO_ALIGN_LEFT,statString);
+        statString = "DEX       "  + std::to_string((int)player->dexterity[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->dexterity[BEING_STAT_BASE]);
+        s_al_draw_text(pirulenFont,PEN_INK,
+                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*1,
+                       ALLEGRO_ALIGN_LEFT,statString);
+        statString = "VIT       " + std::to_string((int)player->vitality[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->vitality[BEING_STAT_BASE]);
+        s_al_draw_text(pirulenFont,PEN_INK,
+                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*2,
+                       ALLEGRO_ALIGN_LEFT,statString);
+        statString = "AGI       " + std::to_string((int)player->agility[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->agility[BEING_STAT_BASE]);
+        s_al_draw_text(pirulenFont,PEN_INK,
+                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*3,
+                       ALLEGRO_ALIGN_LEFT,statString);
+        statString = "WIL       " + std::to_string((int)player->willpower[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->willpower[BEING_STAT_BASE]);
+        s_al_draw_text(pirulenFont,PEN_INK,
+                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*4,
+                       ALLEGRO_ALIGN_LEFT,statString);
+        statString = "ATU       " + std::to_string((int)player->attunement[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->attunement[BEING_STAT_BASE]);
+        s_al_draw_text(pirulenFont,PEN_INK,
+                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*5,
+                       ALLEGRO_ALIGN_LEFT,statString);
+
+        // Draw player secondary stats
+
+
+
     }
 
 
@@ -1722,7 +1755,7 @@ void ProcessInput(int whatContext)
             }
 
             else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
-                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
+                    (keyInput[KEY_I] && controlContextChangeDelay == 0))
             {
                 ChangeControlContext(NORMAL_CONTEXT,TOOL_INVENTORY_CONTEXT);
                 guiDrawInventoryIconTab[1] = false;
@@ -1913,48 +1946,48 @@ void ProcessInput(int whatContext)
 
     case EQUIP_INVENTORY_CONTEXT:
         if( (keyInput[KEY_1] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            {
-                ChangeControlContext(EQUIP_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[0] = true;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+        {
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[0] = true;
+        }
         else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
-                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
-            {
-                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[0] = true;
-                guiDrawInventoryIconTab[1] = false;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0))
+        {
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[0] = true;
+            guiDrawInventoryIconTab[1] = false;
+        }
         else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[0] = true;
-                guiDrawInventoryIconTab[2] = false;
-            }
+        {
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[0] = true;
+            guiDrawInventoryIconTab[2] = false;
+        }
         else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[0] = true;
-                guiDrawInventoryIconTab[3] = false;
-            }
+        {
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[0] = true;
+            guiDrawInventoryIconTab[3] = false;
+        }
         else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[0] = true;
-                guiDrawInventoryIconTab[4] = false;
-            }
+        {
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[0] = true;
+            guiDrawInventoryIconTab[4] = false;
+        }
         else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[0] = true;
-                guiDrawInventoryIconTab[5] = false;
-            }
+        {
+            ChangeControlContext(EQUIP_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[0] = true;
+            guiDrawInventoryIconTab[5] = false;
+        }
 
         else if(keyInput[KEY_Z] && viewedItem != nullptr)
         {
@@ -1966,6 +1999,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition); // ** Erases element but not not delete object! **
                     viewedItem = nullptr;  // Forces user to select a new item from equipInventory, with the side effect of acquiring new viewedItemPosition.
+
                 }
                 else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]->equipType == EQUIP_TYPE_MAIN_HAND) //Player's main hand holds a one-handed weapon.
                 {
@@ -1974,6 +2008,7 @@ void ProcessInput(int whatContext)
                         player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] = viewedEquip;
                         player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                         viewedItem = nullptr;
+
                     }
                     else // Offhand slot is filled.
                     {
@@ -1983,6 +2018,8 @@ void ProcessInput(int whatContext)
                         player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                         player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                         viewedItem = nullptr;
+
+
                     }
                 }
                 else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND]->equipType == EQUIP_TYPE_TWO_HAND) // If a two-handed weapon is current wielded, unequip it for the new weapon.
@@ -1992,6 +2029,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
 
             }
@@ -2010,8 +2048,9 @@ void ProcessInput(int whatContext)
                     }
 
                     viewedItem = nullptr;  // Forces user to select a new item from equipInventory, with the side effect of acquiring new viewedItemPosition.
+
                 }
-                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // Player's off hand is NOT empty (which implies a two-hander is not equipped anyway).
+                else if(player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // Player's off hand is NOT empty (which implies a two-hander is not equipped anyway, so two-hander check is not necessary).
                 {
 
                     // Exchange one vector's pointer for the other:
@@ -2019,20 +2058,22 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
             }
 
             else if(viewedEquip->equipType == EQUIP_TYPE_TWO_HAND)
             {
                 if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr
-                    && player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr) // Items are currently equipped in NEITHER main and offhand.
+                        && player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr) // Items are currently equipped in NEITHER main and offhand.
                 {
                     player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
                 else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] != nullptr
-                   && player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // An item is already equipped in BOTH main and offhand.
+                        && player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // An item is already equipped in BOTH main and offhand.
                 {
                     if(player->equipInventory.size() < 24-1) // Player equipInventory has room for *two* items.
                     {
@@ -2041,6 +2082,7 @@ void ProcessInput(int whatContext)
                         player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                         player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                         viewedItem = nullptr;
+
                     }
                     else
                     {
@@ -2054,6 +2096,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
                 else if(player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] == nullptr
                         && player->wornEquipment[PLAYER_EQUIP_SLOT_OFF_HAND] != nullptr) // An item is equipped in ONLY offhand; NOT main hand.
@@ -2063,6 +2106,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_MAIN_HAND] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
             }
 
@@ -2073,12 +2117,14 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_1] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
                 else if(player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_2] == nullptr) // (First relic slot is NOT open) but second relic slot is open
                 {
                     player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_2] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
                 else // (Both relic slots are occupied)
                 {
@@ -2087,6 +2133,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_RELIC_1] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
             }
 
@@ -2097,6 +2144,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_HEAD] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
                 else
                 {
@@ -2104,6 +2152,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_HEAD] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
             }
 
@@ -2114,6 +2163,7 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_BODY] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
                 else
                 {
@@ -2121,6 +2171,8 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_BODY] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
+
                 }
             }
 
@@ -2131,6 +2183,8 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_ARMS] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
+
                 }
                 else
                 {
@@ -2138,6 +2192,8 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_ARMS] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
+
                 }
             }
 
@@ -2148,6 +2204,8 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_LEGS] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
+
                 }
                 else
                 {
@@ -2155,8 +2213,19 @@ void ProcessInput(int whatContext)
                     player->wornEquipment[PLAYER_EQUIP_SLOT_LEGS] = viewedEquip;
                     player->equipInventory.erase(player->equipInventory.begin()+viewedItemPosition);
                     viewedItem = nullptr;
+
                 }
             }
+
+            player->RecalculateEquipPrimaryStats();
+            player->RecalculateEquipSecondaryStats();
+
+            player->RecalculateEffectivePrimaryStats();
+            player->RecalculateEffectiveSecondaryStats();
+
+            player->RecalculateSpells();
+
+
         }
 
         for(unsigned int i = KEY_A; i < KEY_A+23; i++) // 0 - 25
@@ -2173,47 +2242,47 @@ void ProcessInput(int whatContext)
 
     case TOOL_INVENTORY_CONTEXT:
         if( (keyInput[KEY_2] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            {
-                ChangeControlContext(TOOL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[1] = true;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+        {
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[1] = true;
+        }
         else if(keyInput[KEY_1] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(TOOL_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[1] = true;
-                guiDrawInventoryIconTab[0] = false;
-            }
+        {
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[1] = true;
+            guiDrawInventoryIconTab[0] = false;
+        }
         else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(TOOL_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[1] = true;
-                guiDrawInventoryIconTab[2] = false;
-            }
+        {
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[1] = true;
+            guiDrawInventoryIconTab[2] = false;
+        }
         else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(TOOL_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[1] = true;
-                guiDrawInventoryIconTab[3] = false;
-            }
+        {
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[1] = true;
+            guiDrawInventoryIconTab[3] = false;
+        }
         else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(TOOL_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[1] = true;
-                guiDrawInventoryIconTab[4] = false;
-            }
+        {
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[1] = true;
+            guiDrawInventoryIconTab[4] = false;
+        }
         else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(TOOL_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[1] = true;
-                guiDrawInventoryIconTab[5] = false;
-            }
+        {
+            ChangeControlContext(TOOL_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[1] = true;
+            guiDrawInventoryIconTab[5] = false;
+        }
 
         for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
@@ -2224,99 +2293,99 @@ void ProcessInput(int whatContext)
 
     case MAGIC_INVENTORY_CONTEXT:
         if( (keyInput[KEY_3] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            {
-                ChangeControlContext(MAGIC_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[2] = true;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+        {
+            ChangeControlContext(MAGIC_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[2] = true;
+        }
         else if(keyInput[KEY_1] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[2] = true;
-                guiDrawInventoryIconTab[0] = false;
-            }
+        {
+            ChangeControlContext(MAGIC_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[2] = true;
+            guiDrawInventoryIconTab[0] = false;
+        }
         else if(keyInput[KEY_2] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[2] = true;
-                guiDrawInventoryIconTab[1] = false;
-            }
+        {
+            ChangeControlContext(MAGIC_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[2] = true;
+            guiDrawInventoryIconTab[1] = false;
+        }
         else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[2] = true;
-                guiDrawInventoryIconTab[3] = false;
-            }
+        {
+            ChangeControlContext(MAGIC_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[2] = true;
+            guiDrawInventoryIconTab[3] = false;
+        }
         else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[2] = true;
-                guiDrawInventoryIconTab[4] = false;
-            }
+        {
+            ChangeControlContext(MAGIC_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[2] = true;
+            guiDrawInventoryIconTab[4] = false;
+        }
         else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MAGIC_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[2] = true;
-                guiDrawInventoryIconTab[5] = false;
-            }
+        {
+            ChangeControlContext(MAGIC_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[2] = true;
+            guiDrawInventoryIconTab[5] = false;
+        }
 
         for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
             if(keyInput[i] && player->magicInventory.size() >= i-KEY_A+1)
                 viewedItem = player->magicInventory[i-KEY_A];
         }
-            break;
+        break;
 
     case MATERIAL_INVENTORY_CONTEXT:
         if( (keyInput[KEY_4] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            {
-                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[3] = true;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+        {
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT, NORMAL_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[3] = true;
+        }
         else if(keyInput[KEY_1] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[3] = true;
-                guiDrawInventoryIconTab[0] = false;
-            }
+        {
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,EQUIP_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[3] = true;
+            guiDrawInventoryIconTab[0] = false;
+        }
         else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
-                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
-            {
-                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[3] = true;
-                guiDrawInventoryIconTab[1] = false;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0))
+        {
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[3] = true;
+            guiDrawInventoryIconTab[1] = false;
+        }
         else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[3] = true;
-                guiDrawInventoryIconTab[2] = false;
-            }
+        {
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[3] = true;
+            guiDrawInventoryIconTab[2] = false;
+        }
         else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[3] = true;
-                guiDrawInventoryIconTab[4] = false;
-            }
+        {
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,KEY_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[3] = true;
+            guiDrawInventoryIconTab[4] = false;
+        }
         else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[3] = true;
-                guiDrawInventoryIconTab[5] = false;
-            }
+        {
+            ChangeControlContext(MATERIAL_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[3] = true;
+            guiDrawInventoryIconTab[5] = false;
+        }
 
         for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
@@ -2327,48 +2396,48 @@ void ProcessInput(int whatContext)
 
     case KEY_INVENTORY_CONTEXT:
         if(keyInput[KEY_5] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(KEY_INVENTORY_CONTEXT,NORMAL_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[4] = true;
-            }
+        {
+            ChangeControlContext(KEY_INVENTORY_CONTEXT,NORMAL_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[4] = true;
+        }
         else if( (keyInput[KEY_1] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            {
-                ChangeControlContext(KEY_INVENTORY_CONTEXT, EQUIP_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[4] = true;
-                guiDrawInventoryIconTab[0] = false;
-            }
+                 (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+        {
+            ChangeControlContext(KEY_INVENTORY_CONTEXT, EQUIP_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[4] = true;
+            guiDrawInventoryIconTab[0] = false;
+        }
         else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
-                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
-            {
-                ChangeControlContext(KEY_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[4] = true;
-                guiDrawInventoryIconTab[1] = false;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0))
+        {
+            ChangeControlContext(KEY_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[4] = true;
+            guiDrawInventoryIconTab[1] = false;
+        }
         else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(KEY_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[4] = true;
-                guiDrawInventoryIconTab[2] = false;
-            }
+        {
+            ChangeControlContext(KEY_INVENTORY_CONTEXT,MAGIC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[4] = true;
+            guiDrawInventoryIconTab[2] = false;
+        }
         else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(KEY_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[4] = true;
-                guiDrawInventoryIconTab[3] = false;
-            }
+        {
+            ChangeControlContext(KEY_INVENTORY_CONTEXT,MATERIAL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[4] = true;
+            guiDrawInventoryIconTab[3] = false;
+        }
         else if(keyInput[KEY_6] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(KEY_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[4] = true;
-                guiDrawInventoryIconTab[5] = false;
-            }
+        {
+            ChangeControlContext(KEY_INVENTORY_CONTEXT,MISC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[4] = true;
+            guiDrawInventoryIconTab[5] = false;
+        }
 
         for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
@@ -2379,50 +2448,50 @@ void ProcessInput(int whatContext)
         }
         break;
 
-        case MISC_INVENTORY_CONTEXT:
+    case MISC_INVENTORY_CONTEXT:
         if(keyInput[KEY_6] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MISC_INVENTORY_CONTEXT,NORMAL_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[5] = true;
-            }
+        {
+            ChangeControlContext(MISC_INVENTORY_CONTEXT,NORMAL_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[5] = true;
+        }
         else if( (keyInput[KEY_1] && controlContextChangeDelay == 0) ||
-            (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
-            {
-                ChangeControlContext(MISC_INVENTORY_CONTEXT, EQUIP_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[5] = true;
-                guiDrawInventoryIconTab[0] = false;
-            }
+                 (keyInput[KEY_I] && controlContextChangeDelay == 0)) // Should later add in ESC
+        {
+            ChangeControlContext(MISC_INVENTORY_CONTEXT, EQUIP_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[5] = true;
+            guiDrawInventoryIconTab[0] = false;
+        }
         else if((keyInput[KEY_2] && controlContextChangeDelay == 0) ||
-                     (keyInput[KEY_I] && controlContextChangeDelay == 0))
-            {
-                ChangeControlContext(MISC_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[5] = true;
-                guiDrawInventoryIconTab[1] = false;
-            }
+                (keyInput[KEY_I] && controlContextChangeDelay == 0))
+        {
+            ChangeControlContext(MISC_INVENTORY_CONTEXT,TOOL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[5] = true;
+            guiDrawInventoryIconTab[1] = false;
+        }
         else if(keyInput[KEY_3] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MISC_INVENTORY_CONTEXT, MAGIC_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[5] = true;
-                guiDrawInventoryIconTab[2] = false;
-            }
+        {
+            ChangeControlContext(MISC_INVENTORY_CONTEXT, MAGIC_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[5] = true;
+            guiDrawInventoryIconTab[2] = false;
+        }
         else if(keyInput[KEY_4] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MISC_INVENTORY_CONTEXT, MATERIAL_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[5] = true;
-                guiDrawInventoryIconTab[3] = false;
-            }
+        {
+            ChangeControlContext(MISC_INVENTORY_CONTEXT, MATERIAL_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[5] = true;
+            guiDrawInventoryIconTab[3] = false;
+        }
         else if(keyInput[KEY_5] && controlContextChangeDelay == 0)
-            {
-                ChangeControlContext(MISC_INVENTORY_CONTEXT, KEY_INVENTORY_CONTEXT);
-                viewedItem = nullptr;
-                guiDrawInventoryIconTab[5] = true;
-                guiDrawInventoryIconTab[4] = false;
-            }
+        {
+            ChangeControlContext(MISC_INVENTORY_CONTEXT, KEY_INVENTORY_CONTEXT);
+            viewedItem = nullptr;
+            guiDrawInventoryIconTab[5] = true;
+            guiDrawInventoryIconTab[4] = false;
+        }
 
         for(unsigned int i = KEY_A; i < KEY_A+23; i++)
         {
@@ -2452,6 +2521,12 @@ void ProcessInput(int whatContext)
                         // "Unequip"
                         player->equipInventory.push_back(player->wornEquipment[i-KEY_A]); // 1. Add a copy of item pointer to equipinventory vector.
                         player->wornEquipment[i-KEY_A] = nullptr; //2. Nullify item's slot in wornequip vector.
+
+                        player->RecalculateEquipPrimaryStats();
+                        player->RecalculateEquipSecondaryStats();
+
+                        player->RecalculateEffectivePrimaryStats();
+                        player->RecalculateEffectiveSecondaryStats();
                     }
                     else // Player equipInventory has no room.
                     {
@@ -2471,6 +2546,8 @@ void ProcessInput(int whatContext)
         {
             ChangeControlContext(WEAPON_SPELL_CONTEXT, NORMAL_CONTEXT);
         }
+
+
         break;
 
     }
@@ -2512,7 +2589,13 @@ void DevAddTestItemsToPlayer()
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_WOOD));
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_MAPLE_LEAF));
 
+    //player->RecalculateEquipPrimaryStats();
+    //player->RecalculateEquipSecondaryStats();
 
+    //player->RecalculateEffectivePrimaryStats();
+    //player->RecalculateEffectiveSecondaryStats();
+
+    player->RecalculateSpells();
 
 }
 

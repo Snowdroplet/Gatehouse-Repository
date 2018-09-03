@@ -23,7 +23,9 @@ enum enumPlayerEquipSlots
     PLAYER_EQUIP_SLOT_HEAD = 4,
     PLAYER_EQUIP_SLOT_BODY = 5,
     PLAYER_EQUIP_SLOT_ARMS = 6,
-    PLAYER_EQUIP_SLOT_LEGS = 7
+    PLAYER_EQUIP_SLOT_LEGS = 7,
+
+    PLAYER_EQUIP_SLOT_TOTAL = 8 // Number of unique slots, for use in loops.
 };
 
 class Player: public Being
@@ -56,26 +58,14 @@ class Player: public Being
 
 public:
 
-    std::vector<Equip*>equipInventory; // Currently capping inventory at 24 items (30 limit for contingency e.g. item unequipped + inactive but memory not yet deleted)
+    std::vector<Equip*>equipInventory; // Currently capping inventory UI at 24 items per page. See guisystem.h/cpp.
     std::vector<Tool*>toolInventory;
     std::vector<Magic*>magicInventory;
     std::vector<Material*>materialInventory;
     std::vector<Key*>keyInventory;
     std::vector<Misc*>miscInventory;
 
-    std::vector<Equip*>wornEquipment;
-
-    /*
-    Item* mainHandEquipSlot;
-    Item* offHandEquipSlot;
-    Item* relic1EquipSlot;
-    Item* relic2EquipSlot;
-
-    Item* headEquipSlot;
-    Item* bodyEquipSlot;
-    Item* armEquipSlot;
-    Item* legEquipSlot;
-    */
+    std::vector<Equip*>wornEquipment; // Should really be an std::array, as the size is not intended to be altered. See definition in player.cpp.
 
     Player();
     Player(bool savedPlayer);
@@ -84,6 +74,21 @@ public:
     virtual ~Player();
 
     void Logic();
+
+    void RecalculateDebuffPrimaryStats();
+    void RecalculateBuffPrimaryStats();
+    void RecalculateEquipPrimaryStats();
+    void RecalculateEffectivePrimaryStats(); // The sum of primary stat breakdown.
+
+    void RecalculateDebuffSecondaryStats();
+    void RecalculateBuffSecondaryStats();
+    void RecalculateEquipSecondaryStats();
+    void RecalculateEffectiveSecondaryStats(); // The sum of secondary stat breakdown.
+
+    void RecalculateStats(); // All of the above, in sequence
+
+    void RecalculateSpells();
+
     void PlayerAction();
 };
 

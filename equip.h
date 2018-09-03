@@ -27,27 +27,30 @@ public:
     int upgradeLevel;
 
     // Primary (bonuses can be negative)
-    int strBonus;
-    int dexBonus;
-    int vitBonus;
-    int agiBonus
-    int wilBonus;
-    int atuBonus;
+    int strengthBonus;
+    int dexterityBonus;
+    int vitalityBonus;
+    int agilityBonus;
+    int willpowerBonus;
+    int attunementBonus;
 
     // Secondary (bonuses can be negative)
-    int atkBonus;
-    int matkBonus;
-    int hitBonus;
-    int critBonus;
-    int atkspdBonus;
-    int matkspdBonus;
+    int lifeBonus;
+    int animaBonus;
 
-    int defBonus;
-    int mdefBonus;
-    int evadeBonus;
-    int healBonus;
+    int attackBonus;
+    int magicAttackBonus;
+    int hitBonus;
+    int criticalBonus;
+    int attackSpeedBonus;
+    int magicAttackSpeedBonus;
+
+    int defenseBonus;
+    int magicDefenseBonus;
+    int evasionBonus;
+    int walkSpeedBonus;
+    int healingBonus;
     int meditationBonus;
-    int speedBonus;
 
     Equip();
     Equip(int equipTemplateID);

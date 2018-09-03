@@ -17,13 +17,13 @@ NPC::NPC(int whatNPCType, int spawnXCell, int spawnYCell)
     if(NPCType == SLIME)
     {
         name = "Slime";
-        effectiveSpeed = baseSpeed = 50;
+        walkSpeed[BEING_STAT_EFFECTIVE] = walkSpeed[BEING_STAT_BASE] = 50;
         animationFrameThreshold = 1;
     }
     else if(NPCType == QUICKLING)
     {
         name = "Quickling";
-        effectiveSpeed = baseSpeed = 200;
+        walkSpeed[BEING_STAT_EFFECTIVE] = walkSpeed[BEING_STAT_BASE] = 200;
         animationFrameThreshold = 1;
     }
 
@@ -31,6 +31,11 @@ NPC::NPC(int whatNPCType, int spawnXCell, int spawnYCell)
     yCell = spawnYCell;
     dXPosition = xPosition = xCell*32;
     dYPosition = yPosition = yCell*32;
+
+}
+
+NPC::~NPC()
+{
 
 }
 

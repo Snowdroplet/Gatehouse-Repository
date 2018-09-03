@@ -85,6 +85,7 @@ extern int guiPstatPrimaryOriginY;
 
 extern int guiPstatSecondaryOriginX;
 extern int guiPstatSecondaryOriginY;
+extern int guiPstatPrimaryYSpacing; // Vertical spacing between lines of stat text.
 
 void GuiInit();
 void GuiDeinit();

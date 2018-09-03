@@ -52,10 +52,10 @@ int guiPstatEquipOriginY;
 
 int guiPstatPrimaryOriginX;
 int guiPstatPrimaryOriginY;
+int guiPstatPrimaryYSpacing;
 
 int guiPstatSecondaryOriginX;
 int guiPstatSecondaryOriginY;
-
 
 void GuiInit()
 {
@@ -107,11 +107,14 @@ void GuiInit()
     guiPstatEquipOriginX = guiPstatUIX + 230;
     guiPstatEquipOriginY = guiPstatUIY + 38;
 
-    guiPstatPrimaryOriginX = guiPstatUIX + 42;
-    guiPstatPrimaryOriginY = guiPstatUIY + 226;
+    guiPstatPrimaryOriginX = guiPstatUIX + 52; // Corner is at 42 but shifting right a bit for development.
+    guiPstatPrimaryOriginY = guiPstatUIY + 238; // Corner is at Y 226 but shifting down a bit for development.
+    guiPstatPrimaryYSpacing = 37;
 
     guiPstatSecondaryOriginX = guiPstatUIX + 228;
     guiPstatSecondaryOriginY = guiPstatUIY + 226;
+
+
 }
 
 void GuiDeinit()

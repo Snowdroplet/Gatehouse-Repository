@@ -46,6 +46,52 @@ enum enumBeingPossibleActions
 
 };
 
+enum enumBeingStatBreakdown
+{
+    BEING_STAT_EFFECTIVE = 0,
+    BEING_STAT_BASE = 1,
+    BEING_STAT_EQUIP_MOD = 2,
+    BEING_STAT_BUFFS_MOD = 3,
+    BEING_STAT_DEBUFFS_MOD = 4,
+
+    BEING_STAT_BREAKDOWN_TOTAL = 5
+};
+
+/*
+enum enumBeingPrimaryStats
+{
+    BEING_PRIMARY_STRENGTH = 0,
+    BEING_PRIMARY_DEXTERITY = 1,
+    BEING_PRIMARY_VITALITY = 2,
+    BEING_PRIMARY_AGILITY = 3,
+    BEING_PRIMARY_WILLPOWER = 4,
+    BEING_PRIMARY_ATTUNEMENT = 5,
+
+    BEING_PRIMARY_TOTAL = 6
+};
+
+enum enumBeingSecondaryStats
+{
+    BEING_SECONDARY_LIFE = 0,
+    BEING_SECONDARY_ANIMA = 1,
+
+    BEING_SECONDARY_ATTACK = 2,
+    BEING_SECONDARY_MAGIC_ATTACK = 3,
+    BEING_SECONDARY_HIT = 4, // accuracy
+    BEING_SECONDARY_CRITICAL = 5,
+    BEING_SECONDARY_ATTACK_SPEED = 6,
+
+    BEING_SECONDARY_DEFENSE = 7,
+    BEING_SECONDARY_MAGIC_DEFENSE = 8,
+    BEING_SECONDARY_EVASION = 9,
+    BEING_SECONDARY_WALK_SPEED = 10,
+    BEING_SECONDARY_HEALING = 11, // hp regen
+    BEING_SECONDARY_MEDITATION = 12, // anima regen
+
+    BEING_SECONDARY_TOTAL = 13
+};
+*/
+
 class Being // Make this class abstract later
 {
     /*
@@ -85,35 +131,51 @@ public:
     bool visibleToPlayer;
     bool animationComplete;
     int spriteID;
-    bool freezeFrame; // If true, hold the sprite still
+    bool freezeFrame; // If true, hold the sprite still.
     int animationState; // Which animation state: Passive, prepare, execute, walk...
-    int animationFrame, animationFrameThreshold; // Which frame of the sprite to draw, how many frames exist
-    int animationDelay, animationDelayThreshold; // Governs delay between frame transition
+    int animationFrame, animationFrameThreshold; // Which frame of the sprite to draw, how many frames exist.
+    int animationDelay, animationDelayThreshold; // Governs delay between frame transition.
 
     /// Position
-    float xPosition, yPosition; // coordinates used for animation
-    float dXPosition, dYPosition; // destination coordinates
-    int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase
+    float xPosition, yPosition; // coordinates used for animation.
+    float dXPosition, dYPosition; // destination coordinates.
+    int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase,
+
+    int spellTargetCell; // ID of the cell the Being is aiming at.
 
     /// Unit primary stats
-    float baseStrength, strengthModifier, effectiveStrength;
-    float baseDexterity, dexterityModifier, effectiveDexterity;
-    float baseVitality, vitalityModifier, effectiveVitality;
-    float baseAgility, agilityModifier, effectiveAgility;
-    float baseWillpower, willpowerModifier, effectiveWillpower;
-    float baseAttunement, attunementModifier, effectiveAttunement;
+    //float primary[BEING_PRIMARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
+    //float secondary[BEING_SECONDARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
+
+    float strength[BEING_STAT_BREAKDOWN_TOTAL];
+    float dexterity[BEING_STAT_BREAKDOWN_TOTAL];
+    float vitality[BEING_STAT_BREAKDOWN_TOTAL];
+    float agility[BEING_STAT_BREAKDOWN_TOTAL];
+    float willpower[BEING_STAT_BREAKDOWN_TOTAL];
+    float attunement[BEING_STAT_BREAKDOWN_TOTAL];
 
     /// Unit secondary stats
-    float baseSpeed, speedModifier, effectiveSpeed;
+    float life[BEING_STAT_BREAKDOWN_TOTAL];
+    float anima[BEING_STAT_BREAKDOWN_TOTAL];
 
+    float attack[BEING_STAT_BREAKDOWN_TOTAL];
+    float magicAttack[BEING_STAT_BREAKDOWN_TOTAL];
+    float hit[BEING_STAT_BREAKDOWN_TOTAL]; // accuracy
+    float critical[BEING_STAT_BREAKDOWN_TOTAL];
+    float attackSpeed[BEING_STAT_BREAKDOWN_TOTAL];
+    float magicAttackSpeed[BEING_STAT_BREAKDOWN_TOTAL];
 
-    float weaponPhysicalDamage;
-    float weaponFireDamage;
-    float baseDefense, defenseModifier, effectiveDefense;
+    float defense[BEING_STAT_BREAKDOWN_TOTAL];
+    float magicDefense[BEING_STAT_BREAKDOWN_TOTAL];
+    float evasion[BEING_STAT_BREAKDOWN_TOTAL];
+    float walkSpeed[BEING_STAT_BREAKDOWN_TOTAL];
+    float healing[BEING_STAT_BREAKDOWN_TOTAL]; // hp regen
+    float meditation[BEING_STAT_BREAKDOWN_TOTAL]; // anima regen
 
-    Spell defaultSpell; // The "unmodified" attack option, usually depending on current weapon.
-    Spell currentSpell; // Spell to
-    Spell castSpell;    // Spell to be picked up by global spell queue.
+    Spell *defaultSpell; // The "unmodified" attack option, usually depending on current weapon.
+    Spell *currentSpell; // Spell to
+    Spell *castSpell;    // Spell to be picked up by global spell queue.
+
 
     Being();
     ~Being();
@@ -130,13 +192,7 @@ public:
     void SetPath(int destXCell, int destYCell);
     void TracePath();
 
-    void RecalculateEffectiveStats();
-    void UpdateDefaultSpell();
     void ReleaseCurrentSpell();
-
-    void WearEquipment();
-    void RemoveEquipment();
-
 
 };
 

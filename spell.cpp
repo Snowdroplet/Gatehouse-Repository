@@ -2,21 +2,77 @@
 
 Spell::Spell()
 {
-    duration = 100; // Equivalent to the baseline AP required for a Being to move
 
+}
+
+Spell::Spell(int spellTemplateID)
+{
     school = SCHOOL_NONE;
-    shape = SHAPE_SHAPELESS;
+    magnitude = 0;
+    duration = 0;
 
-    minRange = 1;
-    maxRange = 1;
+    hasOffense = false;
+
+    hasSupport = false;
 
 
+    shape = SHAPE_POINT;
+    canAffectSelf = true;
+    canAffectAlly = true;
+    canAffectNeutral = true;
+    canAffectEnemy = true;
+    canAffectEnvironment = true;
+    minRange = 0;
+    maxRange = 0;
+
+
+    switch(spellTemplateID)
+    {
+    case SPELL_PLAYER_ONE_HAND_BASIC:
+        school = SCHOOL_WEAPON;
+        magnitude = 1;
+
+        hasOffense = true;
+
+        maxRange = 1;
+
+        break;
+
+    case SPELL_PLAYER_TWO_HAND_BASIC:
+        school = SCHOOL_WEAPON;
+        magnitude = 1;
+
+        hasOffense = true;
+
+        maxRange = 1;
+
+        break;
+
+    case SPELL_PLAYER_DUAL_WIELD_BASIC:
+        school = SCHOOL_WEAPON;
+        magnitude = 1;
+
+        hasOffense = true;
+
+        maxRange = 1;
+
+        break;
+
+    case SPELL_PLAYER_ONE_HAND_RECKLESS:
+        school = SCHOOL_WEAPON;
+        magnitude = 1;
+
+        hasOffense = true;
+
+        maxRange = 1;
+
+        break;
+    }
 }
 
 Spell::~Spell()
 {
     cellsCovered.clear();
-
 }
 
 void Spell::Logic()
@@ -27,9 +83,10 @@ void Spell::Logic()
         active = false;
 }
 
-void Spell::Modify(int whatProperty, int magnitudeChange, int durationChange)
+void Spell::ModifyOffense(float phys, float mag, float hit, float crit)
 {
-    // Iterate through all properties.
-    // If property id == whatProperty
-    // Change its magnitude and duration by += change
+    physicalDamage = phys;
+    magicDamage = mag;
+    hitScore = hit;
+    critScore = crit;
 }

@@ -22,6 +22,41 @@ Being::Being()
     actionName = "UNKNOWN";
     actionBlocked = false;
     actionPoints = 0;
+
+    /*
+    for(int i = 0; i < BEING_PRIMARY_TOTAL; i++)
+        for(int j = 0; j < BEING_STAT_BREAKDOWN_TOTAL; j++)
+            primary[i][j] = 0;
+
+    for(int i = 0; i < BEING_SECONDARY_TOTAL; i++)
+        for(int j = 0; j < BEING_STAT_BREAKDOWN_TOTAL; j++)
+            secondary[i][j] = 0;
+
+    */
+
+    for(int i = 0; i < BEING_STAT_BREAKDOWN_TOTAL; i++)
+    {
+        strength[i] = 0;
+        dexterity[i] = 0;
+        vitality[i] = 0;
+        agility[i] = 0;
+        willpower[i] = 0;
+        attunement[i] = 0;
+
+        attack[i] = 0;
+        magicAttack[i] = 0;
+        hit[i] = 0;
+        critical[i] = 0;
+        attackSpeed[i] = 0;
+        magicAttackSpeed[i] = 0;
+
+        defense[i] = 0;
+        magicDefense[i] = 0;
+        evasion[i] = 0;
+        walkSpeed[i] = 0;
+        healing[i] = 0;
+        meditation[i] = 0;
+    }
 }
 
 Being::~Being()
@@ -137,8 +172,6 @@ void Being::BaseLogic()
             animationFrame = 0;
     }
 
-
-
 }
 
 void Being::ProgressWalkAnimation()
@@ -191,29 +224,44 @@ void Being::ResetPath()
     currentPath.clear();
 }
 
-void Being::RecalculateEffectiveStats()
-{
-
-
-}
-
-void Being::UpdateDefaultSpell()
-{
-
-
-}
-
 void Being::ReleaseCurrentSpell()
 {
+    /*
+    SHAPE_SHAPELESS = 0,   // Having no form - i.e. instant buff
+    SHAPE_POINT = 1,       // Targets a single cell
+    SHAPE_MISSILE = 2,     // Targets the first obstruction along a line
+    SHAPE_RAY = 3,         // Targets every cell along a line
+    SHAPE_CIRCLE = 4,      // Targets every cell within a radius
+    SHAPE_BOX = 5          // Targets every cell within a square
+    */
+
+    if(currentSpell->shape == SHAPE_POINT)
+        currentSpell->cellsCovered.push_back(spellTargetCell);
+
+    else if(currentSpell->shape == SHAPE_MISSILE)
+    {
+        // ...
+
+    }
+    else if(currentSpell->shape == SHAPE_RAY)
+    {
+        // Bresenham?
+    }
+    else if(currentSpell->shape == SHAPE_CIRCLE)
+    {
+
+    }
+    else if(currentSpell->shape == SHAPE_BOX)
+    {
+
+    }
+
+    castSpell = currentSpell; // Signals main to copy the spell to an object and add its pointer to activeSpell vector.
+
     /*
     currentSpell.cellsCovered.push_back(targetLockYCell*areaCellWidth+targetLockXCell);
     castSpell = currentSpell;
     currentSpell = defaultSpell;
     */
-}
-
-void Being::WearEquipment()
-{
-
 }
 

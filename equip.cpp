@@ -12,26 +12,30 @@ Equip::Equip(int equipTemplateID)
     upgradable = true;
     upgradeLevel = 0;
 
-    strBonus = 0;
-    dexBonus = 0;
-    conBonus = 0;
-    wilBonus = 0;
-    intBonus = 0;
-    atuBonus = 0;
+    strengthBonus = 0;
+    dexterityBonus = 0;
+    vitalityBonus = 0;
+    agilityBonus = 0;
+    willpowerBonus = 0;
+    attunementBonus = 0;
 
-    atkBonus = 0;
-    matkBonus = 0;
+    lifeBonus = 0;
+    animaBonus = 0;
+
+    attackBonus = 0;
+    magicAttackBonus = 0;
     hitBonus = 0;
-    critBonus = 0;
-    atkspdBonus = 0;
-    matkspdBonus = 0;
+    criticalBonus = 0;
+    attackSpeedBonus = 0;
+    magicAttackBonus = 0;
 
-    defBonus = 0;
-    mdefBonus = 0;
-    evadeBonus = 0;
-    healBonus = 0;
+    defenseBonus = 0;
+    magicDefenseBonus = 0;
+    evasionBonus = 0;
+    walkSpeedBonus = 0;
+    healingBonus = 0;
     meditationBonus = 0;
-    speedBonus = 0;
+
 
     switch(equipTemplateID)
     {
@@ -40,7 +44,9 @@ Equip::Equip(int equipTemplateID)
 
         baseName = fullName = "Xiphos";
         spriteID = EQSI_XIPHOS;
-        dexBonus = 1;
+        dexterityBonus = 1;
+
+        attackBonus = 35;
 
         description[0] = "The blacksmiths of ancient Celkess fired";
         description[1] = "their forges with the wood of the xiphos";
@@ -55,8 +61,10 @@ Equip::Equip(int equipTemplateID)
 
         baseName = fullName = "Sawtooth";
         spriteID = EQSI_SAWTOOTH;
-        dexBonus = 1;
-        wilBonus = 1;
+        dexterityBonus = 1;
+        willpowerBonus = 1;
+
+        attackBonus = 28;
 
         description[0] = "A cruel knife handled by Iain's Ripper Demons.";
         description[1] = "";
@@ -70,8 +78,10 @@ Equip::Equip(int equipTemplateID)
 
         baseName = fullName = "Katana";
         spriteID = EQSI_KATANA;
-        dexBonus = 1;
-        atuBonus = 2;
+        dexterityBonus = 1;
+        attunementBonus = 2;
+
+        attackBonus = 44;
 
         description[0] = "A curved sword forged with a bewitching";
         description[1] = "wave-like pattern.";
@@ -88,6 +98,8 @@ Equip::Equip(int equipTemplateID)
         baseName = fullName = "Shotel";
         spriteID = EQSI_SHOTEL;
 
+        attackBonus = 20;
+
         description[0] = "The shotelai of Ericennes struck where";
         description[1] = "Karune's shields were not, but were";
         description[2] = "overcome by a lord who needed no shield.";
@@ -98,8 +110,11 @@ Equip::Equip(int equipTemplateID)
 
         baseName = fullName = "Kris";
         spriteID = EQSI_KRIS;
-        wilBonus = 1;
-        atuBonus = 1;
+        willpowerBonus = 1;
+        attunementBonus = 1;
+
+        attackBonus = 15;
+        magicAttackBonus = 15;
 
         description[0] = "Kris-makers are forbidden to use tools; they";
         description[1] = "must shape the metal with their bare hands.";
@@ -107,13 +122,16 @@ Equip::Equip(int equipTemplateID)
         description[3] = "bravery upon their wielders.";
         break;
 
-    case EQUIP_TEMPLATE_SICKLE:
+    case EQUIP_TEMPLATE_SCYTHE:
         equipType = EQUIP_TYPE_TWO_HAND;
 
         baseName = fullName = "Scythe";
         spriteID = EQSI_SCYTHE;
-        strBonus = 2;
-        dexBonus = -1;
+        strengthBonus = 2;
+        dexterityBonus = -1;
+
+        attackBonus = 40;
+        magicAttackBonus = 20;
 
         description[0] = "A fearsome weapon that may decapitate a";
         description[1] = "foe.";
