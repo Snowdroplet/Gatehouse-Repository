@@ -54,8 +54,11 @@ int guiPstatPrimaryOriginX;
 int guiPstatPrimaryOriginY;
 int guiPstatPrimaryYSpacing;
 
+int guiPstatSecondaryXSpacing;
+int guiPstatSecondaryYSpacing;
 int guiPstatSecondaryOriginX;
 int guiPstatSecondaryOriginY;
+int guiPstatSecondaryNumCols;
 
 void GuiInit()
 {
@@ -107,13 +110,15 @@ void GuiInit()
     guiPstatEquipOriginX = guiPstatUIX + 230;
     guiPstatEquipOriginY = guiPstatUIY + 38;
 
-    guiPstatPrimaryOriginX = guiPstatUIX + 52; // Corner is at 42 but shifting right a bit for development.
-    guiPstatPrimaryOriginY = guiPstatUIY + 238; // Corner is at Y 226 but shifting down a bit for development.
+    guiPstatPrimaryOriginX = guiPstatUIX + 45; // Corner is at 42 but shifting right a bit for development.
+    guiPstatPrimaryOriginY = guiPstatUIY + 235; // Corner is at Y 226 but shifting down a bit for development.
     guiPstatPrimaryYSpacing = 37;
 
-    guiPstatSecondaryOriginX = guiPstatUIX + 228;
-    guiPstatSecondaryOriginY = guiPstatUIY + 226;
-
+    guiPstatSecondaryXSpacing = 150;
+    guiPstatSecondaryYSpacing = guiPstatPrimaryYSpacing;
+    guiPstatSecondaryOriginX = guiPstatUIX + 232;
+    guiPstatSecondaryOriginY = guiPstatPrimaryOriginY - guiPstatSecondaryYSpacing*1;
+    guiPstatSecondaryNumCols = 2; // 0 to 1
 
 }
 
@@ -130,13 +135,3 @@ void GuiUpdateElements()
     }
 }
 
-void GuiDrawStats()
-{
-
-}
-
-void GuiDrawFrame()
-{
-
-
-}

@@ -57,40 +57,14 @@ enum enumBeingStatBreakdown
     BEING_STAT_BREAKDOWN_TOTAL = 5
 };
 
-/*
-enum enumBeingPrimaryStats
-{
-    BEING_PRIMARY_STRENGTH = 0,
-    BEING_PRIMARY_DEXTERITY = 1,
-    BEING_PRIMARY_VITALITY = 2,
-    BEING_PRIMARY_AGILITY = 3,
-    BEING_PRIMARY_WILLPOWER = 4,
-    BEING_PRIMARY_ATTUNEMENT = 5,
-
-    BEING_PRIMARY_TOTAL = 6
-};
-
-enum enumBeingSecondaryStats
-{
-    BEING_SECONDARY_LIFE = 0,
-    BEING_SECONDARY_ANIMA = 1,
-
-    BEING_SECONDARY_ATTACK = 2,
-    BEING_SECONDARY_MAGIC_ATTACK = 3,
-    BEING_SECONDARY_HIT = 4, // accuracy
-    BEING_SECONDARY_CRITICAL = 5,
-    BEING_SECONDARY_ATTACK_SPEED = 6,
-
-    BEING_SECONDARY_DEFENSE = 7,
-    BEING_SECONDARY_MAGIC_DEFENSE = 8,
-    BEING_SECONDARY_EVASION = 9,
-    BEING_SECONDARY_WALK_SPEED = 10,
-    BEING_SECONDARY_HEALING = 11, // hp regen
-    BEING_SECONDARY_MEDITATION = 12, // anima regen
-
-    BEING_SECONDARY_TOTAL = 13
-};
-*/
+std::string const primaryStringBase[STAT_PRIMARY_TOTAL] = {"Str ", "Dex ", "Vit ", "Agi ", "Wil ", "Atu "};
+std::string const secondaryStringBase[STAT_SECONDARY_TOTAL] = { "Life ", "Anima ",
+                                                                "Atk  ", "Def   ",
+                                                                "mAtk ", "mDef  ",
+                                                                "Hit  ", "Eva   ",
+                                                                "Crit ", "wSpd  ",
+                                                                "aSpd ", "maSpd ",
+                                                                "Heal ", "Medi  "};
 
 class Being // Make this class abstract later
 {
@@ -143,34 +117,13 @@ public:
 
     int spellTargetCell; // ID of the cell the Being is aiming at.
 
-    /// Unit primary stats
-    //float primary[BEING_PRIMARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
-    //float secondary[BEING_SECONDARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
+    /// Unit stats
+    int primary[STAT_PRIMARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
+    int secondary[STAT_SECONDARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
 
-    float strength[BEING_STAT_BREAKDOWN_TOTAL];
-    float dexterity[BEING_STAT_BREAKDOWN_TOTAL];
-    float vitality[BEING_STAT_BREAKDOWN_TOTAL];
-    float agility[BEING_STAT_BREAKDOWN_TOTAL];
-    float willpower[BEING_STAT_BREAKDOWN_TOTAL];
-    float attunement[BEING_STAT_BREAKDOWN_TOTAL];
+    std::string primaryString[STAT_PRIMARY_TOTAL];
+    std::string secondaryString[STAT_SECONDARY_TOTAL];
 
-    /// Unit secondary stats
-    float life[BEING_STAT_BREAKDOWN_TOTAL];
-    float anima[BEING_STAT_BREAKDOWN_TOTAL];
-
-    float attack[BEING_STAT_BREAKDOWN_TOTAL];
-    float magicAttack[BEING_STAT_BREAKDOWN_TOTAL];
-    float hit[BEING_STAT_BREAKDOWN_TOTAL]; // accuracy
-    float critical[BEING_STAT_BREAKDOWN_TOTAL];
-    float attackSpeed[BEING_STAT_BREAKDOWN_TOTAL];
-    float magicAttackSpeed[BEING_STAT_BREAKDOWN_TOTAL];
-
-    float defense[BEING_STAT_BREAKDOWN_TOTAL];
-    float magicDefense[BEING_STAT_BREAKDOWN_TOTAL];
-    float evasion[BEING_STAT_BREAKDOWN_TOTAL];
-    float walkSpeed[BEING_STAT_BREAKDOWN_TOTAL];
-    float healing[BEING_STAT_BREAKDOWN_TOTAL]; // hp regen
-    float meditation[BEING_STAT_BREAKDOWN_TOTAL]; // anima regen
 
     Spell *defaultSpell; // The "unmodified" attack option, usually depending on current weapon.
     Spell *currentSpell; // Spell to

@@ -58,14 +58,14 @@ class Player: public Being
 
 public:
 
+    std::vector<Equip*>wornEquipment; // Should really be an std::array, as the size is not intended to be altered. See definition in player.cpp.
+
     std::vector<Equip*>equipInventory; // Currently capping inventory UI at 24 items per page. See guisystem.h/cpp.
     std::vector<Tool*>toolInventory;
     std::vector<Magic*>magicInventory;
     std::vector<Material*>materialInventory;
     std::vector<Key*>keyInventory;
     std::vector<Misc*>miscInventory;
-
-    std::vector<Equip*>wornEquipment; // Should really be an std::array, as the size is not intended to be altered. See definition in player.cpp.
 
     Player();
     Player(bool savedPlayer);
@@ -80,6 +80,7 @@ public:
     void RecalculateEquipPrimaryStats();
     void RecalculateEffectivePrimaryStats(); // The sum of primary stat breakdown.
 
+    void RecalculateBaseSecondaryStats();
     void RecalculateDebuffSecondaryStats();
     void RecalculateBuffSecondaryStats();
     void RecalculateEquipSecondaryStats();

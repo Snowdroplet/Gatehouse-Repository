@@ -4,11 +4,7 @@ Item::Item()
 {
     itemID = AssignItemID();
 
-
     active = true;
-
-    baseName = "base";
-    description = "default item";
 }
 
 Item::~Item()

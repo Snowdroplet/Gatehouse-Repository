@@ -41,8 +41,8 @@ ALLEGRO_BITMAP *gfxPstatUI = nullptr;
 
 ALLEGRO_FONT   *penFont = nullptr;
 ALLEGRO_FONT   *penFontLarge = nullptr;
-ALLEGRO_FONT   *pirulenFont = nullptr;
-ALLEGRO_FONT   *titleFont = nullptr;
+ALLEGRO_FONT   *robotoSlabFont = nullptr;
+ALLEGRO_FONT   *sourceCodeFont = nullptr;
 
 /// Constants
 
@@ -94,8 +94,8 @@ void LoadResources()
 
     penFont = al_load_ttf_font("SnowdropletPen.ttf",28,0);
     penFontLarge = al_load_ttf_font("SnowdropletPen.ttf",36,0);
-    pirulenFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
-    titleFont = al_load_ttf_font("RobotoSlab-Regular.ttf",12,0);
+    robotoSlabFont = al_load_ttf_font("RobotoSlab-Regular.ttf",15,0);
+    sourceCodeFont = al_load_ttf_font("sourceCodeFont.ttf",18,0);
 }
 
 void UnloadResources()
@@ -144,6 +144,6 @@ void UnloadResources()
 
     al_destroy_font(penFont);
     al_destroy_font(penFontLarge);
-    al_destroy_font(pirulenFont);
-    al_destroy_font(titleFont);
+    al_destroy_font(robotoSlabFont);
+    al_destroy_font(sourceCodeFont);
 }

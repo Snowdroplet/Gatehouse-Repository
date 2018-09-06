@@ -198,7 +198,7 @@ enum enumControlContexts
 
     PLAYER_STAT_CONTEXT = 10,
 
-    WEAPON_SPELL_CONTEXT = 13
+    WEAPON_SPELL_CONTEXT = 11
 
 };
 
@@ -282,6 +282,46 @@ enum enumFeatureTypes
 
 extern int playerXCell, playerYCell;
 extern int playerXPosition, playerYPosition;
+
+/// BEING AND EQUIPMENT STATISTICS
+
+enum enumPrimaryStats
+{
+    STAT_STRENGTH = 0,
+    STAT_DEXTERITY = 1,
+    STAT_VITALITY = 2,
+    STAT_AGILITY = 3,
+    STAT_WILLPOWER = 4,
+    STAT_ATTUNEMENT = 5,
+
+    STAT_PRIMARY_TOTAL = 6
+};
+
+enum enumSecondaryStats
+{
+    STAT_LIFE = 0,
+    STAT_ANIMA = 1,
+
+    STAT_ATTACK = 2,
+    STAT_DEFENSE = 3,
+
+    STAT_MAGIC_ATTACK = 4,
+    STAT_MAGIC_DEFENSE = 5,
+
+    STAT_HIT = 6,
+    STAT_EVASION = 7,
+
+    STAT_CRITICAL = 8,
+    STAT_WALK_SPEED = 9,
+
+    STAT_ATTACK_SPEED = 10,
+    STAT_MAGIC_ATTACK_SPEED = 11,
+
+    STAT_HEALING = 12,
+    STAT_MEDITATION = 13,
+
+    STAT_SECONDARY_TOTAL = 14
+};
 
 
 

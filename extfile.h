@@ -1,12 +1,13 @@
 #ifndef EXTFILE_H_INCLUDED
 #define EXTFILE_H_INCLUDED
 
+#define BOOST_SYSTEM_NO_DEPRECATED
+
 /*
 
 #include <string>
 #include <fstream>
 
-#define BOOST_SYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

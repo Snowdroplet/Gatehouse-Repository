@@ -20,37 +20,14 @@ class Equip : public Item
 {
 public:
 
-
     int equipType; // Whether this item is intended to be used as boots, gloves, helmet, etc...
 
     bool upgradable;
     int upgradeLevel;
 
-    // Primary (bonuses can be negative)
-    int strengthBonus;
-    int dexterityBonus;
-    int vitalityBonus;
-    int agilityBonus;
-    int willpowerBonus;
-    int attunementBonus;
-
-    // Secondary (bonuses can be negative)
-    int lifeBonus;
-    int animaBonus;
-
-    int attackBonus;
-    int magicAttackBonus;
-    int hitBonus;
-    int criticalBonus;
-    int attackSpeedBonus;
-    int magicAttackSpeedBonus;
-
-    int defenseBonus;
-    int magicDefenseBonus;
-    int evasionBonus;
-    int walkSpeedBonus;
-    int healingBonus;
-    int meditationBonus;
+    // stat modifiers (can be negative)
+    int primaryMod[STAT_PRIMARY_TOTAL];
+    int secondaryMod[STAT_SECONDARY_TOTAL];
 
     Equip();
     Equip(int equipTemplateID);

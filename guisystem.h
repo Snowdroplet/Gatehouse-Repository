@@ -6,10 +6,10 @@
 #include <string>
 
 #include "gamesystem.h"
-//#include "control.h"
 #include "resource.h"
 
-#include "guidecorations.h"
+#include "being.h"
+
 
 /// Target contexts
 
@@ -82,15 +82,20 @@ extern int guiPstatEquipOriginY;
 
 extern int guiPstatPrimaryOriginX;
 extern int guiPstatPrimaryOriginY;
+extern int guiPstatPrimaryYSpacing; // Vertical spacing between lines of stat text.
 
+
+extern int guiPstatSecondaryXSpacing;
+extern int guiPstatSecondaryYSpacing;
 extern int guiPstatSecondaryOriginX;
 extern int guiPstatSecondaryOriginY;
-extern int guiPstatPrimaryYSpacing; // Vertical spacing between lines of stat text.
+extern int guiPstatSecondaryNumCols;
+
 
 void GuiInit();
 void GuiDeinit();
 
 void GuiUpdateElements();
-void GuiDrawFrame();
+
 
 #endif // GUISYSTEM_H_INCLUDED

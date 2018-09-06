@@ -1,30 +1,15 @@
 /***
 Error:
     NPC sprite drawing position updates too slow.
-
-To do:
-    !! Fire spell
-        if(keyInput[key_f]) and target is acquired
-            Player calls Being::ReleaseSpell();
-
-        Check UpdateObjects function for spell coverage functionality
-
-    !! Equipment system must be implemented before fire spell.
-        Change current equipment with 'w'. Add context: equipment.
-
-    !! Inventory system must be implemented before equipment system.
-        Add context: inventory.
-
-    ! Select active spell with 'z'.
+    Const char al_draw_text flickering/corruption in inventory and pstat GUIs
+    ! Fix sporadic infinite looping in distributing generation bodies
 
 To optimize later:
     ! Restructure so that UpdateObjects' non-animation functions
         (esp. iterating through all vectors) is only called upon when "stuff" happens
         checking every logic cycle seems a waste of CPU
 
-    ! Fix sporadic infinite looping in distributing generation bodies
-
-    ! Movement is not smooth, find out why and fix
+    ! Being movement is disjointed; not smooth and continuous. Find out why and fix
 
 */
 
@@ -38,7 +23,13 @@ How to operate debug:
     TY = Output test path from player to random cell
     UI = Move player to last cell on path
 
-
+    numpad = move
+    12345 = open/close/switch inventories
+    c = open character stat window
+    Shift+c = exit character stat window
+    l = toggle lock-on context
+    z = weapon stance context
+    shift + z = close weapon stance context
 */
 
 
@@ -426,9 +417,9 @@ void GameLogic()
 
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
-            (*it)->actionPoints += (*it)->walkSpeed[BEING_STAT_EFFECTIVE]; // Each being receives AP according to its effective speed.
+            (*it)->actionPoints += (*it)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; // Each being receives AP according to its effective speed.
 #ifdef D_TURN_LOGIC
-            std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->walkSpeed[BEING_STAT_EFFECTIVE] << " AP." << std::endl;
+            std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << " AP." << std::endl;
 #endif
 
             if((*it)->actionPoints >= 100) // If a being has at least 100 AP, add it to actionQueue.
@@ -511,7 +502,7 @@ void GameLogic()
                     (*actionQueueFront)->actionPoints -= (*actionQueueFront)->actionCost; // Spend AP cost of action. It is very possible for moves to put beings into negative AP (e.g. power-attacks)
 
 #ifdef D_TURN_LOGIC
-                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->walkSpeed[BEING_STAT_EFFECTIVE] << "AP" << std::endl;
+                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << "AP" << std::endl;
 #endif
 
                     if((*actionQueueFront)->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
@@ -546,7 +537,7 @@ void GameLogic()
 #endif
                     player->actionPoints -= player->actionCost;
 #ifdef D_TURN_LOGIC
-                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->walkSpeed[BEING_STAT_EFFECTIVE] << "AP" << std::endl;
+                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << "AP" << std::endl;
 #endif
 
                     // Reset flags to default, false.
@@ -977,7 +968,7 @@ void LoadingDrawing()
                                           COLD_BLUE, 1);
 
 
-                    s_al_draw_text(pirulenFont, NEUTRAL_WHITE,
+                    s_al_draw_text(robotoSlabFont, NEUTRAL_WHITE,
                                    (*it)->x1-loadingCamX+4,
                                    (*it)->y1-loadingCamY+4,
                                    ALLEGRO_ALIGN_LEFT,
@@ -1057,32 +1048,32 @@ void DrawGUI()
         if(guiDrawInventoryIconTab[0]) // if == true
         {
             al_draw_bitmap(gfxEquipUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY, 0, "1");
+            al_draw_text(robotoSlabFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY, 0, "1");
         }
         if(guiDrawInventoryIconTab[1])
         {
             al_draw_bitmap(gfxToolUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing, 0, "2");
+            al_draw_text(robotoSlabFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing, 0, "2");
         }
         if(guiDrawInventoryIconTab[2])
         {
             al_draw_bitmap(gfxMagicUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0, "3");
+            al_draw_text(robotoSlabFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*2, 0, "3");
         }
         if(guiDrawInventoryIconTab[3])
         {
             al_draw_bitmap(gfxMaterialUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0, "4");
+            al_draw_text(robotoSlabFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*3, 0, "4");
         }
         if(guiDrawInventoryIconTab[4])
         {
             al_draw_bitmap(gfxKeyUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0, "5");
+            al_draw_text(robotoSlabFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*4, 0, "5");
         }
         if(guiDrawInventoryIconTab[5])
         {
             al_draw_bitmap(gfxMiscUIIconSmall,guiItemInactiveTabX,guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0);
-            al_draw_text(pirulenFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0, "6");
+            al_draw_text(robotoSlabFont, BLOOD_RED, guiItemInactiveTabX + 55, guiItemInactiveTabY+guiItemInactiveTabSpacing*5, 0, "6");
         }
 
         // Active inventory window's big tab
@@ -1308,7 +1299,7 @@ void DrawGUI()
             char c = 'a' + i;
             const char *cc = &c;
 
-            al_draw_text(pirulenFont, BLOOD_RED,
+            al_draw_text(robotoSlabFont, BLOOD_RED,
                          guiItemUIOriginX + ITEM_UI_SLOT_WIDTH * (i % ITEM_UI_ROW_WIDTH),
                          guiItemUIOriginY + ITEM_UI_SLOT_WIDTH * (i / ITEM_UI_ROW_WIDTH),
                          0,cc);
@@ -1355,42 +1346,28 @@ void DrawGUI()
             char c = 'a' + i;
             const char *cc = &c;
 
-            al_draw_text(pirulenFont, BLOOD_RED,
+            al_draw_text(robotoSlabFont, BLOOD_RED,
                          guiPstatEquipOriginX + PSTAT_UI_EQUIP_SLOT_WIDTH * (i % PSTAT_UI_EQUIP_ROW_WIDTH),
                          guiPstatEquipOriginY + PSTAT_UI_EQUIP_SLOT_WIDTH * (i / PSTAT_UI_EQUIP_ROW_WIDTH),
                          0,cc);
         }
 
         // Draw player primary stats
-        std::string statString;
-
-        statString = "STR       " + std::to_string((int)player->strength[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->strength[BEING_STAT_BASE]);
-        s_al_draw_text(pirulenFont,PEN_INK,
-                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*0,
-                       ALLEGRO_ALIGN_LEFT,statString);
-        statString = "DEX       "  + std::to_string((int)player->dexterity[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->dexterity[BEING_STAT_BASE]);
-        s_al_draw_text(pirulenFont,PEN_INK,
-                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*1,
-                       ALLEGRO_ALIGN_LEFT,statString);
-        statString = "VIT       " + std::to_string((int)player->vitality[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->vitality[BEING_STAT_BASE]);
-        s_al_draw_text(pirulenFont,PEN_INK,
-                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*2,
-                       ALLEGRO_ALIGN_LEFT,statString);
-        statString = "AGI       " + std::to_string((int)player->agility[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->agility[BEING_STAT_BASE]);
-        s_al_draw_text(pirulenFont,PEN_INK,
-                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*3,
-                       ALLEGRO_ALIGN_LEFT,statString);
-        statString = "WIL       " + std::to_string((int)player->willpower[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->willpower[BEING_STAT_BASE]);
-        s_al_draw_text(pirulenFont,PEN_INK,
-                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*4,
-                       ALLEGRO_ALIGN_LEFT,statString);
-        statString = "ATU       " + std::to_string((int)player->attunement[BEING_STAT_EFFECTIVE]) + " / " + std::to_string((int)player->attunement[BEING_STAT_BASE]);
-        s_al_draw_text(pirulenFont,PEN_INK,
-                       guiPstatPrimaryOriginX,guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*5,
-                       ALLEGRO_ALIGN_LEFT,statString);
+        for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+        {
+            s_al_draw_text(sourceCodeFont, PEN_INK,
+                           guiPstatPrimaryOriginX, guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*i,
+                           ALLEGRO_ALIGN_LEFT, player->primaryString[i]);
+        }
 
         // Draw player secondary stats
-
+        for(int i = 0+2; i < STAT_SECONDARY_TOTAL; i++) // Skip LIFE/ANIMA
+        {
+            s_al_draw_text(sourceCodeFont, PEN_INK,
+                           guiPstatSecondaryOriginX + guiPstatSecondaryXSpacing * (i % guiPstatSecondaryNumCols),
+                           guiPstatSecondaryOriginY + guiPstatSecondaryYSpacing * (i / guiPstatSecondaryNumCols),
+                           ALLEGRO_ALIGN_LEFT, player->secondaryString[i]);
+        }
 
 
     }
@@ -1417,7 +1394,7 @@ void DrawGUI()
                 std::string intAlpha;
                 intAlpha = (char)97+i;
 
-                s_al_draw_centered_text(pirulenFont, NEUTRAL_WHITE,
+                s_al_draw_centered_text(robotoSlabFont, NEUTRAL_WHITE,
                                         targetableBeings[i]->xPosition + TILESIZE + SCREEN_W/2 - playerXPosition,
                                         targetableBeings[i]->yPosition + SCREEN_H/2 - playerYPosition,
                                         ALLEGRO_ALIGN_CENTER,
@@ -1435,8 +1412,6 @@ void DrawGUI()
 
 /// END TARGETTING CONTEXTS /////////////////////////////////////////////////////
 
-    GuiDrawFrame();
-
     ALLEGRO_COLOR colorToDraw = NEUTRAL_WHITE;
 
     // Draw the (now unused)
@@ -1445,7 +1420,7 @@ void DrawGUI()
     // Draw the text that would go in the terminal (make a better terminal later)
     for(int i = 0; i < EXCERPT_NUM_LINES; ++i)
     {
-        s_al_draw_text(pirulenFont,colorToDraw,
+        s_al_draw_text(robotoSlabFont,colorToDraw,
                        TERMINAL_TEXT_OPEN_X,
                        TERMINAL_TEXT_OPEN_Y-(20*i),
                        ALLEGRO_ALIGN_LEFT,
@@ -1455,7 +1430,7 @@ void DrawGUI()
     // Draw turn counter (put it in an appropriate place later)
     std::string statText;
     statText = "turn" + std::to_string(turn);
-    s_al_draw_text(pirulenFont,NEUTRAL_WHITE,STATS_BAR_OPEN_X,STATS_BAR_OPEN_Y,ALLEGRO_ALIGN_LEFT,statText);
+    s_al_draw_text(robotoSlabFont,NEUTRAL_WHITE,STATS_BAR_OPEN_X,STATS_BAR_OPEN_Y,ALLEGRO_ALIGN_LEFT,statText);
 
 }
 
@@ -1554,7 +1529,7 @@ void DrawDebugOverlay()
     {
         //Draw player's cell coordinates
         std::string posStr = "(" + std::to_string(playerXCell) + ", " + std::to_string(playerYCell) + ")";
-        s_al_draw_text(pirulenFont,al_map_rgb(255,255,255),0,0,ALLEGRO_ALIGN_LEFT,posStr);
+        s_al_draw_text(robotoSlabFont,al_map_rgb(255,255,255),0,0,ALLEGRO_ALIGN_LEFT,posStr);
     }
     if(mainPhase == MAIN_PHASE_LOADING)
     {
@@ -1564,7 +1539,7 @@ void DrawDebugOverlay()
         int crosshairXCell = crosshairX/MINI_TILESIZE;
         int crosshairYCell = crosshairY/MINI_TILESIZE;
         std::string posStr = "(" + std::to_string(crosshairX) + ", " + std::to_string(crosshairY) + ") : (" + std::to_string(crosshairXCell) + ", " + std::to_string(crosshairYCell) + ")";
-        s_al_draw_text(pirulenFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
+        s_al_draw_text(robotoSlabFont,HOLY_INDIGO,0,0,ALLEGRO_ALIGN_LEFT,posStr);
 
         al_draw_line(SCREEN_W/2,0,SCREEN_W/2,SCREEN_H,HOLY_INDIGO,1);
         al_draw_line(0,SCREEN_H/2,SCREEN_W,SCREEN_H/2,HOLY_INDIGO,1);
@@ -1581,66 +1556,26 @@ void DrawDebugOverlay()
 
 void UpdateObjects()
 {
-    for(std::vector<Item*>::iterator it = areaItems.begin(); it != areaItems.end();)
-    {
-        if(gameExit)
-            (*it)->active = false;
-
-        if(!(*it)->active)
-        {
-            delete *it;
-            areaItems.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-
-    for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
-    {
-        /*
-        for(std::vector<int>::iterator ccit = (*it)->cellsCovered.begin(); ccit != (*it)->cellsCovered.end(); ++ccit)
-        {
-            if(area->beingmap[*ccit] != nullptr)
-            {
-                // Combine target being's active effects vector with spell's effects vector.
-                Being*bpointer = area->beingmap[*ccit];
-                bpointer->effects.insert(bpointer->effects.end(),(*it)->effects.begin(), (*it)->effects.end());
-            }
-        }
-        */
-
-        (*it)->Logic();
-
-
-        if(gameExit)
-            (*it)->active = false;
-
-        if(!(*it)->active)
-        {
-            delete *it;
-            activeSpells.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
     for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end();)
     {
         area->beingmap[(*it)->yCell * areaCellWidth + (*it)->xCell] = nullptr; // "Uproot" being from map to fiddle with it
 
         //Check the derived type and call the logic function specific to its class.
         //GameLogic() just handles data that needs to be constantly updated.
-
         (*it)->BaseLogic();
         if((*it)->derivedType == BEING_TYPE_PLAYER)
             ((Player*)(*it))->Logic();
         else if((*it)->derivedType == BEING_TYPE_NPC)
             ((NPC*)(*it))->Logic();
+
+
+        // If the Being has cast a spell, add the spell to activeSpells vector
+        if((*it)->castSpell != nullptr)
+        {
+            activeSpells.push_back((*it)->castSpell)
+            (*it)->castSpell = nullptr;
+        }
+
 
         if(gameExit)
             (*it)->active = false;
@@ -1659,6 +1594,80 @@ void UpdateObjects()
         else
         {
             area->beingmap[(*it)->yCell * areaCellWidth + (*it)->xCell] = (*it); // "Plant" being back into map
+            ++it;
+        }
+    }
+
+    for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
+    {
+        // Check cells covered by the spell for beings/objects.
+        for(std::vector<int>::iterator ccit = (*it)->cellsCovered.begin(); ccit != (*it)->cellsCovered.end(); ++ccit)
+        {
+            Being*bPointer;
+
+            if(area->beingmap[*ccit] != nullptr) // There is a Being present on the cell being iterated over.
+            {
+                if((*it)->canAffectSelf)
+                {
+
+                }
+                if((*it)->canAffectAlly)
+                {
+
+                }
+                if((*it)->canAffectEnemy)
+                {
+
+                }
+                if((*it)->canAffectNeutral)
+                {
+
+                }
+                if((*it)->canAffectEnvironment)
+                {
+
+                }
+            }
+
+
+            /*
+            if(area->beingmap[*ccit] != nullptr)
+            {
+                bpointer = area->beingmap[*ccit];
+                bpointer->effects.insert(bpointer->effects.end(),(*it)->effects.begin(), (*it)->effects.end());
+            }
+            */
+        }
+
+        (*it)->Logic();
+
+
+        if(gameExit)
+            (*it)->active = false;
+
+        if(!(*it)->active)
+        {
+            delete *it;
+            activeSpells.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    for(std::vector<Item*>::iterator it = areaItems.begin(); it != areaItems.end();)
+    {
+        if(gameExit)
+            (*it)->active = false;
+
+        if(!(*it)->active)
+        {
+            delete *it;
+            areaItems.erase(it);
+        }
+        else
+        {
             ++it;
         }
     }
@@ -2217,11 +2226,7 @@ void ProcessInput(int whatContext)
                 }
             }
 
-            player->RecalculateEquipPrimaryStats();
-            player->RecalculateEquipSecondaryStats();
-
-            player->RecalculateEffectivePrimaryStats();
-            player->RecalculateEffectiveSecondaryStats();
+            player->RecalculateStats();
 
             player->RecalculateSpells();
 
@@ -2522,11 +2527,8 @@ void ProcessInput(int whatContext)
                         player->equipInventory.push_back(player->wornEquipment[i-KEY_A]); // 1. Add a copy of item pointer to equipinventory vector.
                         player->wornEquipment[i-KEY_A] = nullptr; //2. Nullify item's slot in wornequip vector.
 
-                        player->RecalculateEquipPrimaryStats();
-                        player->RecalculateEquipSecondaryStats();
-
-                        player->RecalculateEffectivePrimaryStats();
-                        player->RecalculateEffectiveSecondaryStats();
+                        player->RecalculateStats();
+                        player->RecalculateSpells();
                     }
                     else // Player equipInventory has no room.
                     {
@@ -2572,8 +2574,16 @@ void UpdateGamesystem()
 
 void DevAddTestItemsToPlayer()
 {
+
     player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_XIPHOS));
-    player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_SCYTHE));
+
+    std::cout << "debug- Xiphos' primary stat modifiers:";
+    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+    {
+        std::cout << player->equipInventory[0]->primaryMod[i] << " | ";
+    }
+    std::cout << std::endl;
+
     player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_SCYTHE));
     player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_KRIS));
     player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_KATANA));
@@ -2584,17 +2594,11 @@ void DevAddTestItemsToPlayer()
     player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_SPEAR));
     player->toolInventory.push_back(new Tool(TOOL_TEMPLATE_TRICK_KNIFE));
 
-
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_MATERIA));
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_WOOD));
     player->materialInventory.push_back(new Material(MATERIAL_TEMPLATE_MAPLE_LEAF));
 
-    //player->RecalculateEquipPrimaryStats();
-    //player->RecalculateEquipSecondaryStats();
-
-    //player->RecalculateEffectivePrimaryStats();
-    //player->RecalculateEffectiveSecondaryStats();
-
+    player->RecalculateStats();
     player->RecalculateSpells();
 
 }
