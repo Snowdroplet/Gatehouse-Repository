@@ -8,22 +8,22 @@ NPC::NPC(bool savedNPC)
 NPC::NPC(int whatNPCType, int spawnXCell, int spawnYCell)
 {
     derivedType = BEING_TYPE_NPC;
-
     NPCType = whatNPCType;
+    AIMode = AI_MODE_AIMLESS;
     spriteID = whatNPCType;
-
+    playerRelation = RELATION_ENEMY;
     visibleToPlayer = true;
 
     if(NPCType == SLIME)
     {
         name = "Slime";
-        walkSpeed[BEING_STAT_EFFECTIVE] = walkSpeed[BEING_STAT_BASE] = 50;
+        stats[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE] = stats[STAT_WALK_SPEED][BEING_STAT_BASE] = 50;
         animationFrameThreshold = 1;
     }
     else if(NPCType == QUICKLING)
     {
         name = "Quickling";
-        walkSpeed[BEING_STAT_EFFECTIVE] = walkSpeed[BEING_STAT_BASE] = 200;
+        stats[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE] = stats[STAT_WALK_SPEED][BEING_STAT_BASE] = 200;
         animationFrameThreshold = 1;
     }
 
@@ -46,31 +46,58 @@ void NPC::Logic()
 
 void NPC::AI()
 {
-    actionCost = 100;
-    currentAction = ACTION_WALK;
+    switch(AIMode)
+    {
+    case AI_MODE_SLEEP:
 
-    int randomDirection = rand() % 9;
-    if(randomDirection == 0)
-        randomDirection = INPUT_NORTHWEST;
-    else if(randomDirection == 1)
-        randomDirection = INPUT_NORTH;
-    else if(randomDirection == 2)
-        randomDirection = INPUT_NORTHEAST;
-    else if(randomDirection == 3)
-        randomDirection = INPUT_WEST;
-    else if(randomDirection == 4)
-        randomDirection = INPUT_EAST;
-    else if(randomDirection == 5)
-        randomDirection = INPUT_SOUTHWEST;
-    else if(randomDirection == 6)
-        randomDirection = INPUT_SOUTH;
-    else if(randomDirection == 7)
-        randomDirection = INPUT_SOUTHEAST;
-    else if(randomDirection == 8)
-        randomDirection = INPUT_NO_DIRECTION;
+        break;
 
+    case AI_MODE_PATROL_POINT:
 
-    Move(randomDirection); // 1-9
+        break;
+
+    case AI_MODE_WANDERING:
+
+        break;
+
+    case AI_MODE_AIMLESS:
+    {
+        actionCost = 100;
+        currentAction = ACTION_WALK;
+        std::vector<int>validCells; // List to be populated the cell indexes of valid cell indexes.
+
+        for(int y = yCell-1; y <= yCell+1; y++) // Seach 3x3 square centered on NPC coordinates.
+        {
+            for(int x = xCell-1; x <= xCell+1; x++)
+            {
+                if(x >= 0 && y >= 0 && x < areaCellWidth && y < areaCellHeight) // Check out-of-bounds.
+                {
+                    int index = y*areaCellWidth+x;
+                    if(area->wallmap[index] == WT_WALL_EMPTY)
+                        validCells.push_back(index);
+
+                }
+            }
+        }
+
+        if(validCells.size() > 0) // Ensure at least one valid, empty cell to move to. Prevents undefined behaviour while "stuck in a wall".
+        {
+            int randomDirection = rand()%validCells.size();
+            MoveTo(validCells[randomDirection]%areaCellWidth, validCells[randomDirection]/areaCellWidth);
+        }
+        else
+        {
+            MoveTo(xCell,yCell); // Move to own position.
+        }
+
+        std::vector<int>().swap(validCells);
+        break;
+    }
+
+    case AI_MODE_PURSUIT:
+
+        break;
+    }
 
     //Test code written to terminal
     //std::string AIMsg;

@@ -72,6 +72,7 @@ How to operate debug:
 
 #include "area.h"
 
+//#include "spelleffect.h"
 #include "spell.h"
 
 #include "item.h"
@@ -417,7 +418,7 @@ void GameLogic()
 
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
-            (*it)->actionPoints += (*it)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; // Each being receives AP according to its effective speed.
+            (*it)->actionPoints += (*it)->stats[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; // Each being receives AP according to its effective speed.
 #ifdef D_TURN_LOGIC
             std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << " AP." << std::endl;
 #endif
@@ -1352,23 +1353,13 @@ void DrawGUI()
                          0,cc);
         }
 
-        // Draw player primary stats
-        for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+        // Draw player stats
+        for(int i = 0; i < STAT_TOTAL-1; i++)
         {
             s_al_draw_text(sourceCodeFont, PEN_INK,
-                           guiPstatPrimaryOriginX, guiPstatPrimaryOriginY+guiPstatPrimaryYSpacing*i,
-                           ALLEGRO_ALIGN_LEFT, player->primaryString[i]);
+                           guiPstatOriginX, guiPstatOriginY+guiPstatYSpacing*i,
+                           ALLEGRO_ALIGN_LEFT, player->statString[i]);
         }
-
-        // Draw player secondary stats
-        for(int i = 0+2; i < STAT_SECONDARY_TOTAL; i++) // Skip LIFE/ANIMA
-        {
-            s_al_draw_text(sourceCodeFont, PEN_INK,
-                           guiPstatSecondaryOriginX + guiPstatSecondaryXSpacing * (i % guiPstatSecondaryNumCols),
-                           guiPstatSecondaryOriginY + guiPstatSecondaryYSpacing * (i / guiPstatSecondaryNumCols),
-                           ALLEGRO_ALIGN_LEFT, player->secondaryString[i]);
-        }
-
 
     }
 
@@ -1516,8 +1507,6 @@ void DrawTiles()
                                       y*TILESIZE + SCREEN_H/2 - playerYPosition,
                                       0);
 
-
-
             }
         }
     }
@@ -1558,7 +1547,7 @@ void UpdateObjects()
 {
     for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end();)
     {
-        area->beingmap[(*it)->yCell * areaCellWidth + (*it)->xCell] = nullptr; // "Uproot" being from map to fiddle with it
+        area->beingmap[(*it)->yCell * areaCellWidth + (*it)->xCell] = nullptr; // "Uproot" being from map before fiddling with it
 
         //Check the derived type and call the logic function specific to its class.
         //GameLogic() just handles data that needs to be constantly updated.
@@ -1572,7 +1561,7 @@ void UpdateObjects()
         // If the Being has cast a spell, add the spell to activeSpells vector
         if((*it)->castSpell != nullptr)
         {
-            activeSpells.push_back((*it)->castSpell)
+            activeSpells.push_back((*it)->castSpell);
             (*it)->castSpell = nullptr;
         }
 
@@ -1598,8 +1587,11 @@ void UpdateObjects()
         }
     }
 
+    /*
     for(std::vector<Spell*>::iterator it = activeSpells.begin(); it != activeSpells.end();)
     {
+
+
         // Check cells covered by the spell for beings/objects.
         for(std::vector<int>::iterator ccit = (*it)->cellsCovered.begin(); ccit != (*it)->cellsCovered.end(); ++ccit)
         {
@@ -1607,36 +1599,38 @@ void UpdateObjects()
 
             if(area->beingmap[*ccit] != nullptr) // There is a Being present on the cell being iterated over.
             {
-                if((*it)->canAffectSelf)
-                {
 
-                }
-                if((*it)->canAffectAlly)
-                {
+                bPointer = area->beingmap[*ccit];
 
-                }
-                if((*it)->canAffectEnemy)
+                // If the Being covered by spell can be affected by the spell, copy all of the spell's spellEffects to the Being's activeSpellEffects vector.
+                if(bPointer->playerRelation == RELATION_SELF && (*it)->canAffectSelf)
                 {
-
+                    bPointer->activeSpellEffects.insert(bPointer->activeSpellEffects.end(),
+                                                        (*it)->effects.begin(), (*it)->effects.end());
                 }
-                if((*it)->canAffectNeutral)
+                else if(bPointer->playerRelation == RELATION_ALLY && (*it)->canAffectAlly)
                 {
-
+                    bPointer->activeSpellEffects.insert(bPointer->activeSpellEffects.end(),
+                                                        (*it)->effects.begin(), (*it)->effects.end());
                 }
-                if((*it)->canAffectEnvironment)
+                else if(bPointer->playerRelation == RELATION_NEUTRAL && (*it)->canAffectNeutral)
                 {
-
+                    bPointer->activeSpellEffects.insert(bPointer->activeSpellEffects.end(),
+                                                        (*it)->effects.begin(), (*it)->effects.end());
                 }
+                else if(bPointer->playerRelation == RELATION_ENEMY && (*it)->canAffectEnemy)
+                {
+                    bPointer->activeSpellEffects.insert(bPointer->activeSpellEffects.end(),
+                                                        (*it)->effects.begin(), (*it)->effects.end());
+                }
+
             }
 
+            //if(area->featuremap[*ccit] != nullptr)
+            //{
+                // What to do when a dungeon feature is hit.
+            //}
 
-            /*
-            if(area->beingmap[*ccit] != nullptr)
-            {
-                bpointer = area->beingmap[*ccit];
-                bpointer->effects.insert(bpointer->effects.end(),(*it)->effects.begin(), (*it)->effects.end());
-            }
-            */
         }
 
         (*it)->Logic();
@@ -1655,6 +1649,8 @@ void UpdateObjects()
             ++it;
         }
     }
+
+    */
 
     for(std::vector<Item*>::iterator it = areaItems.begin(); it != areaItems.end();)
     {
@@ -2577,10 +2573,10 @@ void DevAddTestItemsToPlayer()
 
     player->equipInventory.push_back(new Equip(EQUIP_TEMPLATE_XIPHOS));
 
-    std::cout << "debug- Xiphos' primary stat modifiers:";
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+    std::cout << "debug- Xiphos' stat modifiers:";
+    for(int i = 0; i < STAT_TOTAL-1; i++)
     {
-        std::cout << player->equipInventory[0]->primaryMod[i] << " | ";
+        std::cout << player->equipInventory[0]->statMod[i] << " | ";
     }
     std::cout << std::endl;
 

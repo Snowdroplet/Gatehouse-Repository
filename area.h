@@ -83,6 +83,7 @@ public:
 
     Area();                  // Default constructor which creates random square test area. Data normally read in the serialized "areafile" is initialized here.
     Area(bool savedArea);
+    Area(int staticArea);
     //void InitByArchive();
     ~Area();
 

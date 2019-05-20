@@ -18,8 +18,8 @@ Tool::Tool(int toolTemplateID)
         fullName = baseName = "Potion";
         spriteID = TLSI_POTION;
 
-        description[0] = "A tincture of frozen anima. Use to restore";
-        description[1] = "one-third of Max AP.";
+        description[0] = "A tincture of frozen anima. Cures";
+        description[1] = "Overload state.";
         description[2] = "";
         description[3] = "Anima is life, and all life resists";
         description[4] = "control. Excessive manipulation of anima";
@@ -36,8 +36,7 @@ Tool::Tool(int toolTemplateID)
         description[2] = "";
         description[3] = "These bombs are a byproduct of refining";
         description[4] = "raw anima for use in medicines. Life";
-        description[5] = "and death are two sides of the same coin;";
-        description[6] = "the apothecary is the metal in between.";
+        description[5] = "and death are two sides of the same coin.";
         break;
 
     case TOOL_TEMPLATE_TRICK_KNIFE:
@@ -51,7 +50,7 @@ Tool::Tool(int toolTemplateID)
         description[3] = "";
         description[4] = "It is said that Shadowblade Mayshell once";
         description[5] = "deflected an assailant's trick knives with";
-        description[6] = "her own, felling that assailant in the process.";
+        description[6] = "her own.";
         break;
 
     case TOOL_TEMPLATE_SPEAR:
@@ -59,12 +58,11 @@ Tool::Tool(int toolTemplateID)
         fullName = baseName = "Spear";
         spriteID = TLSI_SPEAR;
 
-        description[0] = "Transforms into a piercing ray when thrown.";
+        description[0] = "Becomes a piercing ray when thrown.";
         description[1] = "";
-        description[2] = "Weapons imbued with anima shatter under";
-        description[3] = "their own power when used, but they";
-        description[4] = "allowed Gatehouse's royal soldiers one";
-        description[5] = "final stand against the Undying.";
+        description[2] = "Weapons imbued with anima";
+        description[3] = "allowed Sharumnir's royal soldiers one";
+        description[4] = "final stand against the Undying.";
         break;
     }
 }

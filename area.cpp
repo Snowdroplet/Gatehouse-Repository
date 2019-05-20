@@ -17,6 +17,39 @@ Area::Area(bool savedArea)
 }
 
 /*
+Area::Area(int staticArea)
+{
+    // Read in map from txt
+    std::ifstream staticAreafile;
+    staticAreafile.open("static_debug_floor.txt");
+
+    int w,h;
+    staticAreafile >> w;
+    staticAreafile >> h;
+
+    beingmap = std::vector<Being*>(w*h,nullptr); // All cells are unoccupied by default.
+
+    floormap = std::vector<int>(w*h, FT_FLOOR_EMPTY); // All floor spaces are nonexistent by default.
+    wallmap = std::vector<int>(w*h, WT_WALL_EMPTY); // All wall spaces are nonexistent by default.
+    featuremap = std::vector<int>(w*h, FEATURE_EMPTY); // All cells unfurnished by default.
+
+    floormapImageCategory = std::vector<int>(w*h, FC_STONE_DUNGEON_FLOOR); // The dungeon style, by default.
+    floormapImageIndex = std::vector<int>(w*h, SI_TEST_FLOOR); // Test floor by default. Shows if cells have been generated improperly.
+    wallmapImageCategory = std::vector<int>(w*h, WC_LIGHT_DUNGEON_WALL); // The dungeon wall style, by default.
+    wallmapImageIndex = std::vector<int>(w*h, SI_TEST_WALL); // Test wall by default. Shows if cells have been generated improperly.
+    featuremapImageCategory = std::vector<int>(w*h, FEATC_MISC); // The furniture style is simply an all-encompassing "misc" until further styles are introduced.
+    featuremapImageIndex = std::vector<int>(w*h, FI_ERROR); // Test furniture by default. Shows if furniture has been generated improperly.
+
+    for(int i = 0; i < w*h; i++)
+    {
+        int value;
+        staticAreafile >> value;
+        wallmap[i] = value;
+    }
+}
+*/
+
+/*
 void Area::InitByArchive()
 {
 }
