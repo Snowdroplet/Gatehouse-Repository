@@ -50,15 +50,9 @@ int guiPstatPortraitOriginY;
 int guiPstatEquipOriginX;
 int guiPstatEquipOriginY;
 
-int guiPstatPrimaryOriginX;
-int guiPstatPrimaryOriginY;
-int guiPstatPrimaryYSpacing;
-
-int guiPstatSecondaryXSpacing;
-int guiPstatSecondaryYSpacing;
-int guiPstatSecondaryOriginX;
-int guiPstatSecondaryOriginY;
-int guiPstatSecondaryNumCols;
+int guiPstatOriginX;
+int guiPstatOriginY;
+int guiPstatYSpacing;
 
 void GuiInit()
 {
@@ -104,21 +98,15 @@ void GuiInit()
     guiPstatNameplateTextX = guiPstatUIX + al_get_bitmap_width(gfxPstatUI)/2;
     guiPstatNameplateTextY = guiPstatNameplateY + al_get_bitmap_height(gfxUINameplate)/4;
 
-    guiPstatPortraitOriginX = guiPstatUIX + 42; // Arbitrary top left corner of item ui grid. Includes portrait backgrounded by covenant symbol, cooldown for spell 1, 2, and 3
-    guiPstatPortraitOriginY = guiPstatUIY + 40;
+    guiPstatPortraitOriginX = guiPstatUIX + 310; // Arbitrary top left corner of item ui grid. Includes portrait backgrounded by covenant symbol, cooldown for spell 1, 2, and 3
+    guiPstatPortraitOriginY = guiPstatUIY + 270;
 
     guiPstatEquipOriginX = guiPstatUIX + 230;
     guiPstatEquipOriginY = guiPstatUIY + 38;
 
-    guiPstatPrimaryOriginX = guiPstatUIX + 45; // Corner is at 42 but shifting right a bit for development.
-    guiPstatPrimaryOriginY = guiPstatUIY + 235; // Corner is at Y 226 but shifting down a bit for development.
-    guiPstatPrimaryYSpacing = 37;
-
-    guiPstatSecondaryXSpacing = 150;
-    guiPstatSecondaryYSpacing = guiPstatPrimaryYSpacing;
-    guiPstatSecondaryOriginX = guiPstatUIX + 232;
-    guiPstatSecondaryOriginY = guiPstatPrimaryOriginY - guiPstatSecondaryYSpacing*1;
-    guiPstatSecondaryNumCols = 2; // 0 to 1
+    guiPstatOriginX = guiPstatUIX + 45;
+    guiPstatOriginY = guiPstatUIY + 45;
+    guiPstatYSpacing = 37;
 
 }
 

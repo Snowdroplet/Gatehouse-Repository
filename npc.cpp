@@ -11,7 +11,7 @@ NPC::NPC(int whatNPCType, int spawnXCell, int spawnYCell)
     NPCType = whatNPCType;
     AIMode = AI_MODE_AIMLESS;
     spriteID = whatNPCType;
-    playerRelation = RELATION_ENEMY;
+    team = TEAM_HOSTILE;
     visibleToPlayer = true;
 
     if(NPCType == SLIME)
@@ -49,21 +49,30 @@ void NPC::AI()
     switch(AIMode)
     {
     case AI_MODE_SLEEP:
+    {
+        actionCost = 100;
 
         break;
-
+    }
     case AI_MODE_PATROL_POINT:
+    {
+        actionCost = 100;
+        ChangeAction(ACTION_WALK);
 
         break;
-
+    }
     case AI_MODE_WANDERING:
+    {
+        actionCost = 100;
+        ChangeAction(ACTION_WALK);
 
         break;
-
+    }
     case AI_MODE_AIMLESS:
     {
         actionCost = 100;
-        currentAction = ACTION_WALK;
+        ChangeAction(ACTION_WALK);
+
         std::vector<int>validCells; // List to be populated the cell indexes of valid cell indexes.
 
         for(int y = yCell-1; y <= yCell+1; y++) // Seach 3x3 square centered on NPC coordinates.
@@ -73,14 +82,14 @@ void NPC::AI()
                 if(x >= 0 && y >= 0 && x < areaCellWidth && y < areaCellHeight) // Check out-of-bounds.
                 {
                     int index = y*areaCellWidth+x;
-                    if(area->wallmap[index] == WT_WALL_EMPTY)
+                    if(area->wallmap[index] == WT_WALL_EMPTY // No walls, no beings occupying cell.
+                       && area->beingmap[index] == nullptr)
                         validCells.push_back(index);
-
                 }
             }
         }
 
-        if(validCells.size() > 0) // Ensure at least one valid, empty cell to move to. Prevents undefined behaviour while "stuck in a wall".
+        if(validCells.size() > 0) // Ensure at least one valid, empty cell to move to. Prevents undefined behaviour while "stuck inside a wall".
         {
             int randomDirection = rand()%validCells.size();
             MoveTo(validCells[randomDirection]%areaCellWidth, validCells[randomDirection]/areaCellWidth);
@@ -97,6 +106,15 @@ void NPC::AI()
     case AI_MODE_PURSUIT:
 
         break;
+
+    case AI_MODE_ATTACK_ADJACENT:
+    {
+
+
+        break;
+    }
+
+
     }
 
     //Test code written to terminal

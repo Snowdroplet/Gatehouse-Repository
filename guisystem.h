@@ -62,9 +62,7 @@ const int PSTAT_UI_PORTRAIT_ROW_WIDTH = 2; // 0 to 1
 const int PSTAT_UI_EQUIP_SLOT_WIDTH = 75;
 const int PSTAT_UI_EQUIP_ROW_WIDTH = 4; // 0 to 3
 
-const int PSTAT_UI_PRIMARY_ROW_WIDTH = 1; // 0 to 0
-
-const int PSTAT_UI_SECONDARY_ROW_WIDTH = 2; // 0 to 1
+const int PSTAT_UI_ROW_WIDTH = 1; // 0 to 0
 
 extern int guiPstatUIX;
 extern int guiPstatUIY;
@@ -80,16 +78,9 @@ extern int guiPstatPortraitOriginY;
 extern int guiPstatEquipOriginX;
 extern int guiPstatEquipOriginY;
 
-extern int guiPstatPrimaryOriginX;
-extern int guiPstatPrimaryOriginY;
-extern int guiPstatPrimaryYSpacing; // Vertical spacing between lines of stat text.
-
-
-extern int guiPstatSecondaryXSpacing;
-extern int guiPstatSecondaryYSpacing;
-extern int guiPstatSecondaryOriginX;
-extern int guiPstatSecondaryOriginY;
-extern int guiPstatSecondaryNumCols;
+extern int guiPstatOriginX;
+extern int guiPstatOriginY;
+extern int guiPstatYSpacing; // Vertical spacing between lines of stat text.
 
 
 void GuiInit();

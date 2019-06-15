@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Gatehouse" />
+		<Option pch_mode="2" />
+		<Option compiler="gnu_gcc_w64" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Gatehouse" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gnu_gcc_w64" />
+				<Compiler>
+					<Add option="-std=c++11" />
+					<Add option="-g" />
+					<Add directory="../../Libraries/Allegro/Allegro5/include" />
+					<Add directory="../../Libraries/boost_1_63_0/boost_1_63_0" />
+				</Compiler>
+				<Linker>
+					<Add option="-lallegro-5.0.10-monolith-mt" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_filesystem-mgw53-mt-1_63.a" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_serialization-mgw53-mt-1_63.a" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_random-mgw53-mt-1_63.a" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_system-mgw53-mt-1_63.a" />
+					<Add directory="../../Libraries/Allegro/Allegro5/lib" />
+					<Add directory="../../Libraries/Boost/boost_1_63_0/boost_1_63_0/libs" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Gatehouse" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gnu_gcc_w64" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="../../Libraries/Allegro/Allegro5/include" />
+					<Add directory="../../Libraries/Boost" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-lallegro-5.0.10-monolith-mt" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_filesystem-mgw53-mt-1_63.a" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_serialization-mgw53-mt-1_63.a" />
+					<Add library="../../Libraries/boost_1_63_0/boost_1_63_0/stage/lib/libboost_random-mgw53-mt-1_63.a" />
+					<Add directory="../../Libraries/Allegro/Allegro5/lib" />
+					<Add directory="../../Libraries/Boost/boost_1_63_0/boost_1_63_0/libs" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="allegrocustom.cpp" />
+		<Unit filename="allegrocustom.h" />
+		<Unit filename="area.cpp" />
+		<Unit filename="area.h" />
+		<Unit filename="being.cpp" />
+		<Unit filename="being.h" />
+		<Unit filename="control.cpp" />
+		<Unit filename="control.h" />
+		<Unit filename="delaunay.cpp" />
+		<Unit filename="delaunay.h" />
+		<Unit filename="eat.h" />
+		<Unit filename="equip.cpp" />
+		<Unit filename="equip.h" />
+		<Unit filename="extfile.cpp" />
+		<Unit filename="extfile.h" />
+		<Unit filename="gamesystem.cpp" />
+		<Unit filename="gamesystem.h" />
+		<Unit filename="generator.cpp" />
+		<Unit filename="generator.h" />
+		<Unit filename="gods.h" />
+		<Unit filename="graph.cpp" />
+		<Unit filename="graph.h" />
+		<Unit filename="guisystem.cpp" />
+		<Unit filename="guisystem.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="item.cpp" />
+		<Unit filename="item.h" />
+		<Unit filename="key.cpp" />
+		<Unit filename="key.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="magic.cpp" />
+		<Unit filename="magic.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="material.cpp" />
+		<Unit filename="material.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="mintree.cpp" />
+		<Unit filename="mintree.h" />
+		<Unit filename="misc.cpp" />
+		<Unit filename="misc.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="node.cpp" />
+		<Unit filename="node.h" />
+		<Unit filename="npc.cpp" />
+		<Unit filename="npc.h" />
+		<Unit filename="player.cpp" />
+		<Unit filename="player.h" />
+		<Unit filename="pray.h" />
+		<Unit filename="resource.cpp" />
+		<Unit filename="resource.h" />
+		<Unit filename="roomgenbox.cpp" />
+		<Unit filename="roomgenbox.h" />
+		<Unit filename="spell.cpp" />
+		<Unit filename="spell.h" />
+		<Unit filename="spellEffect.cpp" />
+		<Unit filename="spellEffect.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="terminal.cpp" />
+		<Unit filename="terminal.h" />
+		<Unit filename="tool.cpp" />
+		<Unit filename="tool.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

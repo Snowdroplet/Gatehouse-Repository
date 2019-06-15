@@ -3,19 +3,7 @@
 
 #include <vector>
 
-enum enumAllSpellSchools
-{
-    SCHOOL_NONE = 0,
-    SCHOOL_WEAPON = 1,    // Weapon specific powers ( Long ranged attack with a kusarigama )
-    SCHOOL_MARTIAL = 2,   // Physical powers ( Flying kick )
-
-    SCHOOL_ARCANA = 4,    // Fast, transient and subversive ( Counterspell )
-    SCHOOL_RUNIC = 3,     // Slow, enduring, wide-area ( Antimagic field )
-    SCHOOL_SOULFLAME = 4, // Unmatched power at a price ( Scorching ray )
-    SCHOOL_DIVINITY = 5,  // Constant and inspiring ( Wheel of samsara )
-    SCHOOL_CURSE = 6,     // Steals the enemy's strengths ( Drain soul )
-    SCHOOL_NATURE = 7     // Gains complexity over time ( Poison cloud )
-};
+#include "spelleffect.h"
 
 enum enumAllSpellShapes
 {
@@ -27,37 +15,26 @@ enum enumAllSpellShapes
     SHAPE_BOX = 5          // Targets every cell within a square
 };
 
-enum enumAllSpellIdentities
-{
-    SPELL_PLAYER_ONE_HAND_BASIC = 0,
-    SPELL_PLAYER_TWO_HAND_BASIC = 1,
-    SPELL_PLAYER_DUAL_WIELD_BASIC = 2,
-
-    SPELL_PLAYER_ONE_HAND_RECKLESS = 3,
-
-
-};
-
 class Spell
 {
 public:
 
-    bool active;   // Inactive spells are marked for deletion
+    bool active;   // Inactive spells are marked for deletion.
+    int duration;  // Can be 0.
 
-    int school;
-    float magnitude; // base effect multiplier
-    int duration;  // Can be 0
+    std::vector<SpellEffect*>spellEffects;
 
 /// Offense attributes
-    bool hasOffense; // Has offensive properties to account for
+    bool hasOffense; // Has offensive properties to account for.
 
-    float physicalDamage;
-    float magicDamage;
-    float hitScore;
-    float critScore;
+    float minPhysicalDamage;
+    float maxPhysicalDamage;
+    float minMagicDamage;
+    float maxMagicDamage;
+    float casterDexterity;
 
 /// Support attributes
-    bool hasSupport; // Has supportive properties to account for
+    bool hasSupport; // Has supportive properties to account for.
 
 
 /// Targetting and coverage attributes
@@ -75,10 +52,9 @@ public:
 /// //////////////////////////////////
 
     Spell();
-    Spell(int spellTemplateID);
     ~Spell();
     void Logic();
-    void ModifyOffense(float phys, float mag, float hit, float crit);
+    void ModifyOffense(float minphys, float maxphys, float minmag, float maxmag, float castdex);
 
 };
 

@@ -2,19 +2,16 @@
 
 Spell::Spell()
 {
+    minPhysicalDamage = 0;
+    maxPhysicalDamage = 0;
+    minMagicDamage = 0;
+    maxMagicDamage = 0;
 
-}
-
-Spell::Spell(int spellTemplateID)
-{
-    school = SCHOOL_NONE;
-    magnitude = 0;
     duration = 0;
 
-    hasOffense = false;
+    hasOffense = true;
 
     hasSupport = false;
-
 
     shape = SHAPE_POINT;
     canAffectSelf = true;
@@ -22,52 +19,10 @@ Spell::Spell(int spellTemplateID)
     canAffectNeutral = true;
     canAffectEnemy = true;
     canAffectEnvironment = true;
-    minRange = 0;
-    maxRange = 0;
 
 
-    switch(spellTemplateID)
-    {
-    case SPELL_PLAYER_ONE_HAND_BASIC:
-        school = SCHOOL_WEAPON;
-        magnitude = 1;
 
-        hasOffense = true;
 
-        maxRange = 1;
-
-        break;
-
-    case SPELL_PLAYER_TWO_HAND_BASIC:
-        school = SCHOOL_WEAPON;
-        magnitude = 1;
-
-        hasOffense = true;
-
-        maxRange = 1;
-
-        break;
-
-    case SPELL_PLAYER_DUAL_WIELD_BASIC:
-        school = SCHOOL_WEAPON;
-        magnitude = 1;
-
-        hasOffense = true;
-
-        maxRange = 1;
-
-        break;
-
-    case SPELL_PLAYER_ONE_HAND_RECKLESS:
-        school = SCHOOL_WEAPON;
-        magnitude = 1;
-
-        hasOffense = true;
-
-        maxRange = 1;
-
-        break;
-    }
 }
 
 Spell::~Spell()
@@ -83,10 +38,11 @@ void Spell::Logic()
         active = false;
 }
 
-void Spell::ModifyOffense(float phys, float mag, float hit, float crit)
+void Spell::ModifyOffense(float minphys, float maxphys, float minmag, float maxmag, float castdex)
 {
-    physicalDamage = phys;
-    magicDamage = mag;
-    hitScore = hit;
-    critScore = crit;
+    minPhysicalDamage = minphys;
+    maxPhysicalDamage = maxphys;
+    minMagicDamage = minmag;
+    maxMagicDamage = maxmag;
+    casterDexterity = castdex;
 }

@@ -4,7 +4,6 @@ Being::Being()
 {
     graph = new Graph(areaCellWidth, areaCellHeight);
 
-    isPlayer = false;
     active = true;
 
     intendedWalkDirection = INPUT_NO_DIRECTION;
@@ -23,46 +22,40 @@ Being::Being()
     actionBlocked = false;
     actionPoints = 0;
 
-    /*
-    for(int i = 0; i < BEING_PRIMARY_TOTAL; i++)
+    // Default stats to 0
+    for(int i = 0; i < STAT_TOTAL-1; i++)
         for(int j = 0; j < BEING_STAT_BREAKDOWN_TOTAL; j++)
-            primary[i][j] = 0;
+            stats[i][j] = 0;
 
-    for(int i = 0; i < BEING_SECONDARY_TOTAL; i++)
-        for(int j = 0; j < BEING_STAT_BREAKDOWN_TOTAL; j++)
-            secondary[i][j] = 0;
-
-    */
-
-    for(int i = 0; i < BEING_STAT_BREAKDOWN_TOTAL; i++)
-    {
-        strength[i] = 0;
-        dexterity[i] = 0;
-        vitality[i] = 0;
-        agility[i] = 0;
-        willpower[i] = 0;
-        attunement[i] = 0;
-
-        attack[i] = 0;
-        magicAttack[i] = 0;
-        hit[i] = 0;
-        critical[i] = 0;
-        attackSpeed[i] = 0;
-        magicAttackSpeed[i] = 0;
-
-        defense[i] = 0;
-        magicDefense[i] = 0;
-        evasion[i] = 0;
-        walkSpeed[i] = 0;
-        healing[i] = 0;
-        meditation[i] = 0;
-    }
 }
 
 Being::~Being()
 {
     delete graph;
 
+}
+
+void Being::ChangeAction(int changeTo)
+{
+    switch(changeTo)
+    {
+        case ACTION_IDLE:
+            currentAction = ACTION_IDLE;
+            break;
+
+        case ACTION_WALK:
+            currentAction = ACTION_WALK;
+            animationComplete = false;
+            break;
+
+        case ACTION_CASTING:
+
+            break;
+
+        case ACTION_EXECUTE:
+
+            break;
+    }
 }
 
 void Being::Move(int inputDirection)
@@ -127,6 +120,7 @@ void Being::MoveTo(int destXCell, int destYCell)
     yCell = destYCell;
     //xPosition = dXPosition = xCell*TILESIZE;
     //yPosition = dYPosition = yCell*TILESIZE;
+
     dXPosition = xCell*TILESIZE;
     dYPosition = yCell*TILESIZE;
 }
@@ -177,7 +171,7 @@ void Being::BaseLogic()
 void Being::ProgressWalkAnimation()
 {
     //std::cout << "ProgressWalkAnimation()" << std::endl;
-    animationComplete = false; // False but meant to be proven true if animation is incomplete
+    //animationComplete = false; // False but meant to be proven true if animation is incomplete
 
     if(xPosition < dXPosition)
         xPosition += 8;
@@ -191,7 +185,7 @@ void Being::ProgressWalkAnimation()
     if(xPosition == dXPosition && yPosition == dYPosition)
     {
         animationComplete = true;
-        currentAction = ACTION_IDLE;
+        ChangeAction(ACTION_IDLE);
     }
 }
 
@@ -202,7 +196,7 @@ void Being::InstantCompleteWalkAnimation()
     yPosition = dYPosition;
 
     animationComplete = true;
-    currentAction = ACTION_IDLE;
+    ChangeAction(ACTION_IDLE);
 }
 
 void Being::ProgressIdleAnimation()
@@ -224,7 +218,7 @@ void Being::ResetPath()
     currentPath.clear();
 }
 
-void Being::ReleaseCurrentSpell()
+void Being::ReleaseCurrentSpell(int targetCellID)
 {
     /*
     SHAPE_SHAPELESS = 0,   // Having no form - i.e. instant buff
@@ -236,7 +230,7 @@ void Being::ReleaseCurrentSpell()
     */
 
     if(currentSpell->shape == SHAPE_POINT)
-        currentSpell->cellsCovered.push_back(spellTargetCell);
+        currentSpell->cellsCovered.push_back(targetCellID);
 
     else if(currentSpell->shape == SHAPE_MISSILE)
     {
@@ -258,10 +252,5 @@ void Being::ReleaseCurrentSpell()
 
     castSpell = currentSpell; // Signals main to copy the spell to an object and add its pointer to activeSpell vector.
 
-    /*
-    currentSpell.cellsCovered.push_back(targetLockYCell*areaCellWidth+targetLockXCell);
-    castSpell = currentSpell;
-    currentSpell = defaultSpell;
-    */
 }
 

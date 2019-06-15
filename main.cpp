@@ -41,6 +41,7 @@ How to operate debug:
 #include <ctime>
 #include <cmath>
 #include <vector>
+#include <set>
 
 //#include <boost/filesystem.hpp>
 
@@ -102,7 +103,7 @@ void PopulateItems(); // Fill items vector with all items currently held by all 
 void DevAddTestItemsToPlayer(); // In development...
 
 /// Spell containers and functions #################
-std::vector<Spell*>activeSpells;
+//std::vector<Spell*>activeSpells;
 
 /// Being containers and functions #################
 std::vector<Being*>beings; // All beings currently in play.
@@ -354,7 +355,7 @@ void GameLogic()
                 if(!player->currentPath.empty())
                 {
                     player->actionCost = 100;
-                    player->currentAction = ACTION_WALK;
+                    player->ChangeAction(ACTION_WALK);
                     player->TracePath();
                     submittedPlayerActionCommand = true;
                 }
@@ -420,7 +421,8 @@ void GameLogic()
         {
             (*it)->actionPoints += (*it)->stats[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; // Each being receives AP according to its effective speed.
 #ifdef D_TURN_LOGIC
-            std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << " AP." << std::endl;
+            std::cout << (*it)->name << " has " << (*it)->actionPoints << "/" << (*it)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE];
+                    << " AP." << std::endl;
 #endif
 
             if((*it)->actionPoints >= 100) // If a being has at least 100 AP, add it to actionQueue.
@@ -503,7 +505,8 @@ void GameLogic()
                     (*actionQueueFront)->actionPoints -= (*actionQueueFront)->actionCost; // Spend AP cost of action. It is very possible for moves to put beings into negative AP (e.g. power-attacks)
 
 #ifdef D_TURN_LOGIC
-                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << "AP" << std::endl;
+                    std::cout << (*actionQueueFront)->name << " now has " << (*actionQueueFront)->actionPoints << "/" << (*actionQueueFront)->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE];
+                            << "AP" << std::endl;
 #endif
 
                     if((*actionQueueFront)->currentAction == ACTION_WALK) // If the selected action is walk, add to the walk animation queue.
@@ -538,7 +541,8 @@ void GameLogic()
 #endif
                     player->actionPoints -= player->actionCost;
 #ifdef D_TURN_LOGIC
-                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE]; << "AP" << std::endl;
+                    std::cout << player->name << " now has " << player->actionPoints << "/" << player->secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE];
+                            << "AP" << std::endl;
 #endif
 
                     // Reset flags to default, false.
@@ -606,15 +610,15 @@ void GameLogic()
     {
         animationPhaseComplete = false; // Reset flag.
 
-        //Progress the IDLE animation of all beings by one step.
-        //Note that all beings will go through this (possibly hidden to the player) progression in idle animation (even) when they are not queued to act or animate.
+        //Progress the IDLE animation of ALL beings by one step.
+        //Note that all beings will go through this (possibly invisible to the player) progression in idle animation (even) when they are not queued for animation.
         for(std::vector<Being*>::iterator it = beings.begin(); it != beings.end(); ++it)
         {
             (*it)->ProgressIdleAnimation();
         }
         if(spotlightedBeing != nullptr) // There IS a being being spotlighted.
         {
-//std::cout << "Being spotlighted." << std::endl;
+std::cout << "Being spotlighted." << std::endl;
             if(spotlightedBeing->animationComplete) // The spotlighted being has completed its animation
             {
                 animationPhaseComplete = true; // Move on to Processing phase.
@@ -676,6 +680,19 @@ void GameLogic()
 
     if(turnLogicPhase == LOGIC_PHASE_PROCESSING)
     {
+
+        std::cout << beings[0]->name << std::endl;
+        std::cout << "--x: " << beings[0]->xPosition << " / " << beings[0]->xCell*TILESIZE << std::endl;
+        std::cout <<"--y: " << beings[0]->yPosition << " / " << beings[0]->yCell*TILESIZE << std::endl;
+        std::cout << beings[1]->name << std::endl;
+        std::cout <<"--x: " << beings[1]->xPosition << " / " << beings[1]->dXPosition << std::endl;
+        std::cout <<"--y: " << beings[1]->yPosition << " / " << beings[1]->dYPosition << std::endl;
+        std::cout << beings[2]->name << std::endl;
+        std::cout <<"--x: " << beings[2]->xPosition << " / " << beings[2]->dXPosition << std::endl;
+        std::cout <<"--y: " << beings[2]->yPosition << " / " << beings[2]->dYPosition << std::endl;
+
+
+
         // Something here.
 
         //Processing having been applied, turn logic flags are reset to await new actions.
@@ -1558,11 +1575,63 @@ void UpdateObjects()
             ((NPC*)(*it))->Logic();
 
 
-        // If the Being has cast a spell, add the spell to activeSpells vector
+        // If the Being has cast a spell, check effects
         if((*it)->castSpell != nullptr)
         {
-            activeSpells.push_back((*it)->castSpell);
+
+            std::set<Being*>affectedBeings;
+
             (*it)->castSpell = nullptr;
+            for(unsigned int i = 0; i < (*it)->castSpell->cellsCovered.size(); i++)
+            {
+                if(area->beingmap[i] != nullptr)
+                {
+                    Being*spellTarget = area->beingmap[i];
+
+                    if((*it)->castSpell->canAffectSelf && (*it) == spellTarget)
+                    {
+                        affectedBeings.insert(spellTarget);
+                    }
+                    if((*it)->castSpell->canAffectAlly)
+                    {
+                        if((*it)->team > TEAM_PLAYER_MARKER_BEGIN && (*it)->team < TEAM_PLAYER_MARKER_END)
+                        {
+                            if(spellTarget->team > TEAM_PLAYER_MARKER_BEGIN && spellTarget->team < TEAM_PLAYER_MARKER_END)
+                            {
+                                affectedBeings.insert(spellTarget);
+                            }
+                        }
+                        else if((*it)->team == TEAM_HOSTILE && spellTarget->team == TEAM_HOSTILE)
+                        {
+                            affectedBeings.insert(spellTarget);
+                        }
+                    }
+                    if((*it)->castSpell->canAffectNeutral && spellTarget->team == TEAM_NEUTRAL)
+                    {
+                        affectedBeings.insert(spellTarget);
+                    }
+                    if((*it)->castSpell->canAffectEnemy)
+                    {
+                        if((*it)->team > TEAM_PLAYER_MARKER_BEGIN && (*it)->team < TEAM_PLAYER_MARKER_END && spellTarget->team == TEAM_HOSTILE)
+                            affectedBeings.insert(spellTarget);
+
+                        else if((*it)->team == TEAM_HOSTILE && spellTarget->team > TEAM_PLAYER_MARKER_BEGIN && spellTarget->team < TEAM_PLAYER_MARKER_END)
+                            affectedBeings.insert(spellTarget);
+                    }
+
+                }
+            }
+
+            // Append all of the cast spell's properties to the list(vector) of spell effects being experienced by affected targets.
+            for(std::set<Being*>::iterator st = affectedBeings.begin(); st != affectedBeings.end(); ++st)
+            {
+                (*st)->activeSpellEffects.insert(std::end((*st)->activeSpellEffects),
+                                                 std::begin((*it)->castSpell->spellEffects),
+                                                 std::end((*it)->castSpell->spellEffects));
+            }
+
+            affectedBeings.clear();
+            (*it)->castSpell = nullptr; // Clear spellcasting status.
         }
 
 
@@ -1603,7 +1672,7 @@ void UpdateObjects()
                 bPointer = area->beingmap[*ccit];
 
                 // If the Being covered by spell can be affected by the spell, copy all of the spell's spellEffects to the Being's activeSpellEffects vector.
-                if(bPointer->playerRelation == RELATION_SELF && (*it)->canAffectSelf)
+                if(bPointer->playerRelation == RELATION_PLAYER && (*it)->canAffectSelf)
                 {
                     bPointer->activeSpellEffects.insert(bPointer->activeSpellEffects.end(),
                                                         (*it)->effects.begin(), (*it)->effects.end());
@@ -1805,25 +1874,25 @@ void ProcessInput(int whatContext)
                     }
                     else
                     {
-                        player->ReleaseCurrentSpell();
+                        player->ReleaseCurrentSpell(targetLockYCell*areaCellWidth+targetLockXCell);
                     }
                 }
 
                 if(targetLockLevel == TARGET_LOCK_AUTO)
                 {
-                    player->ReleaseCurrentSpell();
+                    player->ReleaseCurrentSpell(targetLockYCell*areaCellWidth+targetLockXCell);
                     //player->actionCost = 100;
                     //submittedPlayerActionCommand = true;
                 }
                 else if(targetLockLevel == TARGET_LOCK_CELL)
                 {
-                    player->ReleaseCurrentSpell();
+                    player->ReleaseCurrentSpell(targetLockYCell*areaCellWidth+targetLockXCell);
                     //player->actionCost = 100;
                     //submittedPlayerActionCommand = true;
                 }
                 else if(targetLockLevel == TARGET_LOCK_BEING)
                 {
-                    player->ReleaseCurrentSpell();
+                    player->ReleaseCurrentSpell(targetLockYCell*areaCellWidth+targetLockXCell);
                     //player->actionCost = 100;
                     //submittedPlayerActionCommand = true;
                 }
@@ -1876,7 +1945,8 @@ void ProcessInput(int whatContext)
                 if(keypadDirection > 0)
                 {
                     player->actionCost = 100;
-                    player->currentAction = ACTION_WALK;
+                    player->ChangeAction(ACTION_WALK);
+
                     // ********* check emptiness of destination here **************************
                     player->intendedWalkDirection = keypadDirection;
 

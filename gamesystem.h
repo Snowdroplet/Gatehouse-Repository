@@ -283,49 +283,43 @@ enum enumFeatureTypes
 extern int playerXCell, playerYCell;
 extern int playerXPosition, playerYPosition;
 
+enum enumBeingTeam
+{
+
+    TEAM_PLAYER_MARKER_BEGIN = 0,
+    TEAM_PLAYER = 1,
+    TEAM_PLAYER_ALLY = 2,
+    TEAM_PLAYER_MARKER_END = 3,
+
+    TEAM_NEUTRAL = 4,
+
+    TEAM_HOSTILE = 5
+
+};
+
 /// BEING AND EQUIPMENT STATISTICS
 
 enum enumPrimaryStats
 {
-    STAT_STRENGTH = 0,
-    STAT_DEXTERITY = 1,
-    STAT_VITALITY = 2,
-    STAT_AGILITY = 3,
-    STAT_WILLPOWER = 4,
-    STAT_ATTUNEMENT = 5,
+    STAT_ATTACK_MEDIAN = 0,
+    STAT_MAGIC_MEDIAN = 1,
 
-    STAT_PRIMARY_TOTAL = 6
+    STAT_STRENGTH = 2,
+    STAT_DEXTERITY = 3,
+    STAT_DEFENSE = 4,
+    STAT_VITALITY = 5,
+
+    STAT_WALK_SPEED = 6,
+    STAT_ATTACK_SPEED = 7,
+
+
+    STAT_HEALING = 8,
+    STAT_MEDITATION = 9,
+    STAT_DAMAGE_REFLECTION = 10,
+    STAT_LIFE_LEECH = 11,
+
+    STAT_TOTAL = 12
 };
-
-enum enumSecondaryStats
-{
-    STAT_LIFE = 0,
-    STAT_ANIMA = 1,
-
-    STAT_ATTACK = 2,
-    STAT_DEFENSE = 3,
-
-    STAT_MAGIC_ATTACK = 4,
-    STAT_MAGIC_DEFENSE = 5,
-
-    STAT_HIT = 6,
-    STAT_EVASION = 7,
-
-    STAT_CRITICAL = 8,
-    STAT_WALK_SPEED = 9,
-
-    STAT_ATTACK_SPEED = 10,
-    STAT_MAGIC_ATTACK_SPEED = 11,
-
-    STAT_HEALING = 12,
-    STAT_MEDITATION = 13,
-
-    STAT_SECONDARY_TOTAL = 14
-};
-
-
-
-
 
 
 #endif // GAMESYSTEM_H_INCLUDED

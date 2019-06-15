@@ -14,6 +14,7 @@
 
 #include "graph.h"
 
+#include "spellEffect.h"
 #include "spell.h"
 
 #include "item.h"
@@ -57,14 +58,8 @@ enum enumBeingStatBreakdown
     BEING_STAT_BREAKDOWN_TOTAL = 5
 };
 
-std::string const primaryStringBase[STAT_PRIMARY_TOTAL] = {"Str ", "Dex ", "Vit ", "Agi ", "Wil ", "Atu "};
-std::string const secondaryStringBase[STAT_SECONDARY_TOTAL] = { "Life ", "Anima ",
-                                                                "Atk  ", "Def   ",
-                                                                "mAtk ", "mDef  ",
-                                                                "Hit  ", "Eva   ",
-                                                                "Crit ", "wSpd  ",
-                                                                "aSpd ", "maSpd ",
-                                                                "Heal ", "Medi  "};
+
+std::string const statStringBase[STAT_TOTAL] = {"Attack ", "Magic ", "Strength ", "Dexterity ", "Defense ", "Walk Speed ", "Attack Speed ", "Healing ", "Arcana ", "Counter ", "Leech "};
 
 class Being // Make this class abstract later
 {
@@ -83,11 +78,12 @@ public:
     int derivedType;
     int identity;
 
-    bool isPlayer;
-
     bool active;
 
     std::string name;
+
+    int team; // 1. Determines whether spells that affect self, allies, hostiles, etc. can affect targets
+              // 2. Determines AI types available to NPCs.
 
     /// Pathfinding
     Graph *graph; //Pathfinding graph
@@ -115,18 +111,15 @@ public:
     float dXPosition, dYPosition; // destination coordinates.
     int xCell, yCell; // The current cell it occupies, as well as the destination cell during animation phase,
 
-    int spellTargetCell; // ID of the cell the Being is aiming at.
-
     /// Unit stats
-    int primary[STAT_PRIMARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
-    int secondary[STAT_SECONDARY_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
+    int stats[STAT_TOTAL][BEING_STAT_BREAKDOWN_TOTAL];
 
-    std::string primaryString[STAT_PRIMARY_TOTAL];
-    std::string secondaryString[STAT_SECONDARY_TOTAL];
+    std::string statString[STAT_TOTAL];
 
+    std::vector<SpellEffect*>activeSpellEffects;
 
     Spell *defaultSpell; // The "unmodified" attack option, usually depending on current weapon.
-    Spell *currentSpell; // Spell to
+    Spell *currentSpell; // Spell to be cast.
     Spell *castSpell;    // Spell to be picked up by global spell queue.
 
 
@@ -139,13 +132,15 @@ public:
 
     void ResetPath();
 
+    void ChangeAction(int changeTo);
+
     void Move(int inputDirection); // See gamesystem.h for numpad direction enumerators expected as arguments
     void MoveTo(int destXCell, int destYCell);
     void WarpTo(int destXCell, int destYCell);
     void SetPath(int destXCell, int destYCell);
     void TracePath();
 
-    void ReleaseCurrentSpell();
+    void ReleaseCurrentSpell(int targetCellID);
 
 };
 

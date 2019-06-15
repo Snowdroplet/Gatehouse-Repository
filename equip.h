@@ -26,8 +26,7 @@ public:
     int upgradeLevel;
 
     // stat modifiers (can be negative)
-    int primaryMod[STAT_PRIMARY_TOTAL];
-    int secondaryMod[STAT_SECONDARY_TOTAL];
+    int statMod[STAT_TOTAL];
 
     Equip();
     Equip(int equipTemplateID);

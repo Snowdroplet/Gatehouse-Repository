@@ -528,6 +528,10 @@ void Generator::LayoutFloorFill()
         {
             genLayout[i] = GEN_CELL_HALLWAY;
 
+
+            /// Currently disabled code that mades hallways 3 squares wide
+            /*
+
             if(adopt(mtRng)
                     && genLayout[i-areaCellWidth] == GEN_CELL_EMPTY) // check above
             {
@@ -561,6 +565,8 @@ void Generator::LayoutFloorFill()
                 else if(hEx(mtRng))
                     genLayout[i-1] = GEN_CELL_HALLWAY_EXTENSION;
             }
+
+            */
         }
 
     }
@@ -1039,13 +1045,13 @@ void Generator::InitialState()
 
     roomBoxesToGenerate = 250;
 
-    averageRoomWidth = MINI_TILESIZE*6;
-    averageRoomHeight = MINI_TILESIZE*6;
+    averageRoomWidth = MINI_TILESIZE*3;
+    averageRoomHeight = MINI_TILESIZE*3;
     stdWidthDeviation = averageRoomWidth*0.30;
     stdHeightDeviation = averageRoomHeight*0.30;
 
-    mainRoomWidthThreshold = MINI_TILESIZE*7;
-    mainRoomHeightThreshold = MINI_TILESIZE*7;
+    mainRoomWidthThreshold = MINI_TILESIZE*4;
+    mainRoomHeightThreshold = MINI_TILESIZE*4;
 
     SetRemovedEdgeReturnPercentage( (float)(rand()%75) / 100 ); // 0-60%
 

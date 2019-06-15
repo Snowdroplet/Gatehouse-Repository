@@ -75,16 +75,10 @@ public:
 
     void Logic();
 
-    void RecalculateDebuffPrimaryStats();
-    void RecalculateBuffPrimaryStats();
-    void RecalculateEquipPrimaryStats();
-    void RecalculateEffectivePrimaryStats(); // The sum of primary stat breakdown.
-
-    void RecalculateBaseSecondaryStats();
-    void RecalculateDebuffSecondaryStats();
-    void RecalculateBuffSecondaryStats();
-    void RecalculateEquipSecondaryStats();
-    void RecalculateEffectiveSecondaryStats(); // The sum of secondary stat breakdown.
+    void RecalculateDebuffStats();
+    void RecalculateBuffStats();
+    void RecalculateEquipStats();
+    void RecalculateEffectiveStats(); // The sum of stats breakdown.
 
     void RecalculateStats(); // All of the above, in sequence
 

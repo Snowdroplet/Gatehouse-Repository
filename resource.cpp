@@ -95,7 +95,7 @@ void LoadResources()
     penFont = al_load_ttf_font("SnowdropletPen.ttf",28,0);
     penFontLarge = al_load_ttf_font("SnowdropletPen.ttf",36,0);
     robotoSlabFont = al_load_ttf_font("RobotoSlab-Regular.ttf",15,0);
-    sourceCodeFont = al_load_ttf_font("sourceCodeFont.ttf",18,0);
+    sourceCodeFont = al_load_ttf_font("sourceCodeFont.ttf",15,0);
 }
 
 void UnloadResources()

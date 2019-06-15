@@ -13,7 +13,6 @@ Player::Player(bool savedPlayer)
 void Player::InitByArchive()
 {
     derivedType = BEING_TYPE_PLAYER;
-    isPlayer = true;
 
     visibleToPlayer = true;
 
@@ -27,24 +26,22 @@ void Player::InitByArchive()
 Player::Player(int spawnXCell, int spawnYCell)
 {
     derivedType = BEING_TYPE_PLAYER;
-    isPlayer = true;
 
     name = "Player";
+    team = TEAM_PLAYER;
 
     visibleToPlayer = true;
 
 
-    // Set all primary effective/base stats to 8.
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
-        primary[i][BEING_STAT_EFFECTIVE] = primary[i][BEING_STAT_BASE] = 8;
+    // Set all effective/base stats to 8.
+    for(int i = 0; i < STAT_TOTAL-1; i++)
+        stats[i][BEING_STAT_EFFECTIVE] = stats[i][BEING_STAT_BASE] = 8;
 
-    secondary[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE] = secondary[STAT_WALK_SPEED][BEING_STAT_BASE] = 100;
+    // Set walk speed to 100.
+    stats[STAT_WALK_SPEED][BEING_STAT_EFFECTIVE] = stats[STAT_WALK_SPEED][BEING_STAT_BASE] = 100;
 
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
-        primaryString[i] = primaryStringBase[i];
-
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-        secondaryString[i] = secondaryStringBase[i];
+    for(int i = 0; i < STAT_TOTAL-1; i++)
+        statString[i] = statStringBase[i];
 
     xCell = spawnXCell;
     yCell = spawnYCell;
@@ -56,7 +53,7 @@ Player::Player(int spawnXCell, int spawnYCell)
     wornEquipment = std::vector<Equip*>(8,nullptr);
 
 
-    defaultSpell = new Spell(SPELL_PLAYER_ONE_HAND_BASIC);
+    defaultSpell = new Spell();
     currentSpell = new Spell();
     *currentSpell = *defaultSpell; // Not sure if legit. (Intention: the spell-object pointed to by currentSpell BECOMES A COPY OF the spell-object pointed to by defaultSpell).
     //std::cout << currentSpell->maxRange << std::endl;
@@ -117,181 +114,82 @@ Player::~Player()
 
 void Player::Logic()
 {
-    //spellTargetCell = targetLockYCell*areaCellWidth+targetLockXCell;
 }
 
-void Player::RecalculateDebuffPrimaryStats()
+void Player::RecalculateDebuffStats()
 {
 
 }
 
-void Player::RecalculateBuffPrimaryStats()
+void Player::RecalculateBuffStats()
 {
 
 }
 
-void Player::RecalculateEquipPrimaryStats()
+void Player::RecalculateEquipStats()
 {
-    // All primary stats from equipment = 0.
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+    // All stats from equipment = 0.
+    for(int i = 0; i < STAT_TOTAL-1; i++)
     {
-        primary[i][BEING_STAT_EQUIP_MOD] = 0;
-        std::cout << primary[i][BEING_STAT_EQUIP_MOD] << std::endl;
+        stats[i][BEING_STAT_EQUIP_MOD] = 0;
+        std::cout << stats[i][BEING_STAT_EQUIP_MOD] << std::endl;
     }
 
-    // All primary stats derived from equipment = the sum of corresponding equipment primary stat modifier from all equip-slots.
+    // All stats derived from equipment = the sum of corresponding equipment stat modifier from all equip-slots.
     // e.g. Player's strength stat from equipment = Helm strength mod + body strength mod + arms strength mod + ...
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+    for(int i = 0; i < STAT_TOTAL-1; i++)
     {
         for(int j = 0; j < PLAYER_EQUIP_SLOT_TOTAL; j++)
         {
             if(wornEquipment[j] != nullptr)
-                primary[i][BEING_STAT_EQUIP_MOD] += wornEquipment[j]->primaryMod[i];
+                stats[i][BEING_STAT_EQUIP_MOD] += wornEquipment[j]->statMod[i];
         }
     }
 }
 
-void Player::RecalculateEffectivePrimaryStats()
+void Player::RecalculateEffectiveStats()
 {
 
-    // All effective primary stats = 0.
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
-        primary[i][BEING_STAT_EFFECTIVE] = 0;
+    // All effective stats = 0.
+    for(int i = 0; i < STAT_TOTAL-1; i++)
+        stats[i][BEING_STAT_EFFECTIVE] = 0;
 
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
+    for(int i = 0; i < STAT_TOTAL-1; i++)
     {
         //std::cout << "Modification of attribute element " << i << ": ";
 
         for(int j = BEING_STAT_BASE; j < BEING_STAT_BREAKDOWN_TOTAL; j++) // The following works because BEING_STAT_EFFECTIVE = 0, and BEING_STAT_BASE = 1.
         {
-            primary[i][BEING_STAT_EFFECTIVE] += primary[i][j];
+            stats[i][BEING_STAT_EFFECTIVE] += stats[i][j];
 
-            //std::cout << primary[i][j] << " | ";
+            //std::cout << stats[i][j] << " | ";
         }
         //std::cout << std::endl;
     }
 
-    for(int i = 0; i < STAT_PRIMARY_TOTAL; i++)
-        primaryString[i] = primaryStringBase[i] + std::to_string(primary[i][BEING_STAT_EFFECTIVE]) + "/" + std::to_string(primary[i][BEING_STAT_BASE]);
+    for(int i = 0; i < STAT_TOTAL-1; i++)
+        statString[i] = statStringBase[i] + std::to_string(stats[i][BEING_STAT_EFFECTIVE]) + "/" + std::to_string(stats[i][BEING_STAT_BASE]);
 
-}
-
-void Player::RecalculateBaseSecondaryStats()
-{
-    // All base secondary stats = 0
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-        secondary[i][BEING_STAT_BASE] = 0;
-
-    // Life = str*2 + dex*1 + vit*5 + agi*1 + wil*1 + atu*1
-    secondary[STAT_LIFE][BEING_STAT_BASE] += primary[STAT_STRENGTH][BEING_STAT_EFFECTIVE]*2 + primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_VITALITY][BEING_STAT_EFFECTIVE]*5
-                                           + primary[STAT_AGILITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*1 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*1;
-                                           //std::cout << "Debug: Base Life recalculated to: " << secondary[STAT_LIFE][BEING_STAT_BASE] << std::endl;
-
-    // Anima = str*1 + dex*1 + vit*1 + agi*1 + wil*4 + atu*3
-    secondary[STAT_ANIMA][BEING_STAT_BASE] += primary[STAT_STRENGTH][BEING_STAT_EFFECTIVE]*1 + primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_VITALITY][BEING_STAT_EFFECTIVE]*1
-                                            + primary[STAT_AGILITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*4 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*3;
-
-    // Attack = str*4 + dex*1
-    secondary[STAT_ATTACK][BEING_STAT_BASE] += primary[STAT_STRENGTH][BEING_STAT_EFFECTIVE]*4 + primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1;
-
-    // Defense = str*2 + dex*1 + vit*2
-    secondary[STAT_DEFENSE][BEING_STAT_BASE] += primary[STAT_STRENGTH][BEING_STAT_EFFECTIVE]*2 + primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_VITALITY][BEING_STAT_EFFECTIVE]*2;
-
-    // Magic Attack Attack = wil*4 + atu*1
-    secondary[STAT_MAGIC_ATTACK][BEING_STAT_BASE] += primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*4 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*1;
-
-    // Magic Defense = wil*2 + atu*3
-    secondary[STAT_MAGIC_DEFENSE][BEING_STAT_BASE] += primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*2 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*3;
-
-
-    // Hit = dex*4 + atu*1
-    secondary[STAT_HIT][BEING_STAT_BASE] += primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*4 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*1;
-
-    // Evasion = dex*1 + agi*3 + atu*1
-    secondary[STAT_EVASION][BEING_STAT_BASE] += primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_AGILITY][BEING_STAT_EFFECTIVE]*3 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*1;
-
-    // Critical = dex*1 + atu*4
-    secondary[STAT_CRITICAL][BEING_STAT_BASE] += primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*4;
-
-    // Walk Speed = Base walk speed cannot be modified.
-    secondary[STAT_WALK_SPEED][BEING_STAT_BASE] += 100;
-
-    // Attack Speed = dex*1 + agi*4
-    secondary[STAT_ATTACK_SPEED][BEING_STAT_BASE] += primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_AGILITY][BEING_STAT_EFFECTIVE]*4;
-
-    // Magic Attack Speed = dex*1 + wil*1 + atu*3
-    secondary[STAT_MAGIC_ATTACK_SPEED][BEING_STAT_BASE] += primary[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]*1 + primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*1 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*3;
-
-    // Healing = vit*3 + wil*1 + atu*1
-    secondary[STAT_HEALING][BEING_STAT_BASE] += primary[STAT_VITALITY][BEING_STAT_EFFECTIVE]*3 + primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*1 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*1;
-
-    // Meditation = wil*2 + atu*3
-    secondary[STAT_MEDITATION][BEING_STAT_BASE] += primary[STAT_WILLPOWER][BEING_STAT_EFFECTIVE]*3 + primary[STAT_ATTUNEMENT][BEING_STAT_EFFECTIVE]*1;
-}
-
-
-void Player::RecalculateDebuffSecondaryStats()
-{
-
-}
-
-void Player::RecalculateBuffSecondaryStats()
-{
-
-}
-
-void Player::RecalculateEquipSecondaryStats()
-{
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-        secondary[i][BEING_STAT_EQUIP_MOD] = 0;
-
-    // All secondary stats derived from equipment = the sum of corresponding equipment secondary stat modifier from all equip-slots.
-    // e.g. Player's life stat from equipment = Helm life mod + body life mod + arms life mod + ...
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-    {
-        for(int j = 0; j < PLAYER_EQUIP_SLOT_TOTAL; j++)
-        {
-            if(wornEquipment[j] != nullptr)
-                secondary[i][BEING_STAT_EQUIP_MOD] += wornEquipment[j]->secondaryMod[i];
-        }
-    }
-}
-
-void Player::RecalculateEffectiveSecondaryStats()
-{
-    // All effective secondary stats = 0.
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-        secondary[i][BEING_STAT_EFFECTIVE] = 0;
-
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-    {
-        for(int j = BEING_STAT_BASE; j < BEING_STAT_BREAKDOWN_TOTAL; j++) // The following works because BEING_STAT_EFFECTIVE = 0, and BEING_STAT_BASE = 1.
-        {
-            secondary[i][BEING_STAT_EFFECTIVE] += secondary[i][j];
-        }
-    }
-
-    for(int i = 0; i < STAT_SECONDARY_TOTAL; i++)
-        secondaryString[i] = secondaryStringBase[i] + std::to_string(secondary[i][BEING_STAT_EFFECTIVE]) + "/" + std::to_string(secondary[i][BEING_STAT_BASE]);
 }
 
 void Player::RecalculateStats()
 {
-    RecalculateDebuffPrimaryStats();
-    RecalculateBuffPrimaryStats();
-    RecalculateEquipPrimaryStats();
-    RecalculateEffectivePrimaryStats();
-
-    RecalculateBaseSecondaryStats();
-    RecalculateDebuffSecondaryStats();
-    RecalculateBuffSecondaryStats();
-    RecalculateEquipSecondaryStats();
-    RecalculateEffectiveSecondaryStats();
+    RecalculateDebuffStats();
+    RecalculateBuffStats();
+    RecalculateEquipStats();
+    RecalculateEffectiveStats();
 }
 
 void Player::RecalculateSpells()
 {
 
+    currentSpell->ModifyOffense(stats[STAT_ATTACK_MEDIAN][BEING_STAT_EFFECTIVE] * 0.8,
+                                stats[STAT_ATTACK_MEDIAN][BEING_STAT_EFFECTIVE] * 1.2,
+                                stats[STAT_MAGIC_MEDIAN][BEING_STAT_EFFECTIVE] * 0.5,
+                                stats[STAT_MAGIC_MEDIAN][BEING_STAT_EFFECTIVE] * 1.5,
+                                stats[STAT_DEXTERITY][BEING_STAT_EFFECTIVE]);
+
+    *defaultSpell = *currentSpell;
 }
 
 

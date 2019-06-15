@@ -127,8 +127,8 @@ int subMenuOpen;
 /// IN-GAME AREA
 
 
-int areaCellWidth = 200; // May become variable in the future.
-int areaCellHeight = 200;
+int areaCellWidth = 100; // May become variable in the future.
+int areaCellHeight = 100;
 int areaCellArea = areaCellWidth*areaCellHeight;
 
 int areaWidth = TILESIZE*areaCellWidth;
