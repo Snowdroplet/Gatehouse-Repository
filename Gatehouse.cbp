@@ -109,7 +109,6 @@
 		<Unit filename="roomgenbox.h" />
 		<Unit filename="spell.cpp" />
 		<Unit filename="spell.h" />
-		<Unit filename="spellEffect.cpp" />
 		<Unit filename="spellEffect.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include "gamesystem.h"
+
 //#include <boost/archive/text_oarchive.hpp>
 //#include <boost/archive/text_iarchive.hpp>
 //#include <boost/serialization/vector.hpp>

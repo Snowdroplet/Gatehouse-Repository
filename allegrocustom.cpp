@@ -27,6 +27,8 @@ ALLEGRO_COLOR POISON_GREEN;
 ALLEGRO_COLOR BRIGHT_GREEN;
 ALLEGRO_COLOR BLOOD_RED;
 
+ALLEGRO_COLOR PEN_INK;
+
 void AllegroCustomColours()
 {
     NEUTRAL_WHITE = al_map_rgb(255,255,255);
@@ -49,6 +51,8 @@ void AllegroCustomColours()
     POISON_GREEN = al_map_rgb(0,127,14);
     BRIGHT_GREEN = al_map_rgb(55,255,55);
     BLOOD_RED = al_map_rgb(127,0,0);
+
+    PEN_INK = al_map_rgb(0,15,84);
 
 }
 

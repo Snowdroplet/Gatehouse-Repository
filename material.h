@@ -16,7 +16,11 @@ public:
 
 enum enumMaterialTemplateIDs
 {
-    MATERIAL_TEMPLATE_WOOD = 0
+    MATERIAL_TEMPLATE_WOOD = 0,
+    MATERIAL_TEMPLATE_MAPLE_LEAF = 1,
+    MATERIAL_TEMPLATE_MATERIA = 2
+
+
 };
 
 #endif // MATERIAL_H_INCLUDED

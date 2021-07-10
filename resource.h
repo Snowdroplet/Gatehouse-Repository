@@ -164,8 +164,9 @@ extern ALLEGRO_BITMAP *gfxPstatUI;
 
 extern ALLEGRO_FONT   *penFont;
 extern ALLEGRO_FONT   *penFontLarge;
-extern ALLEGRO_FONT   *pirulenFont;
-extern ALLEGRO_FONT   *titleFont;
+extern ALLEGRO_FONT   *robotoSlabFont;
+//extern ALLEGRO_FONT   *titleFont;
+extern ALLEGRO_FONT   *sourceCodeFont;
 
 void LoadResources();
 void UnloadResources();
